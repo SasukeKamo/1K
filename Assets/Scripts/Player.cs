@@ -24,6 +24,7 @@ public class Player
 
     private void RemoveCardFromHand(Card card)
     {
+        AudioManager.Instance.PlayPlayCardSound();
         hand.Remove(card);
     }
 
