@@ -6,8 +6,9 @@ public class Player
 {
     private string playerName;
     private List<Card> hand;
-    public int score;
+    private int score;
     private int team;
+    private bool hasPassed = false;
 
     public Player(string name, int team)
     {
@@ -15,6 +16,35 @@ public class Player
         hand = new List<Card>();
         score = 0;
         this.team = team;
+    }
+
+    public int GetCardsInHand()
+    {
+        return hand.Count;
+    }
+
+    public Card MakeMove(List<Card> trick)
+    {
+        // TBD
+        return trick[0];
+    }
+
+    public void DealCardsToOtherPlayers()
+    {
+        // TBD
+    }
+
+    public bool HasPassed()
+    {
+        return hasPassed;
+    }
+
+    public bool IsBidding(int bid)
+    {
+        // Czy gracz licytuje wartosc int bid? -> gracz klika w okienko: "tak" lub "nie"
+        bool decision = true; // pobierz wartosc 
+        if (!decision) hasPassed = true;
+        return decision;
     }
 
     public void AddCardToHand(Card card)
@@ -31,6 +61,11 @@ public class Player
     public void ClearHand()
     {
         hand.Clear();
+    }
+
+    public int GetScore()
+    {
+        return score;
     }
 
     public void AddScore(int points)

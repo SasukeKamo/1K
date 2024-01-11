@@ -35,8 +35,10 @@ public class GameManager : MonoBehaviour
     public List<Player> players;
     public Deck mainDeck;
     private int roundNumber;
-    private List<int> teamScore;
+    private List<int> teamScore; // teamScore[0]: team1, teamScore[1]: team2 etc.
     const int targetScore = 1000;
+    private int currentBid;
+    private Player currentBidder;
 
     void Start()
     {
@@ -71,7 +73,7 @@ public class GameManager : MonoBehaviour
 
     void DealInitialCards()
     {
-        int initialCardCount = 10;
+        int initialCardCount = 5;
 
         foreach (Player player in players)
         {
@@ -91,10 +93,127 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void Auction()
+    {
+        int playersRemainingInAuction = players.Count;
+        currentBid = 100;
+
+        while (playersRemainingInAuction > 1)
+        {
+            foreach (Player player in players)
+            {
+                if (!player.HasPassed())
+                {
+                    if (player.IsBidding(currentBid + 10))
+                    {
+                        currentBidder = player;
+                        currentBid += 10;
+                        Debug.Log(player.GetPlayerName() + " bids " + currentBid + " points.");
+                    }
+                    else
+                    {
+                        playersRemainingInAuction--;
+                        Debug.Log(player.GetPlayerName() + " passes.");
+                    }
+                }
+                else
+                {
+                    Debug.Log(player.GetPlayerName() + " has already passed.");
+                }
+            }
+        }
+
+        Debug.Log(currentBidder.GetPlayerName() + " wins the auction with a bid of " + currentBid + " points.");
+
+        for (int i = 0; i < 4; i++)
+        {
+            Card drawnCard = mainDeck.DrawCard();
+            currentBidder.AddCardToHand(drawnCard);
+        }
+    }
+
+    private Player GetNextPlayer(Player currentPlayer)
+    {
+        int currentIndex = players.IndexOf(currentPlayer);
+
+        if (currentIndex != -1)
+        {
+            int nextIndex = (currentIndex + 1) % players.Count;
+            return players[nextIndex];
+        }
+
+        return null;
+    }
+
+    private void UpdatePlayerScore(List<Card> trick, Player winner)
+    {
+        int value = 0;
+        for (int i = 0; i < trick.Count; i++)
+        {
+            value += trick[i].GetValue();     
+        }
+        winner.AddScore(value);
+    }
+
+    private bool UpdateTrickWinner(List<Card> cards)
+    {
+        int lastCard = cards.Count - 2;
+        for (int i = 0; i < cards.Count - 1; i++) 
+        {
+            if (cards[0].GetSuit() == cards[lastCard].GetSuit() && cards[0].GetValue() < cards[lastCard].GetValue())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void Gameplay()
+    {
+        Player currentPlayer = currentBidder;
+        Player trickWinner = currentBidder;
+        List<Card> currentTrick = new List<Card>();
+
+        int numberOfTurns = currentPlayer.GetCardsInHand();
+
+        for (int i = 0; i < numberOfTurns; i++)
+        {
+            for (int j = 0; j < players.Count; j++)
+            {
+                // TODO: marriage / meldunek
+                Card playedCard = currentPlayer.MakeMove(currentTrick); 
+                currentTrick.Add(playedCard);
+                if (UpdateTrickWinner(currentTrick))
+                {
+                    trickWinner = currentPlayer;
+                }
+                currentPlayer = GetNextPlayer(currentPlayer);
+            }
+            UpdatePlayerScore(currentTrick, trickWinner);
+            currentTrick.Clear();
+            currentPlayer = trickWinner;
+        }
+    }
+
+    void DealCardsToOtherPlayers()
+    {
+        foreach (Player player in players)
+        {
+            if (currentBidder != player)
+            {
+                Debug.Log("Dealing card to player " + player.GetPlayerName());
+                // gracz wybiera karty z talii
+            }
+        }
+    }
+
     void StartRound()
     {
         Debug.Log("Starting Round " + roundNumber);
-        // tutaj jakas logika z tym rozpoczynaniem czyli licytacja i oddawanie kart czy cos takiego 
+
+        Auction();
+        DealCardsToOtherPlayers();
+        Gameplay();
     }
 
     void EndRound()
@@ -103,7 +222,7 @@ public class GameManager : MonoBehaviour
         CalculateRoundScores();
         CheckForGameEnd();
         roundNumber++;
-        // przygotowanie na nastêpn¹ runde
+        // przygotowanie na nastepna runde
         mainDeck.InitializeAndShuffle();
         AudioManager.Instance.PlayDealCardSound();
         DealInitialCards();
@@ -111,18 +230,15 @@ public class GameManager : MonoBehaviour
 
     void CalculateRoundScores()
     {
-        // tutaj powinna byc logika wyliczania punktow
         foreach (Player player in players)
         {
             if (player.GetTeam() == 1)
             {
-                //tutaj polecam skorzystac z teamScore
-                players[0].AddScore(player.score);
+                teamScore[0] += player.GetScore();
             }
             else
             {
-                //tutaj tez 
-                players[2].AddScore(player.score);
+                teamScore[1] += player.GetScore();
             }
             player.ClearHand();
         }
@@ -130,15 +246,18 @@ public class GameManager : MonoBehaviour
 
     void CheckForGameEnd()
     {
-        foreach (Player player in players)
+        if (teamScore[0] >= targetScore)
         {
-            if (player.score >= targetScore) //tutaj tez mozna uzyc teamScore, zeby te player score byly zarezerwowane dla gry indywidualnej, a nie druzynowej
-            {
-                AudioManager.Instance.PlayWinSound();
-                Debug.Log("Team " + player.GetTeam() + " wins!");
-                // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
-                return;
-            }
+            AudioManager.Instance.PlayWinSound();
+            Debug.Log("Team 1 wins!");
+            // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
+        }
+        else if (teamScore[1] >= targetScore)
+        {
+            AudioManager.Instance.PlayWinSound();
+            Debug.Log("Team 2 wins!");
+            // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
+            return;
         }
     }
 }
