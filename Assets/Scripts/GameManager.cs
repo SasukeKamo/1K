@@ -71,6 +71,22 @@ public class GameManager : MonoBehaviour
         players.Add(player4);
     }
 
+    void CreateCard(Card.Suit suit, Card.Rank rank)
+    {
+        GameObject cardObject = new GameObject();
+
+        // Add the Card script component to the GameObject
+        Card cardScript = cardObject.AddComponent<Card>();
+
+        // Initialize the card with the specified suit and rank
+        cardScript = new Card(suit, rank);
+
+        // Set the position, rotation, and scale as needed
+        cardObject.transform.position = new Vector3(0f, 0f, 0f);
+        cardObject.transform.rotation = Quaternion.identity;
+        cardObject.transform.localScale = new Vector3(1f, 1f, 1f);
+    }
+
     void DealInitialCards()
     {
         int initialCardCount = 5;
