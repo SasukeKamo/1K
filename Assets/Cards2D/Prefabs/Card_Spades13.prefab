@@ -31,7 +31,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1728497111536696892
 MonoBehaviour:
@@ -48,7 +48,7 @@ MonoBehaviour:
   front: {fileID: 21300000, guid: 57754d6ecad5f3e469a7791119eb77b2, type: 3}
   back: {fileID: 21300000, guid: 7866fc7fa44d06b42ba7bcca7db7902e, type: 3}
   suit: 3
-  rank: 5
+  rank: 4
 --- !u!212 &7162584385662538710
 SpriteRenderer:
   m_ObjectHideFlags: 0
