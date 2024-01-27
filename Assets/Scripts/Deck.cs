@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Deck : MonoBehaviour
 {
-    [SerializeField] private List<Card> cards;
+    public List<Card> cards;
 
     public Deck()
     {
@@ -18,6 +18,7 @@ public class Deck : MonoBehaviour
             foreach (Card.Rank rank in System.Enum.GetValues(typeof(Card.Rank)))
             {
                 Card newCard = new Card(suit, rank);
+                //Card newCard = InitializeCard(suit, rank);
                 cards.Add(newCard);
             }
         }

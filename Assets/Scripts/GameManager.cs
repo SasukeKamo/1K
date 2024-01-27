@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -40,6 +41,12 @@ public class GameManager : MonoBehaviour
     private int currentBid;
     private Player currentBidder;
 
+    [SerializeField] private GameObject p1;
+    [SerializeField] private GameObject p2;
+    [SerializeField] private GameObject p3;
+    [SerializeField] private GameObject p4;
+    [SerializeField] private GameObject t;
+
     void Start()
     {
         InitializeGame();
@@ -47,9 +54,13 @@ public class GameManager : MonoBehaviour
 
     void InitializeGame()
     {
+        Debug.Log("Game Manager started.");
         InitializePlayers();
+        Debug.Log("Players initialized");
         mainDeck = new Deck();
+        Debug.Log("Deck initialized");
         mainDeck.InitializeAndShuffle();
+        Debug.Log("Cards shuffled.");
         DealInitialCards();
         roundNumber = 1;
     }
@@ -91,12 +102,51 @@ public class GameManager : MonoBehaviour
     {
         int initialCardCount = 5;
 
+        for (int i = 0; i < mainDeck.cards.Count; i++)
+        {
+            Debug.Log("Card " + i + " : " + mainDeck.cards[i].GetCardFullName());
+        }
+
+        for (int i = 0; i < initialCardCount; i++)
+        {
+            Card currentCard = mainDeck.cards[i];
+            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
+            go.gameObject.transform.SetParent(p1.transform);
+        }
+        for (int i = initialCardCount; i < 2*initialCardCount; i++)
+        {
+            Card currentCard = mainDeck.cards[i];
+            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
+            go.gameObject.transform.SetParent(p2.transform);
+        }
+        for (int i = 2* initialCardCount; i <3* initialCardCount; i++)
+        {
+            Card currentCard = mainDeck.cards[i];
+            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
+            go.gameObject.transform.SetParent(p3.transform);
+        }
+        for (int i = 3* initialCardCount; i < 4*initialCardCount; i++)
+        {
+            Card currentCard = mainDeck.cards[i];
+            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
+            go.gameObject.transform.SetParent(p4.transform);
+        }
+
+        for (int i = 4 * initialCardCount; i < 4 * initialCardCount + 4; i++)
+        {
+            Card currentCard = mainDeck.cards[i];
+            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
+            go.gameObject.transform.SetParent(t.transform);
+        }
+
+        /*
         foreach (Player player in players)
         {
             for (int i = 0; i < initialCardCount; i++)
             {
-                Card drawnCard = mainDeck.DrawCard();
+                mainDeck.cards[i].gameObject.transform.SetParent(p1.transform);
 
+                
                 if (drawnCard != null)
                 {
                     player.AddCardToHand(drawnCard);
@@ -107,6 +157,7 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+        */
     }
 
     void Auction()

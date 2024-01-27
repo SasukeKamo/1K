@@ -58,10 +58,10 @@ public class Card : MonoBehaviour
         }
 
         //przypisac sprite i ustawic na visible
-        AssignSprites("Assets/Cards2D/Sprites");
+        //AssignSprites("file:../Assets/Cards2D/Sprites/");
 
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        SetVisible(true);
+        //spriteRenderer = GetComponent<SpriteRenderer>();
+        //SetVisible(true);
 
     }
 
@@ -125,6 +125,7 @@ public class Card : MonoBehaviour
         front = System.Array.Find(allSprites, s => s.name.Contains(spriteName));
         back = System.Array.Find(allSprites, s => s.name.Contains("BackColor_Red"));
 
+        Debug.Log(spriteName + " " + folderPath);
         if (front == null || back == null)
         {
             Debug.LogError($"No sprites with the name '{spriteName}' found in the specified folder: {folderPath}");
@@ -136,15 +137,19 @@ public class Card : MonoBehaviour
 
     public void SetVisible(bool visible)
     {
-        if(visible)
+        if (visible)
         {
+            //spriteRenderer = this.GetComponent<SpriteRenderer>();
+            spriteRenderer = GameObject.Find("Card_" + this.GetSuit() + "_" + this.GetRank()).GetComponent<SpriteRenderer>();
             this.visible = true;
             spriteRenderer.sprite = front;
         }
         else
         {
+            spriteRenderer = GameObject.Find("Card_" + this.GetSuit() + "_" + this.GetRank()).GetComponent<SpriteRenderer>();
             this.visible = false;
             spriteRenderer.sprite = back;
+            //spriteR = gameObject.GetComponent<SpriteRenderer>();
         }
     }
 
@@ -158,6 +163,11 @@ public class Card : MonoBehaviour
     public string GetSuit()
     {
         return suit.ToString();
+    }
+
+    public string GetRank()
+    {
+        return rank.ToString();
     }
 
     public int GetValue()
