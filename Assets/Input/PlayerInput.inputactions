@@ -1,0 +1,34 @@
+{
+    "name": "PlayerInput",
+    "maps": [
+        {
+            "name": "PlayCard",
+            "id": "73e0c241-cd7a-4f8f-a374-4300d5ded9d4",
+            "actions": [
+                {
+                    "name": "ClickCard",
+                    "type": "Button",
+                    "id": "03131390-df9a-4e95-ba67-fdf8ae6d5c1e",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "c0f260db-a1d0-4316-b308-1ae85f412cc5",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ClickCard",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

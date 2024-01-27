@@ -57,82 +57,6 @@ public class Card : MonoBehaviour
                 break;
         }
 
-        //przypisac sprite i ustawic na visible
-        //AssignSprites("file:../Assets/Cards2D/Sprites/");
-
-        //spriteRenderer = GetComponent<SpriteRenderer>();
-        //SetVisible(true);
-
-    }
-
-    private string GenerateSpriteName()
-    {
-        //string spriteName = Enum.GetName(typeof(Suit), suit);     //do ewentualnej optymalizacji - branie nazwy bez switch case
-        string spriteName = "";
-
-        switch (suit)
-        {
-            case Suit.Hearts:
-                spriteName += "Heart";
-                break;
-            case Suit.Diamonds:
-                spriteName += "Diamond";
-                break;
-            case Suit.Clubs:
-                spriteName += "Club";
-                break;
-            case Suit.Spades:
-                spriteName += "Spade";
-                break;
-        }
-
-        switch (rank)
-        {
-            case Rank.Ace:
-                spriteName += 01;
-                break;
-            case Rank.Ten:
-                spriteName += 10;
-                break;
-            case Rank.King:
-                spriteName += 13;
-                break;
-            case Rank.Queen:
-                spriteName += 12;
-                break;
-            case Rank.Jack:
-                spriteName += 11;
-                break;
-            case Rank.Nine:
-                spriteName += 09;
-                break;
-            default:
-                spriteName += 01;
-                break;
-        }
-
-        return spriteName;
-    }
-
-    private bool AssignSprites(string folderPath)    //path: Assets/Cards2D/Sprites
-    {
-        string spriteName = GenerateSpriteName();
-
-        // Pobranie wszystkich obrazow
-        Sprite[] allSprites = Resources.LoadAll<Sprite>(folderPath);
-
-        // Filtr obrazow
-        front = System.Array.Find(allSprites, s => s.name.Contains(spriteName));
-        back = System.Array.Find(allSprites, s => s.name.Contains("BackColor_Red"));
-
-        Debug.Log(spriteName + " " + folderPath);
-        if (front == null || back == null)
-        {
-            Debug.LogError($"No sprites with the name '{spriteName}' found in the specified folder: {folderPath}");
-            return false;
-        }
-
-        return true;
     }
 
     public void SetVisible(bool visible)
@@ -140,13 +64,13 @@ public class Card : MonoBehaviour
         if (visible)
         {
             //spriteRenderer = this.GetComponent<SpriteRenderer>();
-            spriteRenderer = GameObject.Find("Card_" + this.GetSuit() + "_" + this.GetRank()).GetComponent<SpriteRenderer>();
+            //spriteRenderer = GameObject.Find("Card_" + this.GetSuit() + "_" + this.GetRank()).GetComponent<SpriteRenderer>();
             this.visible = true;
             spriteRenderer.sprite = front;
         }
         else
         {
-            spriteRenderer = GameObject.Find("Card_" + this.GetSuit() + "_" + this.GetRank()).GetComponent<SpriteRenderer>();
+            //spriteRenderer = GameObject.Find("Card_" + this.GetSuit() + "_" + this.GetRank()).GetComponent<SpriteRenderer>();
             this.visible = false;
             spriteRenderer.sprite = back;
             //spriteR = gameObject.GetComponent<SpriteRenderer>();

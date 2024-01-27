@@ -97,7 +97,7 @@ public class GameManager : MonoBehaviour
         cardObject.transform.rotation = Quaternion.identity;
         cardObject.transform.localScale = new Vector3(1f, 1f, 1f);
     }
-
+    
     void DealInitialCards()
     {
         int initialCardCount = 5;
@@ -112,24 +112,28 @@ public class GameManager : MonoBehaviour
             Card currentCard = mainDeck.cards[i];
             GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
             go.gameObject.transform.SetParent(p1.transform);
+            go.GetComponent<Card>().SetVisible(true);
         }
         for (int i = initialCardCount; i < 2*initialCardCount; i++)
         {
             Card currentCard = mainDeck.cards[i];
             GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
             go.gameObject.transform.SetParent(p2.transform);
+            go.GetComponent<Card>().SetVisible(false);
         }
         for (int i = 2* initialCardCount; i <3* initialCardCount; i++)
         {
             Card currentCard = mainDeck.cards[i];
             GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
             go.gameObject.transform.SetParent(p3.transform);
+            go.GetComponent<Card>().SetVisible(false);
         }
         for (int i = 3* initialCardCount; i < 4*initialCardCount; i++)
         {
             Card currentCard = mainDeck.cards[i];
             GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
             go.gameObject.transform.SetParent(p4.transform);
+            go.GetComponent<Card>().SetVisible(false);
         }
 
         for (int i = 4 * initialCardCount; i < 4 * initialCardCount + 4; i++)
@@ -137,6 +141,7 @@ public class GameManager : MonoBehaviour
             Card currentCard = mainDeck.cards[i];
             GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
             go.gameObject.transform.SetParent(t.transform);
+            go.GetComponent<Card>().SetVisible(false);
         }
 
         /*
