@@ -12,7 +12,7 @@ public class Card : MonoBehaviour
     [SerializeField] private Sprite front;
     [SerializeField] private Sprite back;
 
-    private bool visible;
+    public bool visible;
     private SpriteRenderer spriteRenderer;
 
 
@@ -24,7 +24,7 @@ public class Card : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = front;
-        visible = true;
+        visible = false;
     }
 
     public Card(Suit cardSuit, Rank cardRank)

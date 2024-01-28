@@ -118,6 +118,7 @@ public class GameManager : MonoBehaviour
         {
             Card currentCard = mainDeck.cards[i];
             GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
+            go.transform.Rotate(0,0,90);
             go.gameObject.transform.SetParent(p2.transform);
             go.GetComponent<Card>().SetVisible(false);
         }
@@ -132,17 +133,18 @@ public class GameManager : MonoBehaviour
         {
             Card currentCard = mainDeck.cards[i];
             GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
+            go.transform.Rotate(0, 0, 90);
             go.gameObject.transform.SetParent(p4.transform);
             go.GetComponent<Card>().SetVisible(false);
         }
 
-        for (int i = 4 * initialCardCount; i < 4 * initialCardCount + 4; i++)
+/*        for (int i = 4 * initialCardCount; i < 4 * initialCardCount + 4; i++)
         {
             Card currentCard = mainDeck.cards[i];
             GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
             go.gameObject.transform.SetParent(t.transform);
             go.GetComponent<Card>().SetVisible(false);
-        }
+        }*/
 
         /*
         foreach (Player player in players)
