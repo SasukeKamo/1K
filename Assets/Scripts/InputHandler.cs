@@ -6,29 +6,39 @@ using UnityEngine.InputSystem;
 public class InputHandler : MonoBehaviour
 {
     [SerializeField] private GameObject trick;
-    private int sOrder = 1;
+    private int sortingOrder = 1;
 
     public void OnClick(InputAction.CallbackContext context)
     {
         if (!context.started) return;
 
-        var rayHit = Physics2D.GetRayIntersection(Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue()));
-        if (!rayHit.collider) return;
-
-        Card clickedCard = rayHit.collider.gameObject.GetComponent<Card>();
-        if (clickedCard != null && clickedCard.visible)
+        RaycastHit2D hit = Physics2D.GetRayIntersection(Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue()));
+        if (hit.collider != null)
         {
-            if (rayHit.collider.gameObject.transform.parent != trick.transform)
+            Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
+            if (clickedCard != null && clickedCard.visible)
             {
-                Debug.Log(clickedCard.gameObject.name);
-                rayHit.collider.gameObject.transform.SetParent(trick.transform);
-                rayHit.collider.gameObject.GetComponent<SpriteRenderer>().sortingOrder = sOrder;
-                sOrder++;
+                Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
+                PlayCard(clickedCard, current);
+                GameManager.Instance.MovePlayersToPositions(current.playerNumber);
+                Debug.LogError(current.playerNumber);
+                GameManager.Instance.UpdateCardVisibility();
             }
-            else
-            {
-                Debug.Log("Cannot add card already in the trick area.");
-            }
+        }
+    }
+
+    private void PlayCard(Card card, Player current)
+    {
+        if (card.transform.parent != trick.transform)
+        {
+            card.transform.SetParent(trick.transform);
+            card.GetComponent<SpriteRenderer>().sortingOrder = sortingOrder;
+            sortingOrder++;
+            Debug.Log("Played card: " + card.gameObject.name);
+        }
+        else
+        {
+            Debug.Log("Cannot add card already in the trick area.");
         }
     }
 }

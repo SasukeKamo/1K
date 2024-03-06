@@ -40,12 +40,11 @@ public class GameManager : MonoBehaviour
     const int targetScore = 1000;
     private int currentBid;
     private Player currentBidder;
-
-    [SerializeField] private GameObject p1;
-    [SerializeField] private GameObject p2;
-    [SerializeField] private GameObject p3;
-    [SerializeField] private GameObject p4;
     [SerializeField] private GameObject t;
+    [SerializeField] private GameObject downPlace;
+    [SerializeField] private GameObject leftPlace;
+    [SerializeField] private GameObject upPlace;
+    [SerializeField] private GameObject rightPlace;
 
     void Start()
     {
@@ -54,18 +53,13 @@ public class GameManager : MonoBehaviour
 
     void InitializeGame()
     {
-        Debug.Log("Game Manager started.");
-        InitializePlayers();
-        Debug.Log("Players initialized");
-        mainDeck = new Deck();
-        Debug.Log("Deck initialized");
-        mainDeck.InitializeAndShuffle();
+        mainDeck.Shuffle();
         Debug.Log("Cards shuffled.");
         DealInitialCards();
         roundNumber = 1;
     }
 
-    void InitializePlayers()
+    /*void InitializePlayers()
     {
         players = new List<Player>();
 
@@ -80,92 +74,40 @@ public class GameManager : MonoBehaviour
         players.Add(player2);
         players.Add(player3);
         players.Add(player4);
-    }
+    }*/
 
-    void CreateCard(Card.Suit suit, Card.Rank rank)
-    {
-        GameObject cardObject = new GameObject();
-
-        // Add the Card script component to the GameObject
-        Card cardScript = cardObject.AddComponent<Card>();
-
-        // Initialize the card with the specified suit and rank
-        cardScript = new Card(suit, rank);
-
-        // Set the position, rotation, and scale as needed
-        cardObject.transform.position = new Vector3(0f, 0f, 0f);
-        cardObject.transform.rotation = Quaternion.identity;
-        cardObject.transform.localScale = new Vector3(1f, 1f, 1f);
-    }
-    
     void DealInitialCards()
     {
         int initialCardCount = 5;
 
-        for (int i = 0; i < mainDeck.cards.Count; i++)
+        for (int p = 0; p < players.Count; p++)
         {
-            Debug.Log("Card " + i + " : " + mainDeck.cards[i].GetCardFullName());
-        }
-
-        for (int i = 0; i < initialCardCount; i++)
-        {
-            Card currentCard = mainDeck.cards[i];
-            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
-            go.gameObject.transform.SetParent(p1.transform);
-            go.GetComponent<Card>().SetVisible(true);
-        }
-        for (int i = initialCardCount; i < 2*initialCardCount; i++)
-        {
-            Card currentCard = mainDeck.cards[i];
-            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
-            go.transform.Rotate(0,0,90);
-            go.gameObject.transform.SetParent(p2.transform);
-            go.GetComponent<Card>().SetVisible(false);
-        }
-        for (int i = 2* initialCardCount; i <3* initialCardCount; i++)
-        {
-            Card currentCard = mainDeck.cards[i];
-            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
-            go.gameObject.transform.SetParent(p3.transform);
-            go.GetComponent<Card>().SetVisible(false);
-        }
-        for (int i = 3* initialCardCount; i < 4*initialCardCount; i++)
-        {
-            Card currentCard = mainDeck.cards[i];
-            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
-            go.transform.Rotate(0, 0, 90);
-            go.gameObject.transform.SetParent(p4.transform);
-            go.GetComponent<Card>().SetVisible(false);
-        }
-
-/*        for (int i = 4 * initialCardCount; i < 4 * initialCardCount + 4; i++)
-        {
-            Card currentCard = mainDeck.cards[i];
-            GameObject go = GameObject.Find("Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank());
-            go.gameObject.transform.SetParent(t.transform);
-            go.GetComponent<Card>().SetVisible(false);
-        }*/
-
-        /*
-        foreach (Player player in players)
-        {
-            for (int i = 0; i < initialCardCount; i++)
+            for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
             {
-                mainDeck.cards[i].gameObject.transform.SetParent(p1.transform);
+                Card currentCard = mainDeck.cards[i];
+                string cardName = "Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank();
 
-                
-                if (drawnCard != null)
+                GameObject go = GameObject.Find(cardName);
+                go.transform.SetParent(players[p].transform);
+                players[p].AddCardToHand(currentCard);
+
+                if (p == 0)
                 {
-                    player.AddCardToHand(drawnCard);
+                    go.GetComponent<Card>().SetVisible(true);
+                }
+                else if (p == 2)
+                {
+                    go.GetComponent<Card>().SetVisible(false);
                 }
                 else
                 {
-                    Debug.LogError("Not enough cards in the deck!");
+                    go.transform.Rotate(0, 0, 90);
+                    go.GetComponent<Card>().SetVisible(false);
                 }
             }
         }
-        */
     }
+
 
     void Auction()
     {
@@ -224,7 +166,7 @@ public class GameManager : MonoBehaviour
         int value = 0;
         for (int i = 0; i < trick.Count; i++)
         {
-            value += trick[i].GetValue();     
+            value += trick[i].GetValue();
         }
         winner.AddScore(value);
     }
@@ -232,7 +174,7 @@ public class GameManager : MonoBehaviour
     private bool UpdateTrickWinner(List<Card> cards)
     {
         int lastCard = cards.Count - 2;
-        for (int i = 0; i < cards.Count - 1; i++) 
+        for (int i = 0; i < cards.Count - 1; i++)
         {
             if (cards[0].GetSuit() == cards[lastCard].GetSuit() && cards[0].GetValue() < cards[lastCard].GetValue())
             {
@@ -255,7 +197,7 @@ public class GameManager : MonoBehaviour
             for (int j = 0; j < players.Count; j++)
             {
                 // TODO: marriage / meldunek
-                Card playedCard = currentPlayer.MakeMove(currentTrick); 
+                Card playedCard = currentPlayer.MakeMove(currentTrick);
                 currentTrick.Add(playedCard);
                 if (UpdateTrickWinner(currentTrick))
                 {
@@ -297,7 +239,8 @@ public class GameManager : MonoBehaviour
         CheckForGameEnd();
         roundNumber++;
         // przygotowanie na nastepna runde
-        mainDeck.InitializeAndShuffle();
+        //tutaj powinnismy karty wlozyc do talii znowu
+        mainDeck.Shuffle();
         AudioManager.Instance.PlayDealCardSound();
         DealInitialCards();
     }
@@ -334,4 +277,96 @@ public class GameManager : MonoBehaviour
             return;
         }
     }
+
+    public Player GetPlayerForCurrentCard(GameObject cardObject)
+    {
+        foreach (Player player in GameManager.Instance.players)
+        {
+            if (player.transform == cardObject.transform.parent)
+            {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    public void MovePlayersToPositions(int pNumber)
+    {
+        for (int i = 0; i < players.Count; i++)
+        {
+            GameObject playerObject = players[i].gameObject;
+            Player player = players[i];
+
+            // Przesuniêcie gracza na kolejn¹ pozycjê
+            if (player.position == Player.Position.right)
+            {
+                playerObject.transform.position = upPlace.transform.position;
+                player.position = Player.Position.up;
+            }
+            else if (player.position == Player.Position.up)
+            {
+                playerObject.transform.position = leftPlace.transform.position;
+                player.position = Player.Position.left;
+            }
+            else if (player.position == Player.Position.left)
+            {
+                playerObject.transform.position = downPlace.transform.position;
+                player.position = Player.Position.down;
+            }
+            else if (player.position == Player.Position.down)
+            {
+                playerObject.transform.position = rightPlace.transform.position;
+                player.position = Player.Position.right;
+            }
+            else
+            {
+                Debug.LogWarning("Unsupported player position!");
+            }
+
+            if (i % 2 != 0)
+            {
+                playerObject.transform.rotation = Quaternion.Euler(0, 0, 90);
+            }
+        }
+    }
+
+
+    public void UpdateCardVisibility()
+    {
+        int currentPlayerIndex = 0;
+
+        for (int i = 0; i < players.Count; i++)
+        {
+            GameObject playerObject = players[currentPlayerIndex].gameObject;
+            Player player = players[currentPlayerIndex];
+
+            if (player.position == Player.Position.down)
+            {
+                foreach (Transform cardTransform in playerObject.transform)
+                {
+                    Card card = cardTransform.GetComponent<Card>();
+                    if (card != null)
+                    {
+                        card.SetVisible(true);
+                    }
+                }
+            }
+            else
+            {
+
+                foreach (Transform cardTransform in playerObject.transform)
+                {
+                    Card card = cardTransform.GetComponent<Card>();
+                    if (card != null)
+                    {
+                        card.SetVisible(false);
+                    }
+                }
+            }
+
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
+        }
+    }
+
+
 }

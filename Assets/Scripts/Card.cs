@@ -27,38 +27,6 @@ public class Card : MonoBehaviour
         visible = false;
     }
 
-    public Card(Suit cardSuit, Rank cardRank)
-    {
-        suit = cardSuit;
-        rank = cardRank;
-
-        switch (rank)
-        {
-            case Rank.Ace:
-                value = 11;
-                break;
-            case Rank.Ten:
-                value = 10;
-                break;
-            case Rank.King:
-                value = 4;
-                break;
-            case Rank.Queen:
-                value = 3;
-                break;
-            case Rank.Jack:
-                value = 2;
-                break;
-            case Rank.Nine:
-                value = 0;
-                break;
-            default:
-                value = 0;
-                break;
-        }
-
-    }
-
     public void SetVisible(bool visible)
     {
         if (visible)

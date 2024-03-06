@@ -4,19 +4,14 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public enum Position { down, right, up, left };
+    public Position position;
     private string playerName;
-    private List<Card> hand;
+    public List<Card> hand;
     private int score;
-    private int team;
+    public int team;
     private bool hasPassed = false;
-
-    public Player(string name, int team)
-    {
-        playerName = name;
-        hand = new List<Card>();
-        score = 0;
-        this.team = team;
-    }
+    public int playerNumber;
 
     public int GetCardsInHand()
     {

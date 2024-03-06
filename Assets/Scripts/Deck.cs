@@ -6,25 +6,7 @@ public class Deck : MonoBehaviour
 {
     public List<Card> cards;
 
-    public Deck()
-    {
-        cards = new List<Card>();
-    }
-
-    private void InitializeDeck()
-    {
-        foreach (Card.Suit suit in System.Enum.GetValues(typeof(Card.Suit)))
-        {
-            foreach (Card.Rank rank in System.Enum.GetValues(typeof(Card.Rank)))
-            {
-                Card newCard = new Card(suit, rank);
-                //Card newCard = InitializeCard(suit, rank);
-                cards.Add(newCard);
-            }
-        }
-    }
-
-    private void Shuffle()
+    public void Shuffle()
     {
         for (int i = 0; i < cards.Count; i++)
         {
@@ -48,12 +30,6 @@ public class Deck : MonoBehaviour
             Debug.LogError("Deck is empty!");
             return null;
         }
-    }
-
-    public void InitializeAndShuffle()
-    {
-        InitializeDeck();
-        Shuffle();
     }
 }
 
