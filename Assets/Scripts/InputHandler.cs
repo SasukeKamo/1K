@@ -19,9 +19,9 @@ public class InputHandler : MonoBehaviour
             if (clickedCard != null && clickedCard.visible)
             {
                 Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
+                Debug.Log("Current Player: " + current.playerNumber);
                 PlayCard(clickedCard, current);
                 GameManager.Instance.MovePlayersToPositions(current.playerNumber);
-                Debug.LogError(current.playerNumber);
                 GameManager.Instance.UpdateCardVisibility();
             }
         }
@@ -38,7 +38,7 @@ public class InputHandler : MonoBehaviour
         }
         else
         {
-            Debug.Log("Cannot add card already in the trick area.");
+            Debug.LogWarning("Cannot add card already in the trick area.");
         }
     }
 }
