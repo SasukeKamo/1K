@@ -291,44 +291,40 @@ public class GameManager : MonoBehaviour
     }
 
     public void MovePlayersToPositions(int pNumber)
+{
+    for (int i = 0; i < players.Count; i++)
     {
-        for (int i = 0; i < players.Count; i++)
+        GameObject playerObject = players[i].gameObject;
+        Player player = players[i];
+
+        if (player.position == Player.Position.right)
         {
-            GameObject playerObject = players[i].gameObject;
-            Player player = players[i];
-
-            // Przesuniêcie gracza na kolejn¹ pozycjê
-            if (player.position == Player.Position.right)
-            {
-                playerObject.transform.position = upPlace.transform.position;
-                player.position = Player.Position.up;
-            }
-            else if (player.position == Player.Position.up)
-            {
-                playerObject.transform.position = leftPlace.transform.position;
-                player.position = Player.Position.left;
-            }
-            else if (player.position == Player.Position.left)
-            {
-                playerObject.transform.position = downPlace.transform.position;
-                player.position = Player.Position.down;
-            }
-            else if (player.position == Player.Position.down)
-            {
-                playerObject.transform.position = rightPlace.transform.position;
-                player.position = Player.Position.right;
-            }
-            else
-            {
-                Debug.LogWarning("Unsupported player position!");
-            }
-
-            if (i % 2 != 0)
-            {
-                playerObject.transform.rotation = Quaternion.Euler(0, 0, 90);
-            }
+            playerObject.transform.position = upPlace.transform.position;
+            player.position = Player.Position.up;
         }
+        else if (player.position == Player.Position.up)
+        {
+            playerObject.transform.position = leftPlace.transform.position;
+            player.position = Player.Position.left;
+        }
+        else if (player.position == Player.Position.left)
+        {
+            playerObject.transform.position = downPlace.transform.position;
+            player.position = Player.Position.down;
+        }
+        else if (player.position == Player.Position.down)
+        {
+            playerObject.transform.position = rightPlace.transform.position;
+            player.position = Player.Position.right;
+        }
+        else
+        {
+            Debug.LogWarning("Unsupported player position!");
+        }
+        playerObject.transform.Rotate(0, 0, 90);
     }
+}
+
 
 
     public void UpdateCardVisibility()
