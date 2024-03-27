@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,6 +12,7 @@ public class Player : MonoBehaviour
     private int score;
     public int team;
     private bool hasPassed = false;
+    private bool hasBidded = false;
     public int playerNumber;
 
     public int GetCardsInHand()
@@ -29,18 +31,11 @@ public class Player : MonoBehaviour
         // TBD
     }
 
-    public bool HasPassed()
-    {
-        return hasPassed;
-    }
+    public void SetPassed(bool passed) { hasPassed = passed; }
+    public bool HasPassed() { return hasPassed; }
 
-    public bool IsBidding(int bid)
-    {
-        // Czy gracz licytuje wartosc int bid? -> gracz klika w okienko: "tak" lub "nie"
-        bool decision = true; // pobierz wartosc 
-        if (!decision) hasPassed = true;
-        return decision;
-    }
+    public void SetBidded(bool bidded) { hasBidded = bidded; }
+    public bool HasBidded() { return hasBidded; }
 
     public void AddCardToHand(Card card)
     {
@@ -90,6 +85,13 @@ public class Player : MonoBehaviour
     public int GetTeam()
     {
         return team;
+    }
+
+    public Position GetNextPosition(Position position)
+    {
+        Position[] arr = (Position[])Enum.GetValues(position.GetType());
+        int j = Array.IndexOf(arr, position) + 1;
+        return (arr.Length == j) ? arr[0] : arr[j];
     }
 
 }

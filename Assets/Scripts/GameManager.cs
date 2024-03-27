@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -39,16 +41,19 @@ public class GameManager : MonoBehaviour
     private List<int> teamScore; // teamScore[0]: team1, teamScore[1]: team2 etc.
     const int targetScore = 1000;
     private int currentBid;
-    private Player currentBidder;
+    private Player currentBidder; // Player who is winning the auction at the moment
+    private Player currentPlayer; // Player who is making any move at the moment
     [SerializeField] private GameObject t;
     [SerializeField] private GameObject downPlace;
     [SerializeField] private GameObject leftPlace;
     [SerializeField] private GameObject upPlace;
     [SerializeField] private GameObject rightPlace;
+    [SerializeField] private GameObject auctionDialog;
 
     void Start()
     {
         InitializeGame();
+        StartRound();
     }
 
     void InitializeGame()
@@ -108,45 +113,97 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void DisplayAuctionDialog()
+    {
+        auctionDialog.SetActive(true);
+
+        GameObject text = GameObject.Find("CurrentBidText");
+
+        TextMeshProUGUI currentBidText = GameObject.Find("CurrentBidText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI currentWinnerText = GameObject.Find("CurrentWinnerText").GetComponent<TextMeshProUGUI>();
+
+        currentBidText.text = "CURRENT BID: " + currentBid;
+        currentWinnerText.text = "CURRENT WINNER: " + currentBidder.name;
+    }
+
+    public void PositiveAuctionDialog()
+    {
+        currentBid += 10;
+        currentBidder = currentPlayer;
+        auctionDialog.SetActive(false);
+
+        //_instance.GetComponent<RunLog>().logText("<"+currentBidder.GetPlayerName() + "> has bidded " + currentBid + ".", Color.white);
+        _instance.GetComponent<RunLog>().logText("<"+currentBidder.name + "> has bidded " + currentBid + ".", Color.white);
+
+        do
+        {
+            currentPlayer = GetNextPlayer(currentPlayer);
+            MovePlayersToNextPositions(1);
+
+        } while (currentPlayer.HasPassed());
+        UpdateCardVisibility();
+
+        DisplayAuctionDialog();
+    }
+    public void NegativeAuctionDialog()
+    {
+        auctionDialog.SetActive(false);
+
+        currentPlayer.SetPassed(true);
+
+        int passed = 0;
+
+        foreach(Player player in players)
+        {
+            if (player.HasPassed())
+                passed++;
+        }
+
+        if(passed >= 3) //Wygrana jednego gracza -> oddanie kart innym graczom
+        {
+            //Debug.Log(currentBidder.GetPlayerName() + " wins the auction with a bid of " + currentBid + " points.");
+            Debug.Log(currentBidder.name + " wins the auction with a bid of " + currentBid + " points.");
+
+            for (int i = 0; i < 4; i++)
+            {
+                Card drawnCard = mainDeck.DrawCard();
+                currentBidder.AddCardToHand(drawnCard);
+            }
+
+            MovePlayerToPosition(currentBidder, Player.Position.down, true);
+            UpdateCardVisibility();
+
+            DealCardsToOtherPlayers();
+        }
+        else //Nie wszyscy spasowali -> dilog dla nastêpnego gracza
+        {
+            do
+            {
+                currentPlayer = GetNextPlayer(currentPlayer);
+                MovePlayersToNextPositions(1);
+
+            } while (currentPlayer.HasPassed());
+            UpdateCardVisibility();
+
+            DisplayAuctionDialog();
+        }
+    }
 
     void Auction()
     {
-        int playersRemainingInAuction = players.Count;
         currentBid = 100;
 
-        while (playersRemainingInAuction > 1)
-        {
-            foreach (Player player in players)
-            {
-                if (!player.HasPassed())
-                {
-                    if (player.IsBidding(currentBid + 10))
-                    {
-                        currentBidder = player;
-                        currentBid += 10;
-                        Debug.Log(player.GetPlayerName() + " bids " + currentBid + " points.");
-                    }
-                    else
-                    {
-                        playersRemainingInAuction--;
-                        Debug.Log(player.GetPlayerName() + " passes.");
-                    }
-                }
-                else
-                {
-                    Debug.Log(player.GetPlayerName() + " has already passed.");
-                }
-            }
-        }
+        currentPlayer = players[0];     // TODO: Gracz rozpoczynaj¹cy dan¹ turê
+        currentBidder = currentPlayer;
+        currentPlayer = GetNextPlayer(currentPlayer);
 
-        Debug.Log(currentBidder.GetPlayerName() + " wins the auction with a bid of " + currentBid + " points.");
+        MovePlayersToNextPositions(1);
+        UpdateCardVisibility();
 
-        for (int i = 0; i < 4; i++)
-        {
-            Card drawnCard = mainDeck.DrawCard();
-            currentBidder.AddCardToHand(drawnCard);
-        }
+        DisplayAuctionDialog();
     }
+
+
 
     private Player GetNextPlayer(Player currentPlayer)
     {
@@ -156,6 +213,19 @@ public class GameManager : MonoBehaviour
         {
             int nextIndex = (currentIndex + 1) % players.Count;
             return players[nextIndex];
+        }
+
+        return null;
+    }
+
+    private Player GetPreviousPlayer(Player currentPlayer)
+    {
+        int currentIndex = players.IndexOf(currentPlayer);
+
+        if (currentIndex != -1)
+        {
+            int prevIndex = (currentIndex + players.Count - 1) % players.Count;
+            return players[prevIndex];
         }
 
         return null;
@@ -290,7 +360,7 @@ public class GameManager : MonoBehaviour
         return null;
     }
 
-    public void MovePlayersToPositions(int pNumber)
+    public void MovePlayersToNextPositions(int pNumber)
     {
         for (int i = 0; i < players.Count; i++)
         {
@@ -327,6 +397,49 @@ public class GameManager : MonoBehaviour
             {
                 playerObject.transform.rotation = Quaternion.Euler(0, 0, 90);
             }
+        }
+    }
+
+    public void MovePlayerToPosition(Player playerPivot, Player.Position positionPivot, bool moveOtherPlayers = true)
+    {
+        int p = 1;
+        if (moveOtherPlayers) p = players.Count;
+
+        Player player = playerPivot;
+        Player.Position position = positionPivot;
+
+        for (int i = 0; i < p; i++)
+        {
+            if (position == Player.Position.right)
+            {
+                player.gameObject.transform.position = rightPlace.transform.position;
+                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 90);
+            }
+            else if (position == Player.Position.up)
+            {
+                player.gameObject.transform.position = upPlace.transform.position;
+                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 180);
+            }
+            else if (position == Player.Position.left)
+            {
+                player.gameObject.transform.position = leftPlace.transform.position;
+                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 270);
+            }
+            else if (position == Player.Position.down)
+            {
+                player.gameObject.transform.position = downPlace.transform.position;
+                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 0);
+            }
+            else
+            {
+                Debug.LogWarning("Unsupported player position!");
+                return;
+            }
+
+            player.position = position;
+
+            position = player.GetNextPosition(player.position);
+            player = GetNextPlayer(player);
         }
     }
 
