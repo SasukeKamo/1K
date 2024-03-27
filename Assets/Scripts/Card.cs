@@ -31,17 +31,13 @@ public class Card : MonoBehaviour
     {
         if (visible)
         {
-            //spriteRenderer = this.GetComponent<SpriteRenderer>();
-            //spriteRenderer = GameObject.Find("Card_" + this.GetSuit() + "_" + this.GetRank()).GetComponent<SpriteRenderer>();
             this.visible = true;
             spriteRenderer.sprite = front;
         }
         else
         {
-            //spriteRenderer = GameObject.Find("Card_" + this.GetSuit() + "_" + this.GetRank()).GetComponent<SpriteRenderer>();
             this.visible = false;
             spriteRenderer.sprite = back;
-            //spriteR = gameObject.GetComponent<SpriteRenderer>();
         }
     }
 
