@@ -20,7 +20,7 @@ public class InputHandler : MonoBehaviour
             {
                 Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
                 PlayCard(clickedCard, current);
-                GameManager.Instance.MovePlayersToNextPositions(current.playerNumber);
+                GameManager.Instance.MovePlayersToNextPositions();
                 Debug.LogError(current.playerNumber);
                 GameManager.Instance.UpdateCardVisibility();
             }

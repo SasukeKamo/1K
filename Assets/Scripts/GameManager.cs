@@ -138,7 +138,7 @@ public class GameManager : MonoBehaviour
         do
         {
             currentPlayer = GetNextPlayer(currentPlayer);
-            MovePlayersToNextPositions(1);
+            MovePlayersToNextPositions();
 
         } while (currentPlayer.HasPassed());
         UpdateCardVisibility();
@@ -180,7 +180,7 @@ public class GameManager : MonoBehaviour
             do
             {
                 currentPlayer = GetNextPlayer(currentPlayer);
-                MovePlayersToNextPositions(1);
+                MovePlayersToNextPositions();
 
             } while (currentPlayer.HasPassed());
             UpdateCardVisibility();
@@ -197,7 +197,7 @@ public class GameManager : MonoBehaviour
         currentBidder = currentPlayer;
         currentPlayer = GetNextPlayer(currentPlayer);
 
-        MovePlayersToNextPositions(1);
+        MovePlayersToNextPositions();
         UpdateCardVisibility();
 
         DisplayAuctionDialog();
@@ -360,7 +360,7 @@ public class GameManager : MonoBehaviour
         return null;
     }
 
-    public void MovePlayersToNextPositions(int pNumber)
+    public void MovePlayersToNextPositions()
     {
         for (int i = 0; i < players.Count; i++)
         {
@@ -393,10 +393,7 @@ public class GameManager : MonoBehaviour
                 Debug.LogWarning("Unsupported player position!");
             }
 
-            if (i % 2 != 0)
-            {
-                playerObject.transform.rotation = Quaternion.Euler(0, 0, 90);
-            }
+            playerObject.transform.rotation = Quaternion.Euler(0, 0, (playerObject.transform.rotation.eulerAngles.z+90)%180);
         }
     }
 
@@ -418,17 +415,17 @@ public class GameManager : MonoBehaviour
             else if (position == Player.Position.up)
             {
                 player.gameObject.transform.position = upPlace.transform.position;
-                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 180);
+                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 90);
             }
             else if (position == Player.Position.left)
             {
                 player.gameObject.transform.position = leftPlace.transform.position;
-                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 270);
+                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 90);
             }
             else if (position == Player.Position.down)
             {
                 player.gameObject.transform.position = downPlace.transform.position;
-                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 0);
+                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 90);
             }
             else
             {
