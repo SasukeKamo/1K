@@ -25,6 +25,28 @@ public class Card : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = front;
         visible = false;
+
+        switch(rank)
+        {
+            case Rank.Nine:
+                value = 0;
+                break;
+            case Rank.Ten:
+                value = 10;
+                break;
+            case Rank.Jack:
+                value = 2;
+                break;
+            case Rank.Queen:
+                value = 3;
+                break;
+            case Rank.King:
+                value = 4;
+                break;
+            case Rank.Ace:
+                value = 11;
+                break;
+        }
     }
 
     public void SetVisible(bool visible)

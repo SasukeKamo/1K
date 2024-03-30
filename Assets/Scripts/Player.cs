@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class Player : MonoBehaviour
 {
@@ -9,11 +10,18 @@ public class Player : MonoBehaviour
     public Position position;
     private string playerName;
     public List<Card> hand;
-    private int score;
+    private int score = 0;
+    private TextMeshProUGUI scoreText;
     public int team;
     private bool hasPassed = false;
     private bool hasBidded = false;
     public int playerNumber;
+
+    void Awake()
+    {
+        scoreText = GameObject.Find("ScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
+        scoreText.text = score.ToString();
+    }
 
     public int GetCardsInHand()
     {
@@ -61,6 +69,7 @@ public class Player : MonoBehaviour
     public void AddScore(int points)
     {
         score += points;
+        scoreText.text = score.ToString();
     }
 
     private void TransferCardToPlayer(Card card, Player otherPlayer)

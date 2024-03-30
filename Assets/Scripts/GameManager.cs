@@ -43,6 +43,8 @@ public class GameManager : MonoBehaviour
     private int currentBid;
     private Player currentBidder; // Player who is winning the auction at the moment
     private Player currentPlayer; // Player who is making any move at the moment
+    private bool played;
+    private Card playedCard;
     [SerializeField] private GameObject t;
     [SerializeField] private GameObject downPlace;
     [SerializeField] private GameObject leftPlace;
@@ -243,10 +245,17 @@ public class GameManager : MonoBehaviour
 
     private bool UpdateTrickWinner(List<Card> cards)
     {
-        int lastCard = cards.Count - 2;
+        int lastCard = cards.Count - 1;
+        int max = 0;
         for (int i = 0; i < cards.Count - 1; i++)
         {
-            if (cards[0].GetSuit() == cards[lastCard].GetSuit() && cards[0].GetValue() < cards[lastCard].GetValue())
+            if (cards[i].GetValue() > max && cards[0].GetSuit() == cards[i].GetSuit())
+                max = cards[i].GetValue();
+        }
+
+        for (int i = 0; i < cards.Count - 1; i++)
+        {
+            if (cards[0].GetSuit() == cards[lastCard].GetSuit() && max < cards[lastCard].GetValue())
             {
                 return true;
             }
@@ -254,7 +263,7 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
-    private void Gameplay()
+    private IEnumerator Gameplay()
     {
         Player currentPlayer = currentBidder;
         Player trickWinner = currentBidder;
@@ -266,8 +275,10 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < players.Count; j++)
             {
+                Debug.Log("Current player: " + currentPlayer.playerNumber);
                 // TODO: marriage / meldunek
-                Card playedCard = currentPlayer.MakeMove(currentTrick);
+                yield return new WaitUntil(() => played);
+                played = false;
                 currentTrick.Add(playedCard);
                 if (UpdateTrickWinner(currentTrick))
                 {
@@ -277,8 +288,17 @@ public class GameManager : MonoBehaviour
             }
             UpdatePlayerScore(currentTrick, trickWinner);
             currentTrick.Clear();
+            int playerNum = currentPlayer.playerNumber;
             currentPlayer = trickWinner;
+            MovePlayerToPosition(trickWinner, Player.Position.down);
+            UpdateCardVisibility();
         }
+    }
+
+    public void Play(Card card)
+    {
+        playedCard = card;
+        played = true;
     }
 
     void DealCardsToOtherPlayers()
@@ -299,7 +319,7 @@ public class GameManager : MonoBehaviour
 
         Auction();
         DealCardsToOtherPlayers();
-        Gameplay();
+        StartCoroutine(Gameplay());
     }
 
     void EndRound()
@@ -317,6 +337,10 @@ public class GameManager : MonoBehaviour
 
     void CalculateRoundScores()
     {
+        if(currentBidder.GetScore() < currentBid)
+        {
+            currentBidder.AddScore(-currentBid);
+        }
         foreach (Player player in players)
         {
             if (player.GetTeam() == 1)
@@ -370,23 +394,23 @@ public class GameManager : MonoBehaviour
             // Przesuniêcie gracza na kolejn¹ pozycjê
             if (player.position == Player.Position.right)
             {
-                playerObject.transform.position = upPlace.transform.position;
-                player.position = Player.Position.up;
-            }
-            else if (player.position == Player.Position.up)
-            {
-                playerObject.transform.position = leftPlace.transform.position;
-                player.position = Player.Position.left;
-            }
-            else if (player.position == Player.Position.left)
-            {
                 playerObject.transform.position = downPlace.transform.position;
                 player.position = Player.Position.down;
             }
-            else if (player.position == Player.Position.down)
+            else if (player.position == Player.Position.up)
             {
                 playerObject.transform.position = rightPlace.transform.position;
                 player.position = Player.Position.right;
+            }
+            else if (player.position == Player.Position.left)
+            {
+                playerObject.transform.position = upPlace.transform.position;
+                player.position = Player.Position.up;
+            }
+            else if (player.position == Player.Position.down)
+            {
+                playerObject.transform.position = leftPlace.transform.position;
+                player.position = Player.Position.left;
             }
             else
             {
