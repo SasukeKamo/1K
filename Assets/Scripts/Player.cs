@@ -50,10 +50,16 @@ public class Player : MonoBehaviour
         hand.Add(card);
     }
 
-    private void RemoveCardFromHand(Card card)
+    public void RemoveCardFromHand(Card card)
     {
         AudioManager.Instance.PlayPlayCardSound();
-        hand.Remove(card);
+        if (hand.Contains(card)){
+            hand.Remove(card);
+        }
+        else
+        {
+            Debug.LogWarning("Player doesn't have this card");
+        }
     }
 
     public void ClearHand()

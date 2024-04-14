@@ -66,23 +66,6 @@ public class GameManager : MonoBehaviour
         roundNumber = 1;
     }
 
-    /*void InitializePlayers()
-    {
-        players = new List<Player>();
-
-        //do dostosowania w zaleznosci od trybu gry (teraz jest druzynowa)
-
-        Player player1 = new Player("Player 1", 1);
-        Player player2 = new Player("Player 2", 1);
-        Player player3 = new Player("Player 3", 2);
-        Player player4 = new Player("Player 4", 2);
-
-        players.Add(player1);
-        players.Add(player2);
-        players.Add(player3);
-        players.Add(player4);
-    }*/
-
     void DealInitialCards()
     {
         int initialCardCount = 5;
@@ -169,15 +152,18 @@ public class GameManager : MonoBehaviour
             for (int i = 0; i < 4; i++)
             {
                 Card drawnCard = mainDeck.DrawCard();
-                currentBidder.AddCardToHand(drawnCard);
+
+                // UNCOMMENT BELOW WHEN CARDS DEALING TO OTHERS IMPLEMENTED
+                //currentBidder.AddCardToHand(drawnCard);
             }
 
             MovePlayerToPosition(currentBidder, Player.Position.down, true);
             UpdateCardVisibility();
 
-            DealCardsToOtherPlayers();
+            // UNCOMMENT BELOW WHEN CARDS DEALING TO OTHERS IMPLEMENTED
+            //DealCardsToOtherPlayers();
         }
-        else //Nie wszyscy spasowali -> dilog dla nastêpnego gracza
+        else //Nie wszyscy spasowali -> dilog dla nastï¿½pnego gracza
         {
             do
             {
@@ -195,7 +181,7 @@ public class GameManager : MonoBehaviour
     {
         currentBid = 100;
 
-        currentPlayer = players[0];     // TODO: Gracz rozpoczynaj¹cy dan¹ turê
+        currentPlayer = players[0];     // TODO: Gracz rozpoczynajï¿½cy danï¿½ turï¿½
         currentBidder = currentPlayer;
         currentPlayer = GetNextPlayer(currentPlayer);
 
@@ -214,6 +200,7 @@ public class GameManager : MonoBehaviour
         if (currentIndex != -1)
         {
             int nextIndex = (currentIndex + 1) % players.Count;
+            this.currentPlayer = currentPlayer;
             return players[nextIndex];
         }
 
@@ -384,6 +371,16 @@ public class GameManager : MonoBehaviour
         return null;
     }
 
+    public List<Card> GetPlayerHand(Player current) {
+        List<Card> hand = null;
+        foreach (Player player in GameManager.Instance.players) {
+            if (player == current){
+                return player.hand;
+            }
+        }
+        return hand;
+    }
+
     public void MovePlayersToNextPositions()
     {
         for (int i = 0; i < players.Count; i++)
@@ -391,7 +388,7 @@ public class GameManager : MonoBehaviour
             GameObject playerObject = players[i].gameObject;
             Player player = players[i];
 
-            // Przesuniêcie gracza na kolejn¹ pozycjê
+            // Przesuniï¿½cie gracza na kolejnï¿½ pozycjï¿½
             if (player.position == Player.Position.right)
             {
                 playerObject.transform.position = downPlace.transform.position;
