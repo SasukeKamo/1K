@@ -227,7 +227,7 @@ public class GameManager : MonoBehaviour
         {
             value += trick[i].GetValue();
         }
-        winner.AddScore(value);
+        winner.AddRoundScore(value);
     }
 
     private bool UpdateTrickWinner(List<Card> cards)
@@ -326,17 +326,35 @@ public class GameManager : MonoBehaviour
     {
         if(currentBidder.GetScore() < currentBid)
         {
-            currentBidder.AddScore(-currentBid);
+            currentBidder.SetRoundScore(-currentBid);
+        }
+        else
+        {
+            currentBidder.SetRoundScore(currentBid);
         }
         foreach (Player player in players)
         {
             if (player.GetTeam() == 1)
             {
-                teamScore[0] += player.GetScore();
+                teamScore[0] += player.GetRoundScore();
             }
             else
             {
-                teamScore[1] += player.GetScore();
+                teamScore[1] += player.GetRoundScore();
+            }
+            player.SetRoundScore(0);
+            player.ClearHand();
+        }
+
+        foreach (Player player in players)
+        {
+            if (player.GetTeam() == 1)
+            {
+                player.SetScore(teamScore[0]);
+            }
+            else
+            {
+                player.SetScore(teamScore[1]);
             }
             player.ClearHand();
         }

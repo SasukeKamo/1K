@@ -11,7 +11,9 @@ public class Player : MonoBehaviour
     private string playerName;
     public List<Card> hand;
     private int score = 0;
+    private int roundScore = 0;
     private TextMeshProUGUI scoreText;
+    private TextMeshProUGUI roundScoreText;
     public int team;
     private bool hasPassed = false;
     private bool hasBidded = false;
@@ -21,6 +23,9 @@ public class Player : MonoBehaviour
     {
         scoreText = GameObject.Find("ScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
         scoreText.text = score.ToString();
+
+        roundScoreText = GameObject.Find("RoundScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
+        roundScoreText.text = roundScore.ToString();
     }
 
     public int GetCardsInHand()
@@ -72,10 +77,31 @@ public class Player : MonoBehaviour
         return score;
     }
 
+    public void SetScore(int score)
+    {
+        this.score = score;
+    }
+
     public void AddScore(int points)
     {
         score += points;
         scoreText.text = score.ToString();
+    }
+
+    public int GetRoundScore()
+    {
+        return roundScore;
+    }
+
+    public void SetRoundScore(int score)
+    {
+        roundScore = score;
+    }
+
+    public void AddRoundScore(int points)
+    {
+        roundScore += points;
+        roundScoreText.text = roundScore.ToString();
     }
 
     private void TransferCardToPlayer(Card card, Player otherPlayer)
