@@ -117,7 +117,6 @@ public class GameManager : MonoBehaviour
         currentBidder = currentPlayer;
         auctionDialog.SetActive(false);
 
-        //_instance.GetComponent<RunLog>().logText("<"+currentBidder.GetPlayerName() + "> has bidded " + currentBid + ".", Color.white);
         _instance.GetComponent<RunLog>().logText("<"+currentBidder.name + "> has bidded " + currentBid + ".", Color.white);
 
         do
@@ -128,10 +127,14 @@ public class GameManager : MonoBehaviour
         } while (currentPlayer.HasPassed());
         UpdateCardVisibility();
 
+        Debug.LogWarning("Current player: " + currentPlayer.playerNumber);
+
         DisplayAuctionDialog();
     }
     public void NegativeAuctionDialog()
     {
+        Debug.LogError("PASS");
+
         auctionDialog.SetActive(false);
 
         currentPlayer.SetPassed(true);
@@ -144,9 +147,8 @@ public class GameManager : MonoBehaviour
                 passed++;
         }
 
-        if(passed >= 3) //Wygrana jednego gracza -> oddanie kart innym graczom
+        if (passed >= 3) //Wygrana jednego gracza -> oddanie kart innym graczom
         {
-            //Debug.Log(currentBidder.GetPlayerName() + " wins the auction with a bid of " + currentBid + " points.");
             Debug.Log(currentBidder.name + " wins the auction with a bid of " + currentBid + " points.");
 
             for (int i = 0; i < 4; i++)
@@ -200,7 +202,6 @@ public class GameManager : MonoBehaviour
         if (currentIndex != -1)
         {
             int nextIndex = (currentIndex + 1) % players.Count;
-            this.currentPlayer = currentPlayer;
             return players[nextIndex];
         }
 
@@ -277,7 +278,7 @@ public class GameManager : MonoBehaviour
             currentTrick.Clear();
             int playerNum = currentPlayer.playerNumber;
             currentPlayer = trickWinner;
-            MovePlayerToPosition(trickWinner, Player.Position.down);
+            MovePlayerToPosition(trickWinner, Player.Position.down, true);
             UpdateCardVisibility();
         }
     }
@@ -406,33 +407,27 @@ public class GameManager : MonoBehaviour
             GameObject playerObject = players[i].gameObject;
             Player player = players[i];
 
-            // Przesuni�cie gracza na kolejn� pozycj�
+            // Przesuniecie gracza na kolejna pozycje
             if (player.position == Player.Position.right)
             {
-                playerObject.transform.position = downPlace.transform.position;
-                player.position = Player.Position.down;
+                MovePlayerToPosition(player, Player.Position.up, false);
             }
             else if (player.position == Player.Position.up)
             {
-                playerObject.transform.position = rightPlace.transform.position;
-                player.position = Player.Position.right;
+                MovePlayerToPosition(player, Player.Position.left, false);
             }
             else if (player.position == Player.Position.left)
             {
-                playerObject.transform.position = upPlace.transform.position;
-                player.position = Player.Position.up;
+                MovePlayerToPosition(player, Player.Position.down, false);
             }
             else if (player.position == Player.Position.down)
             {
-                playerObject.transform.position = leftPlace.transform.position;
-                player.position = Player.Position.left;
+                MovePlayerToPosition(player, Player.Position.right, false);
             }
             else
             {
                 Debug.LogWarning("Unsupported player position!");
             }
-
-            playerObject.transform.rotation = Quaternion.Euler(0, 0, (playerObject.transform.rotation.eulerAngles.z+90)%180);
         }
     }
 
@@ -446,31 +441,31 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < p; i++)
         {
+
             if (position == Player.Position.right)
             {
-                player.gameObject.transform.position = rightPlace.transform.position;
-                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 90);
+                player.gameObject.transform.SetParent(rightPlace.transform);
             }
             else if (position == Player.Position.up)
             {
-                player.gameObject.transform.position = upPlace.transform.position;
-                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 90);
+                player.gameObject.transform.SetParent(upPlace.transform);
             }
             else if (position == Player.Position.left)
             {
-                player.gameObject.transform.position = leftPlace.transform.position;
-                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 90);
+                player.gameObject.transform.SetParent(leftPlace.transform);
             }
             else if (position == Player.Position.down)
             {
-                player.gameObject.transform.position = downPlace.transform.position;
-                player.gameObject.transform.eulerAngles = new Vector3(0, 0, 90);
+                player.gameObject.transform.SetParent(downPlace.transform);
             }
             else
             {
                 Debug.LogWarning("Unsupported player position!");
                 return;
             }
+
+            player.gameObject.transform.localPosition = Vector3.zero;
+            player.gameObject.transform.localRotation = Quaternion.identity;
 
             player.position = position;
 
