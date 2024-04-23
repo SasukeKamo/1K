@@ -8,7 +8,10 @@ public class Player : MonoBehaviour
 {
     public enum Position { down, right, up, left };
     public Position position;
-    private string playerName;
+
+    [SerializeField] 
+    public string playerName;
+
     public List<Card> hand;
     private int score = 0;
     private int roundScore = 0;
