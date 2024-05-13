@@ -37,20 +37,24 @@ public class GameManager : MonoBehaviour
 
     public List<Player> players;
     public Deck mainDeck;
+    public Deck otherCards;
     private int roundNumber;
     private List<int> teamScore; // teamScore[0]: team1, teamScore[1]: team2 etc.
     const int targetScore = 1000;
     private int currentBid;
     private Player currentBidder; // Player who is winning the auction at the moment
-    private Player currentPlayer; // Player who is making any move at the moment
+    public Player currentPlayer; // Player who is making any move at the moment
     private bool played;
     private Card playedCard;
+    public bool isGivingStage = false;
     [SerializeField] private GameObject t;
     [SerializeField] private GameObject downPlace;
     [SerializeField] private GameObject leftPlace;
     [SerializeField] private GameObject upPlace;
     [SerializeField] private GameObject rightPlace;
     [SerializeField] private GameObject auctionDialog;
+    [SerializeField] private GameObject handOverDialog;
+    [SerializeField] private GameObject restOfTheDeck;
 
     void Start()
     {
@@ -95,6 +99,22 @@ public class GameManager : MonoBehaviour
                     go.GetComponent<Card>().SetVisible(false);
                 }
             }
+        }
+        SaveRestOfTheCards();
+    }
+
+    private void SaveRestOfTheCards()
+    {
+        int initialCardCount = 5;
+        for (int i = players.Count * initialCardCount; i < mainDeck.cards.Count; i++)
+        {
+            Card currentCard = mainDeck.cards[i];
+            otherCards.AddCard(currentCard);
+            string cardName = "Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank();
+
+            GameObject go = GameObject.Find(cardName);
+            go.transform.SetParent(restOfTheDeck.transform);
+            currentCard.SetVisible(true);
         }
     }
 
@@ -151,19 +171,20 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log(currentBidder.name + " wins the auction with a bid of " + currentBid + " points.");
 
-            for (int i = 0; i < 4; i++)
+
+/*            for (int i = 0; i < 4; i++)
             {
                 Card drawnCard = mainDeck.DrawCard();
 
                 // UNCOMMENT BELOW WHEN CARDS DEALING TO OTHERS IMPLEMENTED
                 //currentBidder.AddCardToHand(drawnCard);
-            }
+            }*/
 
             MovePlayerToPosition(currentBidder, Player.Position.down, true);
             UpdateCardVisibility();
 
             // UNCOMMENT BELOW WHEN CARDS DEALING TO OTHERS IMPLEMENTED
-            //DealCardsToOtherPlayers();
+            DealCardsToOtherPlayers();
         }
         else //Nie wszyscy spasowali -> dilog dla nast�pnego gracza
         {
@@ -195,7 +216,7 @@ public class GameManager : MonoBehaviour
 
 
 
-    private Player GetNextPlayer(Player currentPlayer)
+    public Player GetNextPlayer(Player currentPlayer)
     {
         int currentIndex = players.IndexOf(currentPlayer);
 
@@ -291,14 +312,15 @@ public class GameManager : MonoBehaviour
 
     void DealCardsToOtherPlayers()
     {
-        foreach (Player player in players)
-        {
-            if (currentBidder != player)
-            {
-                Debug.Log("Dealing card to player " + player.GetPlayerName());
-                // gracz wybiera karty z talii
-            }
-        }
+        handOverDialog.SetActive(true);
+        isGivingStage = true;
+        currentPlayer = GetNextPlayer(currentPlayer);
+    }
+
+    public void EndDealingStage()
+    {
+        isGivingStage = false;
+        handOverDialog.SetActive(false);
     }
 
     void StartRound()
@@ -306,7 +328,7 @@ public class GameManager : MonoBehaviour
         Debug.Log("Starting Round " + roundNumber);
 
         Auction();
-        DealCardsToOtherPlayers();
+//        DealCardsToOtherPlayers();
         StartCoroutine(Gameplay());
     }
 
