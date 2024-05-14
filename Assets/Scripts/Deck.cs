@@ -31,5 +31,10 @@ public class Deck : MonoBehaviour
             return null;
         }
     }
+
+    public void AddCard(Card card)
+    {
+        cards.Add(card);
+    }
 }
 

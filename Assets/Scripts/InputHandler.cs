@@ -7,6 +7,7 @@ public class InputHandler : MonoBehaviour
 {
     [SerializeField] private GameObject trick;
     private int sortingOrder = 1;
+    private int cardsToDeal = 3;
 
     private bool ValidateCardOK(Card clickedCard, List<Card> hand) {
         Card[] trickCards = trick.GetComponentsInChildren<Card>();
@@ -58,7 +59,27 @@ public class InputHandler : MonoBehaviour
         if (hit.collider != null)
         {
             Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
-            if (clickedCard != null && clickedCard.visible && clickedCard.transform.parent != trick.transform)
+            if (GameManager.Instance.isGivingStage)
+            {
+                GameManager.Instance.currentPlayer.AddCardToHand(clickedCard);
+                GameObject go = GameObject.Find(clickedCard.name);
+                go.transform.SetParent(GameManager.Instance.currentPlayer.transform);
+                clickedCard.SetVisible(false);
+                GameManager.Instance.otherCards.cards.Remove(clickedCard);
+                cardsToDeal--;
+                GameManager.Instance.currentPlayer = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentPlayer);
+                if (cardsToDeal == 0)
+                {
+                    clickedCard = GameManager.Instance.otherCards.cards[0];
+                    GameManager.Instance.currentPlayer.AddCardToHand(clickedCard);
+                    GameObject lastCard = GameObject.Find(clickedCard.name);
+                    lastCard.transform.SetParent(GameManager.Instance.currentPlayer.transform);
+                    GameManager.Instance.otherCards.cards.Remove(clickedCard);
+                    GameManager.Instance.EndDealingStage();
+                }
+
+            }
+            else if (clickedCard != null && clickedCard.visible && clickedCard.transform.parent != trick.transform)
             {
                 Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
                 List<Card> hand = GameManager.Instance.GetPlayerHand(current);
