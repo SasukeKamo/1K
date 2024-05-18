@@ -148,14 +148,10 @@ public class GameManager : MonoBehaviour
         } while (currentPlayer.HasPassed());
         UpdateCardVisibility();
 
-        Debug.LogWarning("Current player: " + currentPlayer.playerNumber);
-
         DisplayAuctionDialog();
     }
     public void NegativeAuctionDialog()
     {
-        Debug.LogError("PASS");
-
         auctionDialog.SetActive(false);
 
         currentPlayer.SetPassed(true);
@@ -187,8 +183,6 @@ public class GameManager : MonoBehaviour
             UpdateCardVisibility();
 
             // UNCOMMENT BELOW WHEN CARDS DEALING TO OTHERS IMPLEMENTED
-            Debug.Log("Stard Give Cards Dialog.");
-            Debug.Log("Current Player = " + currentPlayer.name);
             DealCardsToOtherPlayers();
         }
         else //Nie wszyscy spasowali -> dilog dla nast�pnego gracza
@@ -289,7 +283,6 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < players.Count; j++)
             {
-                Debug.Log("Current player: " + currentPlayer.playerNumber);
                 // TODO: marriage / meldunek
                 yield return new WaitUntil(() => played);
                 played = false;

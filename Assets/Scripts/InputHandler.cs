@@ -66,6 +66,7 @@ public class InputHandler : MonoBehaviour
                 GameObject go = GameObject.Find(clickedCard.name);
 
                 go.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
+                go.transform.localRotation = Quaternion.Euler(0, 0, 0);
 
                 clickedCard.SetVisible(GameManager.Instance.currentCardReceiver == GameManager.Instance.currentPlayer);
                 GameManager.Instance.otherCards.cards.Remove(clickedCard);

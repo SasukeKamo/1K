@@ -58,8 +58,6 @@ public class Player : MonoBehaviour
         hand.Add(card);
         //card.gameObject.transform.Rotate(0, 0, 90);
 
-        Debug.LogError("Hand Card Rotation = " + card.transform.rotation.eulerAngles.z);
-
         // Rotationg card to match hand rotation
         //Vector3 currentRotation = transform.eulerAngles;
         //currentRotation.z = 0;
