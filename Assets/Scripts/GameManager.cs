@@ -44,6 +44,7 @@ public class GameManager : MonoBehaviour
     private int currentBid;
     private Player currentBidder; // Player who is winning the auction at the moment
     public Player currentPlayer; // Player who is making any move at the moment
+    public Player currentCardReceiver;  // Player who is being given a card at the moment
     private bool played;
     private Card playedCard;
     public bool isGivingStage = false;
@@ -169,6 +170,8 @@ public class GameManager : MonoBehaviour
 
         if (passed >= 3) //Wygrana jednego gracza -> oddanie kart innym graczom
         {
+            currentPlayer = currentBidder;
+
             Debug.Log(currentBidder.name + " wins the auction with a bid of " + currentBid + " points.");
 
 
@@ -184,6 +187,8 @@ public class GameManager : MonoBehaviour
             UpdateCardVisibility();
 
             // UNCOMMENT BELOW WHEN CARDS DEALING TO OTHERS IMPLEMENTED
+            Debug.Log("Stard Give Cards Dialog.");
+            Debug.Log("Current Player = " + currentPlayer.name);
             DealCardsToOtherPlayers();
         }
         else //Nie wszyscy spasowali -> dilog dla nast�pnego gracza
@@ -314,7 +319,10 @@ public class GameManager : MonoBehaviour
     {
         handOverDialog.SetActive(true);
         isGivingStage = true;
-        currentPlayer = GetNextPlayer(currentPlayer);
+        currentCardReceiver = GetNextPlayer(currentPlayer);
+
+        TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+        currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
     }
 
     public void EndDealingStage()

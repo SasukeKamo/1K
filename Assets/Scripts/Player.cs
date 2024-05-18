@@ -6,7 +6,7 @@ using TMPro;
 
 public class Player : MonoBehaviour
 {
-    public enum Position { down, right, up, left };
+    public enum Position { down, left, up, right };
     public Position position;
 
     [SerializeField] 
@@ -56,6 +56,14 @@ public class Player : MonoBehaviour
     public void AddCardToHand(Card card)
     {
         hand.Add(card);
+        //card.gameObject.transform.Rotate(0, 0, 90);
+
+        Debug.LogError("Hand Card Rotation = " + card.transform.rotation.eulerAngles.z);
+
+        // Rotationg card to match hand rotation
+        //Vector3 currentRotation = transform.eulerAngles;
+        //currentRotation.z = 0;
+        //card.gameObject.transform.eulerAngles = currentRotation;
     }
 
     public void RemoveCardFromHand(Card card)

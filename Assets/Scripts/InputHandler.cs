@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,7 +8,7 @@ public class InputHandler : MonoBehaviour
 {
     [SerializeField] private GameObject trick;
     private int sortingOrder = 1;
-    private int cardsToDeal = 3;
+    private int cardsToDeal = 4;
 
     private bool ValidateCardOK(Card clickedCard, List<Card> hand) {
         Card[] trickCards = trick.GetComponentsInChildren<Card>();
@@ -61,20 +62,27 @@ public class InputHandler : MonoBehaviour
             Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
             if (GameManager.Instance.isGivingStage)
             {
-                GameManager.Instance.currentPlayer.AddCardToHand(clickedCard);
+                GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
                 GameObject go = GameObject.Find(clickedCard.name);
-                go.transform.SetParent(GameManager.Instance.currentPlayer.transform);
-                clickedCard.SetVisible(false);
+
+                go.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
+
+                clickedCard.SetVisible(GameManager.Instance.currentCardReceiver == GameManager.Instance.currentPlayer);
                 GameManager.Instance.otherCards.cards.Remove(clickedCard);
                 cardsToDeal--;
-                GameManager.Instance.currentPlayer = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentPlayer);
-                if (cardsToDeal == 0)
+                GameManager.Instance.currentCardReceiver = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentCardReceiver);
+
+                TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+                currentCardReceiverText.text = "Choose card for player: " + GameManager.Instance.currentCardReceiver.playerName;
+
+                if (cardsToDeal == 1)
                 {
                     clickedCard = GameManager.Instance.otherCards.cards[0];
-                    GameManager.Instance.currentPlayer.AddCardToHand(clickedCard);
+                    GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
                     GameObject lastCard = GameObject.Find(clickedCard.name);
-                    lastCard.transform.SetParent(GameManager.Instance.currentPlayer.transform);
+                    lastCard.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
                     GameManager.Instance.otherCards.cards.Remove(clickedCard);
+
                     GameManager.Instance.EndDealingStage();
                 }
 
