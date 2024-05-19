@@ -112,6 +112,8 @@ public class InputHandler : MonoBehaviour
             Debug.Log("Played card: " + card.gameObject.name);
             current.RemoveCardFromHand(card);
 
+            GameManager.Instance.runLog.logText("<" + current.playerName + "> played card " + card.GetCardFullName() + ".");
+
             // end of turn (4 cards on table)
             if (trick.transform.childCount == 4) {
                 Debug.Log("End of turn.");

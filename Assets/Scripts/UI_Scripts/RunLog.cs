@@ -16,9 +16,12 @@ public class RunLog : MonoBehaviour
     {
         logControl.LogText(text, color);
     }
-    
-    public void logText(string text, Color color)
+
+    public void logText(string text, Color color = default)
     {
+        if (color == default) 
+            color = Color.white;
+
         logControl.LogText(text, color);
     }
 }

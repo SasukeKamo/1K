@@ -48,6 +48,7 @@ public class GameManager : MonoBehaviour
     private bool played;
     private Card playedCard;
     public bool isGivingStage = false;
+    public RunLog runLog;
     [SerializeField] private GameObject t;
     [SerializeField] private GameObject downPlace;
     [SerializeField] private GameObject leftPlace;
@@ -59,6 +60,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        runLog = _instance.GetComponent<RunLog>();
         InitializeGame();
         StartRound();
     }
@@ -138,7 +140,7 @@ public class GameManager : MonoBehaviour
         currentBidder = currentPlayer;
         auctionDialog.SetActive(false);
 
-        _instance.GetComponent<RunLog>().logText("<"+currentBidder.name + "> has bidded " + currentBid + ".", Color.white);
+        runLog.logText("<"+currentBidder.playerName + "> has bidded " + currentBid + ".", Color.white);
 
         do
         {
@@ -155,6 +157,8 @@ public class GameManager : MonoBehaviour
         auctionDialog.SetActive(false);
 
         currentPlayer.SetPassed(true);
+
+        runLog.logText("<" + currentBidder.playerName + "> passed.", Color.yellow);
 
         int passed = 0;
 
@@ -207,7 +211,8 @@ public class GameManager : MonoBehaviour
         currentBidder = currentPlayer;
         currentPlayer = GetNextPlayer(currentPlayer);
 
-        MovePlayersToNextPositions();
+        //MovePlayersToNextPositions();
+        MovePlayerToPosition(currentPlayer, Player.Position.down);
         UpdateCardVisibility();
 
         DisplayAuctionDialog();
