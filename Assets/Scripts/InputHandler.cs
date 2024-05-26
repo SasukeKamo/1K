@@ -112,7 +112,7 @@ public class InputHandler : MonoBehaviour
         Card[] trickCards = trick.GetComponentsInChildren<Card>();
 
         // hand marriage
-        if (clickedCard.GetRank() == "Queen"){
+        if (clickedCard.GetRank() == "Queen" && trickCards.Length == 1){
             foreach (Card card in hand){
                 if(card.GetRank()== "King" && card.GetSuitToString() == clickedCard.GetSuitToString()) {
                     Card.Suit suit = clickedCard.GetSuit();
@@ -125,7 +125,7 @@ public class InputHandler : MonoBehaviour
                 }
             }
         }
-        else if (clickedCard.GetRank() == "King"){
+        else if (clickedCard.GetRank() == "King" && trickCards.Length == 1){
             foreach (Card card in hand){
                 if(card.GetRank()== "Queen" && card.GetSuitToString() == clickedCard.GetSuitToString()) {
                     Card.Suit suit = clickedCard.GetSuit();
@@ -140,11 +140,11 @@ public class InputHandler : MonoBehaviour
         }
 
         // king-on-queen marriage
-        int trickSize = trickCards.Count();
+        int trickSize = trickCards.Length;
         if(trickSize > 1) {
-            if( trickCards[trickSize-2].GetSuitToString() == trickCards[trickSize-1].GetSuitToString() &&
+            if( trickCards[trickSize-2].GetSuit() == trickCards[trickSize-1].GetSuit() &&
                 trickCards[trickSize-2].GetRank() == "Queen" &&
-                trickCards[trickSize-1].GetRank() == "King") {
+                trickCards[trickSize-1].GetRank() == "King" ) {
                     Card.Suit suit = clickedCard.GetSuit();
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
 
@@ -199,8 +199,7 @@ public class InputHandler : MonoBehaviour
                 Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
                 List<Card> hand = GameManager.Instance.GetPlayerHand(current);
                 if(ValidateCardOK(clickedCard, hand)){
-                    PlayCard(clickedCard, current);
-                    VerifyMarriage(clickedCard, hand, current);
+                    PlayCard(clickedCard, hand, current);
                     GameManager.Instance.Play(clickedCard);
                     GameManager.Instance.MovePlayersToNextPositions();
                     GameManager.Instance.UpdateCardVisibility();
@@ -209,7 +208,7 @@ public class InputHandler : MonoBehaviour
         }
     }
 
-    private void PlayCard(Card card, Player current)
+    private void PlayCard(Card card, List<Card> hand, Player current)
     {
         if (card.transform.parent != trick.transform)
         {
@@ -217,6 +216,7 @@ public class InputHandler : MonoBehaviour
             card.GetComponent<SpriteRenderer>().sortingOrder = sortingOrder;
             sortingOrder++;
             Debug.Log("Played card: " + card.gameObject.name);
+            VerifyMarriage(card, hand, current);
             current.RemoveCardFromHand(card);
 
             GameManager.Instance.runLog.logText("<" + current.playerName + "> played card " + card.GetCardFullName() + ".");

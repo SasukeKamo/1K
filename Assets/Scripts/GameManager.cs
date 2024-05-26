@@ -128,6 +128,19 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void DisplayTrumpText(){
+        TextMeshProUGUI currentText = GameObject.Find("TrumpText").GetComponent<TextMeshProUGUI>();
+
+        Card.Suit trump = GetAtuSuit();
+
+        if (trump != Card.Suit.None){
+            currentText.text = " TRUMP " + trump.ToString();
+        }
+        else{
+            currentText.text = "";
+        }
+    }
+
     void DisplayAuctionDialog()
     {
         auctionDialog.SetActive(true);
@@ -353,6 +366,7 @@ public class GameManager : MonoBehaviour
             }
             UpdatePlayerScore(currentTrick, trickWinner);
             currentTrick.Clear();
+            DisplayTrumpText();
             int playerNum = currentPlayer.playerNumber;
             currentPlayer = trickWinner;
             MovePlayerToPosition(trickWinner, Player.Position.down, true);
