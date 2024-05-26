@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class Card : MonoBehaviour
 {
-    public enum Suit { Hearts, Diamonds, Clubs, Spades };
+    public enum Suit { Hearts, Diamonds, Clubs, Spades, None };
     public enum Rank { Nine, Ten, Jack, Queen, King, Ace };
 
     //mozecie tez dodac tutaj np image albo sprite i jakas wartosc np czyOdwrocona i zmieniac zdjecie jesli jest i jesli nie jest
@@ -70,9 +71,14 @@ public class Card : MonoBehaviour
         return rankString + " of " + suitString;
     }
 
-    public string GetSuit()
+    public string GetSuitToString()
     {
         return suit.ToString();
+    }
+
+    public Suit GetSuit()
+    {
+        return suit;
     }
 
     public string GetRank()
@@ -83,5 +89,26 @@ public class Card : MonoBehaviour
     public int GetValue()
     {
         return value;
+    }
+}
+
+public static class SuitValue
+{
+    public static int GetValue(this Card.Suit suit)
+    {
+        switch (suit)
+        {
+            case Card.Suit.Hearts:
+                return 100;
+            case Card.Suit.Diamonds:
+                return 80;
+            case Card.Suit.Clubs:
+                return 60;
+            case Card.Suit.Spades:
+                return 40;
+            default:
+                Debug.LogError("Cannot obtain suit value.");
+                return 0;
+        }
     }
 }

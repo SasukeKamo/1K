@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -41,6 +42,7 @@ public class GameManager : MonoBehaviour
     private int roundNumber;
     private List<int> teamScore; // teamScore[0]: team1, teamScore[1]: team2 etc.
     const int targetScore = 1000;
+    private List<Tuple<Player, Card.Suit>> marriages;
     private int currentBid;
     private Player currentBidder; // Player who is winning the auction at the moment
     public Player currentPlayer; // Player who is making any move at the moment
@@ -69,8 +71,13 @@ public class GameManager : MonoBehaviour
     {
         mainDeck.Shuffle();
         Debug.Log("Cards shuffled.");
+        marriages = new List<Tuple<Player, Card.Suit>>();
         DealInitialCards();
         roundNumber = 1;
+    }
+
+    public void AddMarriage(Player player, Card.Suit suit){
+        marriages.Add(Tuple.Create(player, suit));
     }
 
     void DealInitialCards()
@@ -82,8 +89,8 @@ public class GameManager : MonoBehaviour
             for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
             {
                 Card currentCard = mainDeck.cards[i];
-                string cardName = "Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank();
-
+                string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
+                //Debug.Log(cardName);
                 GameObject go = GameObject.Find(cardName);
                 go.transform.SetParent(players[p].transform);
                 players[p].AddCardToHand(currentCard);
@@ -113,7 +120,7 @@ public class GameManager : MonoBehaviour
         {
             Card currentCard = mainDeck.cards[i];
             otherCards.AddCard(currentCard);
-            string cardName = "Card_" + currentCard.GetSuit() + "_" + currentCard.GetRank();
+            string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
 
             GameObject go = GameObject.Find(cardName);
             go.transform.SetParent(restOfTheDeck.transform);
@@ -246,6 +253,16 @@ public class GameManager : MonoBehaviour
         return null;
     }
 
+    public Card.Suit GetAtuSuit()
+    {
+        int size = marriages.Count;
+        if (size > 0){
+            Card.Suit suit = marriages[size-1].Item2;
+            return suit;
+        }
+        return Card.Suit.None;
+    }
+
     private void UpdatePlayerScore(List<Card> trick, Player winner)
     {
         int value = 0;
@@ -256,21 +273,58 @@ public class GameManager : MonoBehaviour
         winner.AddRoundScore(value);
     }
 
-    private bool UpdateTrickWinner(List<Card> cards)
+    private void UpdateMarriageScore(){
+        foreach(Player player in players){
+            foreach(Tuple<Player, Card.Suit> marriage in marriages){
+                if(player.playerNumber == marriage.Item1.playerNumber){
+                    int score = marriage.Item2.GetValue();
+                    player.AddRoundScore(score);
+                }
+            }
+        }
+    }
+
+    private bool IsNewTrickWinner(List<Card> cards)
     {
         int lastCard = cards.Count - 1;
-        int max = 0;
-        for (int i = 0; i < cards.Count - 1; i++)
-        {
-            if (cards[i].GetValue() > max && cards[0].GetSuit() == cards[i].GetSuit())
-                max = cards[i].GetValue();
-        }
+        int maxAtu = -1, max = 0;
 
-        for (int i = 0; i < cards.Count - 1; i++)
-        {
-            if (cards[0].GetSuit() == cards[lastCard].GetSuit() && max < cards[lastCard].GetValue())
+        Card.Suit trump = GetAtuSuit();
+        if (trump != Card.Suit.None){
+            for (int i = 0; i < cards.Count - 1; i++)
             {
-                return true;
+                if (cards[i].GetSuit() == trump)
+                    if (maxAtu == -1) maxAtu = i;
+                    else if (cards[i].GetValue() > cards[maxAtu].GetValue()){
+                        maxAtu = i;
+                    }
+            }
+
+            if(maxAtu == -1){
+                if (cards[lastCard].GetSuit() == trump){
+                    return true;
+                }
+                else{
+                    for (int i = 0; i < cards.Count - 1; i++)
+                    {
+                        if (cards[i].GetValue() > max && cards[0].GetSuitToString() == cards[i].GetSuitToString())
+                            max = cards[i].GetValue();
+                    }
+
+                    for (int i = 0; i < cards.Count - 1; i++)
+                    {
+                        if (cards[0].GetSuitToString() == cards[lastCard].GetSuitToString() && max < cards[lastCard].GetValue())
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            else {
+                if (cards[lastCard].GetSuit() == trump && cards[lastCard].GetValue() > cards[maxAtu].GetValue()){
+                    return true;
+                }
+                return false;
             }
         }
         return false;
@@ -288,11 +342,10 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < players.Count; j++)
             {
-                // TODO: marriage / meldunek
                 yield return new WaitUntil(() => played);
                 played = false;
                 currentTrick.Add(playedCard);
-                if (UpdateTrickWinner(currentTrick))
+                if (IsNewTrickWinner(currentTrick))
                 {
                     trickWinner = currentPlayer;
                 }
@@ -305,6 +358,8 @@ public class GameManager : MonoBehaviour
             MovePlayerToPosition(trickWinner, Player.Position.down, true);
             UpdateCardVisibility();
         }
+        UpdateMarriageScore();
+        marriages.Clear();
     }
 
     public void Play(Card card)
@@ -366,6 +421,7 @@ public class GameManager : MonoBehaviour
             if (player.GetTeam() == 1)
             {
                 teamScore[0] += player.GetRoundScore();
+
             }
             else
             {
@@ -373,6 +429,24 @@ public class GameManager : MonoBehaviour
             }
             player.SetRoundScore(0);
             player.ClearHand();
+        }
+
+        // marriages 
+        foreach (Player player in players)
+        {
+            foreach((Player p, Card.Suit suit) in marriages){
+                if(p==player){
+                    if (player.GetTeam() == 1)
+                    {
+                        teamScore[0] += suit.GetValue();
+                    }
+                    else
+                    {
+                        teamScore[1] += suit.GetValue();
+                    }
+                }
+            }
+            marriages.Clear();
         }
 
         foreach (Player player in players)
@@ -387,6 +461,7 @@ public class GameManager : MonoBehaviour
             }
             player.ClearHand();
         }
+
     }
 
     void CheckForGameEnd()

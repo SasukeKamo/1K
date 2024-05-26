@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -16,40 +18,144 @@ public class InputHandler : MonoBehaviour
             Card baseCard = trickCards[0];
 
             // Rule 1. Same suit
-            if (clickedCard.GetSuit() == baseCard.GetSuit()) {
-                // Rule 2. Overtrump (higher value of same suit)
+            if (clickedCard.GetSuitToString() == baseCard.GetSuitToString()) {
+                // Rule 2. Overtrump
                 if (clickedCard.GetValue() > baseCard.GetValue()){
                     return true;
                 }
                 else {
-                    // verify player can overtrump current trick winner
+                    // verify player can overtrump
+
+                    // Case 1: Player has card of current suit
                     Card trickWinner = trickCards[0];
                     foreach (Card card in trickCards){
-                        if(card.GetSuit() == trickWinner.GetSuit() && card.GetValue() > trickWinner.GetValue()){
+                        if(card.GetSuitToString() == trickWinner.GetSuitToString() && card.GetValue() > trickWinner.GetValue()){
                             trickWinner = card;
                         }
                     }
+
                     foreach (Card card in hand){
-                        if(card.GetSuit() == trickWinner.GetSuit() && card.GetValue() > trickWinner.GetValue()){
-                            Debug.LogWarning("Invalid move. Need to overtrump with higher value of " + baseCard.GetSuit() + "!");
+                        if(card.GetSuitToString() == trickWinner.GetSuitToString() && card.GetValue() > trickWinner.GetValue()){
+                            Debug.LogWarning("Invalid move. Need to overtrump with higher value of " + baseCard.GetSuitToString() + "!");
                             return false;
                         }
                     }
                 }
             }
             else {
+                // Player has cards of the current suit
                 foreach (Card card in hand){
-                    if(card.GetSuit() == baseCard.GetSuit()){
-                            Debug.LogWarning("Invalid move. Need to lay card of " + baseCard.GetSuit() + "!");
+                    if(card.GetSuitToString() == baseCard.GetSuitToString()){
+                            Debug.LogWarning("Invalid move. Need to lay card of " + baseCard.GetSuitToString() + "!");
                             return false;
                         }
                 }
-            }
-            // Rule 3. Overtrump (atu)
-            // TBD (after marriage implementation)
 
+                // Player can overtrump with atu
+                Card.Suit currentAtuSuit = GameManager.Instance.GetAtuSuit();
+                if (currentAtuSuit != Card.Suit.None){
+                    List<Card> handTrumps = new List<Card>();
+                    foreach (Card card in hand){
+                        if (card.GetSuit() == currentAtuSuit){
+                            handTrumps.Add(card);
+                        }
+                    }
+                    Card highestPlayerAtu;
+                    if(handTrumps.Count > 0){
+                        highestPlayerAtu = handTrumps[0];
+                        foreach (Card card in handTrumps){
+                            if (card.GetValue() > highestPlayerAtu.GetValue()){
+                                highestPlayerAtu = card;
+                            }
+                        }
+                    }
+                    else return true;
+
+                    List<Card> trickTrumps = new List<Card>();
+                    foreach (Card card in trickCards){
+                        if (card.GetSuit() == currentAtuSuit){
+                            trickTrumps.Add(card);
+                        }
+                    }
+                    Card highestTrickAtu;
+                    if(trickTrumps.Count > 0){
+                        highestTrickAtu = trickTrumps[0];
+                        foreach (Card card in trickTrumps){
+                            if (card.GetValue() > highestTrickAtu.GetValue()){
+                                highestTrickAtu = card;
+                            }
+                        }
+                    }
+                    else {
+                        if(clickedCard.GetSuit() == currentAtuSuit){
+                            return true;
+                        }
+                        else {
+                            Debug.Log("Invalid move. Player has to play with trump!");
+                            return false;
+                        }
+                    }
+                    if (highestPlayerAtu.GetValue() > clickedCard.GetValue()){
+                        Debug.Log("Invalid move. Player has to overtrump with trump!");
+                        return false;
+                    }
+                    else {
+                        return true;
+                    }
+                }
+            }
         }
         return true;
+    }
+
+    private bool VerifyMarriage(Card clickedCard, List<Card> hand, Player currentPlayer) {
+        Card[] trickCards = trick.GetComponentsInChildren<Card>();
+
+        // hand marriage
+        if (clickedCard.GetRank() == "Queen"){
+            foreach (Card card in hand){
+                if(card.GetRank()== "King" && card.GetSuitToString() == clickedCard.GetSuitToString()) {
+                    Card.Suit suit = clickedCard.GetSuit();
+                    GameManager.Instance.AddMarriage(currentPlayer, suit);
+
+                    Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    GameManager.Instance.runLog.logText("Hand marriage: " + clickedCard.GetSuitToString() + 
+                    " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    return true;
+                }
+            }
+        }
+        else if (clickedCard.GetRank() == "King"){
+            foreach (Card card in hand){
+                if(card.GetRank()== "Queen" && card.GetSuitToString() == clickedCard.GetSuitToString()) {
+                    Card.Suit suit = clickedCard.GetSuit();
+                    GameManager.Instance.AddMarriage(currentPlayer, suit);
+
+                    Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    GameManager.Instance.runLog.logText("Hand marriage: " + clickedCard.GetSuitToString() + 
+                    " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    return true;
+                }
+            }
+        }
+
+        // king-on-queen marriage
+        int trickSize = trickCards.Count();
+        if(trickSize > 1) {
+            if( trickCards[trickSize-2].GetSuitToString() == trickCards[trickSize-1].GetSuitToString() &&
+                trickCards[trickSize-2].GetRank() == "Queen" &&
+                trickCards[trickSize-1].GetRank() == "King") {
+                    Card.Suit suit = clickedCard.GetSuit();
+                    GameManager.Instance.AddMarriage(currentPlayer, suit);
+
+                    Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    GameManager.Instance.runLog.logText("King-on-queen marriage: " + clickedCard.GetSuitToString() + 
+                    " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    return true;
+                }
+        }
+
+        return false;
     }
 
     public void OnClick(InputAction.CallbackContext context)
@@ -94,6 +200,7 @@ public class InputHandler : MonoBehaviour
                 List<Card> hand = GameManager.Instance.GetPlayerHand(current);
                 if(ValidateCardOK(clickedCard, hand)){
                     PlayCard(clickedCard, current);
+                    VerifyMarriage(clickedCard, hand, current);
                     GameManager.Instance.Play(clickedCard);
                     GameManager.Instance.MovePlayersToNextPositions();
                     GameManager.Instance.UpdateCardVisibility();
