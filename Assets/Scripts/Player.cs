@@ -89,6 +89,7 @@ public class Player : MonoBehaviour
     public void SetScore(int score)
     {
         this.score = score;
+        scoreText.text = score.ToString();
     }
 
     public void AddScore(int points)
@@ -105,6 +106,7 @@ public class Player : MonoBehaviour
     public void SetRoundScore(int score)
     {
         roundScore = score;
+        roundScoreText.text = roundScore.ToString();
     }
 
     public void AddRoundScore(int points)
@@ -142,6 +144,12 @@ public class Player : MonoBehaviour
         Position[] arr = (Position[])Enum.GetValues(position.GetType());
         int j = Array.IndexOf(arr, position) + 1;
         return (arr.Length == j) ? arr[0] : arr[j];
+    }
+
+    public void Reset()
+    {
+        hasBidded = false;
+        hasPassed = false;
     }
 
 }

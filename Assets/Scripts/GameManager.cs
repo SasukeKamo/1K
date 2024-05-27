@@ -39,16 +39,19 @@ public class GameManager : MonoBehaviour
     public Deck mainDeck;
     public Deck otherCards;
     private int roundNumber;
-    private List<int> teamScore; // teamScore[0]: team1, teamScore[1]: team2 etc.
+    private List<int> teamScore = new List<int>(); // teamScore[0]: team1, teamScore[1]: team2 etc.
     const int targetScore = 1000;
     private int currentBid;
     private Player currentBidder; // Player who is winning the auction at the moment
     public Player currentPlayer; // Player who is making any move at the moment
     public Player currentCardReceiver;  // Player who is being given a card at the moment
+    private int firstPlayer = 0;
     private bool played;
     private Card playedCard;
     public bool isGivingStage = false;
     public RunLog runLog;
+    private bool gameplayFinished = false;
+    private bool auctionFinished = false;
     [SerializeField] private GameObject t;
     [SerializeField] private GameObject downPlace;
     [SerializeField] private GameObject leftPlace;
@@ -62,7 +65,7 @@ public class GameManager : MonoBehaviour
     {
         runLog = _instance.GetComponent<RunLog>();
         InitializeGame();
-        StartRound();
+        StartCoroutine(GameLoop());
     }
 
     void InitializeGame()
@@ -71,6 +74,21 @@ public class GameManager : MonoBehaviour
         Debug.Log("Cards shuffled.");
         DealInitialCards();
         roundNumber = 1;
+        teamScore.Add(0);
+        teamScore.Add(0);
+        Debug.Log($"{teamScore[0]}, {teamScore[1]}");
+
+    }
+
+    IEnumerator GameLoop()
+    {
+        while (teamScore[0] < targetScore && teamScore[1] < targetScore)
+        {
+            Debug.Log("Round Started");
+            yield return StartCoroutine(StartRound());
+            EndRound();
+            Debug.Log("Round Ended");
+        }
     }
 
     void DealInitialCards()
@@ -207,7 +225,7 @@ public class GameManager : MonoBehaviour
     {
         currentBid = 100;
 
-        currentPlayer = players[0];     // TODO: Gracz rozpoczynaj�cy dan� tur�
+        currentPlayer = players[firstPlayer];     // TODO: Gracz rozpoczynaj�cy dan� tur�
         currentBidder = currentPlayer;
         currentPlayer = GetNextPlayer(currentPlayer);
 
@@ -278,9 +296,17 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator Gameplay()
     {
+        yield return new WaitUntil(() => auctionFinished);
+
+        //Debug.Log("Gameplay started");
+
+        auctionFinished = false;
+
         Player currentPlayer = currentBidder;
         Player trickWinner = currentBidder;
         List<Card> currentTrick = new List<Card>();
+
+        gameplayFinished = false;
 
         int numberOfTurns = currentPlayer.GetCardsInHand();
 
@@ -305,6 +331,7 @@ public class GameManager : MonoBehaviour
             MovePlayerToPosition(trickWinner, Player.Position.down, true);
             UpdateCardVisibility();
         }
+        gameplayFinished = true;
     }
 
     public void Play(Card card)
@@ -327,15 +354,46 @@ public class GameManager : MonoBehaviour
     {
         isGivingStage = false;
         handOverDialog.SetActive(false);
+        auctionFinished = true;
     }
 
-    void StartRound()
+    IEnumerator StartRound()
     {
         Debug.Log("Starting Round " + roundNumber);
 
         Auction();
 //        DealCardsToOtherPlayers();
         StartCoroutine(Gameplay());
+        yield return new WaitUntil(() => gameplayFinished);
+        gameplayFinished = false;
+    }
+
+    void ResetDeck()
+    {
+        string[] s = { "Hearts", "Diamonds", "Clubs", "Spades" };
+        List<string> suits = new List<string>(s);
+
+        string[] r = { "Nine", "Ten", "Jack", "Queen", "King", "Ace" };
+        List<string> ranks = new List<string>(r);
+
+        foreach (string suit in suits)
+        {
+            foreach (string rank in ranks)
+            {
+                string name = $"Card_{suit}_{rank}";
+                GameObject go = GameObject.Find(name);
+                go.transform.SetParent(null);
+                go.transform.position = new Vector3Int(343, 512, -918);
+                go.transform.localEulerAngles = new Vector3Int(0, 0, 0);
+                Card card = go.GetComponent<Card>();
+                card.SetVisible(false);
+            }
+        }
+
+        foreach (Card card in mainDeck.cards)
+        {
+            Debug.Log(card.GetCardFullName());
+        }
     }
 
     void EndRound()
@@ -344,16 +402,27 @@ public class GameManager : MonoBehaviour
         CalculateRoundScores();
         CheckForGameEnd();
         roundNumber++;
+        ResetDeck();
+
+        firstPlayer = (firstPlayer + 1) % players.Count;
+        //Debug.Log(firstPlayer);
+        InputHandler.Instance.ResetCardsToDeal();
+        foreach (Player player in players)
+        {
+            player.Reset();
+        }
+
+        //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
         // przygotowanie na nastepna runde
         //tutaj powinnismy karty wlozyc do talii znowu
         mainDeck.Shuffle();
-        AudioManager.Instance.PlayDealCardSound();
+        //AudioManager.Instance.PlayDealCardSound();
         DealInitialCards();
     }
 
     void CalculateRoundScores()
     {
-        if(currentBidder.GetScore() < currentBid)
+        if(currentBidder.GetRoundScore() < currentBid)
         {
             currentBidder.SetRoundScore(-currentBid);
         }
@@ -393,13 +462,13 @@ public class GameManager : MonoBehaviour
     {
         if (teamScore[0] >= targetScore)
         {
-            AudioManager.Instance.PlayWinSound();
+            //AudioManager.Instance.PlayWinSound();
             Debug.Log("Team 1 wins!");
             // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
         }
         else if (teamScore[1] >= targetScore)
         {
-            AudioManager.Instance.PlayWinSound();
+            //AudioManager.Instance.PlayWinSound();
             Debug.Log("Team 2 wins!");
             // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
             return;

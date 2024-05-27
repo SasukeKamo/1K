@@ -10,6 +10,34 @@ public class InputHandler : MonoBehaviour
     private int sortingOrder = 1;
     private int cardsToDeal = 4;
 
+    private static InputHandler _instance;
+
+    public static InputHandler Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                GameObject go = new GameObject("InputHandler");
+                _instance = go.AddComponent<InputHandler>();
+            }
+            return _instance;
+        }
+    }
+
+    void Awake()
+    {
+        if (_instance == null)
+        {
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     private bool ValidateCardOK(Card clickedCard, List<Card> hand) {
         Card[] trickCards = trick.GetComponentsInChildren<Card>();
         if (trickCards.Length > 0) {
@@ -129,5 +157,10 @@ public class InputHandler : MonoBehaviour
         {
             Debug.Log("Cannot add card already in the trick area.");
         }
+    }
+
+    public void ResetCardsToDeal()
+    {
+        cardsToDeal = 4;
     }
 }
