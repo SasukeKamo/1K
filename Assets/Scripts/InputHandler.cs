@@ -194,8 +194,16 @@ public class InputHandler : MonoBehaviour
         if (hit.collider != null)
         {
             Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
-            if (GameManager.Instance.isGivingStage)
+            if (GameManager.Instance.isGivingStage && clickedCard.visible)
             {
+                Debug.LogError(GameManager.Instance.currentPlayer.name);
+                foreach (Card card in GameManager.Instance.currentPlayer.hand)
+                {
+                    if (clickedCard == card)
+                    {
+                        return;
+                    }
+                }
                 GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
                 GameObject go = GameObject.Find(clickedCard.name);
 
