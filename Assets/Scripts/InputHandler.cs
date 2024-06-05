@@ -32,7 +32,7 @@ public class InputHandler : MonoBehaviour
         if (_instance == null)
         {
             _instance = this;
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -230,7 +230,7 @@ public class InputHandler : MonoBehaviour
                 }
 
             }
-            else if (clickedCard != null && clickedCard.visible && clickedCard.transform.parent != trick.transform)
+            else if (clickedCard != null && clickedCard.visible && clickedCard.transform.parent != trick.transform && GameManager.Instance.auctionFinished)
             {
                 Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
                 List<Card> hand = GameManager.Instance.GetPlayerHand(current);

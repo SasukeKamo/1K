@@ -15,19 +15,23 @@ public class Card : MonoBehaviour
 
     public bool visible;
     private SpriteRenderer spriteRenderer;
+    private Vector3 originalScale;
+    [SerializeField] private GameObject currentPlayerHand;
+    [SerializeField] private GameObject auctionLeftOvers;
 
 
     [SerializeField] private Suit suit;
     [SerializeField] private Rank rank;
     private int value;
 
+    
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = front;
         visible = false;
 
-        switch(rank)
+        switch (rank)
         {
             case Rank.Nine:
                 value = 0;
@@ -90,6 +94,24 @@ public class Card : MonoBehaviour
     {
         return value;
     }
+
+    private void OnMouseEnter()
+    {
+        originalScale = transform.localScale;
+        if (transform.parent.parent == currentPlayerHand.transform || transform.parent == auctionLeftOvers.transform)
+        {
+            transform.localScale = originalScale * 1.1f;
+        }
+    }
+
+    private void OnMouseExit()
+    {
+        if (transform.localScale != originalScale)
+        {
+            transform.localScale = originalScale;
+        }
+    }
+
 }
 
 public static class SuitValue
