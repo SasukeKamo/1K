@@ -24,8 +24,8 @@ public class Player : MonoBehaviour
 
     void Awake()
     {
-        scoreText = GameObject.Find("ScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
-        scoreText.text = score.ToString();
+        if (playerNumber == 1 || playerNumber == 2) scoreText = GameObject.Find("ScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
+        if (playerNumber == 1 || playerNumber == 2) scoreText.text = score.ToString();
 
         roundScoreText = GameObject.Find("RoundScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
         roundScoreText.text = roundScore.ToString();
@@ -89,13 +89,13 @@ public class Player : MonoBehaviour
     public void SetScore(int score)
     {
         this.score = score;
-        scoreText.text = score.ToString();
+        if (playerNumber == 1 || playerNumber == 2) scoreText.text = score.ToString();
     }
 
     public void AddScore(int points)
     {
         score += points;
-        scoreText.text = score.ToString();
+        if (playerNumber == 1 || playerNumber == 2) scoreText.text = score.ToString();
     }
 
     public int GetRoundScore()

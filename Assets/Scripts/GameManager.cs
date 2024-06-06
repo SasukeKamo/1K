@@ -208,7 +208,7 @@ public class GameManager : MonoBehaviour
 
         currentPlayer.SetPassed(true);
 
-        runLog.logText("<" + currentBidder.playerName + "> passed.", Color.yellow);
+        runLog.logText("<" + currentPlayer.playerName + "> passed.", Color.yellow);
 
         int passed = 0;
 
@@ -223,7 +223,7 @@ public class GameManager : MonoBehaviour
             currentPlayer = currentBidder;
 
             Debug.Log(currentBidder.name + " wins the auction with a bid of " + currentBid + " points.");
-
+            runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].", Color.yellow);
 
 /*            for (int i = 0; i < 4; i++)
             {
@@ -331,7 +331,7 @@ public class GameManager : MonoBehaviour
     {
         int lastCard = cards.Count - 1;
         int maxAtu = -1, max = 0;
-
+            
         Card.Suit trump = GetAtuSuit();
         if (trump != Card.Suit.None){
             for (int i = 0; i < cards.Count - 1; i++)
@@ -481,6 +481,7 @@ public class GameManager : MonoBehaviour
     void EndRound()
     {
         Debug.Log("Ending Round " + roundNumber);
+        DisplayTrumpText();
         CalculateRoundScores();
         CheckForGameEnd();
         roundNumber++;
@@ -504,47 +505,38 @@ public class GameManager : MonoBehaviour
 
     void CalculateRoundScores()
     {
-        if(currentBidder.GetRoundScore() < currentBid)
-        {
-            currentBidder.SetRoundScore(-currentBid);
-        }
-        else
-        {
-            currentBidder.SetRoundScore(currentBid);
-        }
-        foreach (Player player in players)
-        {
-            if (player.GetTeam() == 1)
-            {
-                teamScore[0] += player.GetRoundScore();
+        int bidderTeam = currentBidder.GetTeam();
+        List<int> tempTeamScore = new List<int>();
+        tempTeamScore.Add(0);
+        tempTeamScore.Add(0);
 
-            }
-            else
-            {
-                teamScore[1] += player.GetRoundScore();
-            }
-            player.SetRoundScore(0);
-            player.ClearHand();
-        }
-
-        // marriages 
-        foreach (Player player in players)
-        {
+        foreach (Player player in players){
+            tempTeamScore[player.GetTeam() - 1] += player.GetRoundScore();
             foreach((Player p, Card.Suit suit) in marriages){
                 if(p==player){
-                    if (player.GetTeam() == 1)
-                    {
-                        teamScore[0] += suit.GetValue();
-                    }
-                    else
-                    {
-                        teamScore[1] += suit.GetValue();
-                    }
+                    tempTeamScore[player.GetTeam() - 1] += suit.GetValue();
                 }
             }
-            marriages.Clear();
         }
+        marriages.Clear();
 
+
+        for (int i=0;i<2;i++){
+            if(i == bidderTeam-1){
+                if (tempTeamScore[bidderTeam-1] < currentBid)
+                {
+                    teamScore[i]-=currentBid;
+                }
+                else
+                {
+                    teamScore[i]+=tempTeamScore[i];
+                }
+            }
+            else{
+                teamScore[i]=tempTeamScore[i];
+            }
+        }
+        
         foreach (Player player in players)
         {
             if (player.GetTeam() == 1)
@@ -555,9 +547,9 @@ public class GameManager : MonoBehaviour
             {
                 player.SetScore(teamScore[1]);
             }
+            player.SetRoundScore(0);
             player.ClearHand();
         }
-
     }
 
     void CheckForGameEnd()

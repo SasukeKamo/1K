@@ -160,7 +160,7 @@ public class InputHandler : MonoBehaviour
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
-                    GameManager.Instance.runLog.logText("Hand marriage: " + clickedCard.GetSuitToString() + 
+                    GameManager.Instance.runLog.logText("Marriage: " + clickedCard.GetSuitToString() + 
                     " [+" + clickedCard.GetSuit().GetValue() + " points].");
                     return true;
                 }
@@ -177,7 +177,7 @@ public class InputHandler : MonoBehaviour
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
 
                     Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
-                    GameManager.Instance.runLog.logText("King-on-queen marriage: " + clickedCard.GetSuitToString() + 
+                    GameManager.Instance.runLog.logText("Marriage: " + clickedCard.GetSuitToString() + 
                     " [+" + clickedCard.GetSuit().GetValue() + " points].");
                     return true;
                 }
@@ -196,7 +196,7 @@ public class InputHandler : MonoBehaviour
             Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
             if (GameManager.Instance.isGivingStage && clickedCard.visible)
             {
-                Debug.LogError(GameManager.Instance.currentPlayer.name);
+                Debug.Log(GameManager.Instance.currentPlayer.name);
                 foreach (Card card in GameManager.Instance.currentPlayer.hand)
                 {
                     if (clickedCard == card)
@@ -255,7 +255,7 @@ public class InputHandler : MonoBehaviour
             VerifyMarriage(card, hand, current);
             current.RemoveCardFromHand(card);
 
-            GameManager.Instance.runLog.logText("<" + current.playerName + "> played card " + card.GetCardFullName() + ".");
+            GameManager.Instance.runLog.logText("<" + current.playerName + "> plays " + card.GetCardFullName() + ".");
 
             // end of turn (4 cards on table)
             if (trick.transform.childCount == 4) {
