@@ -49,6 +49,8 @@ public class GameManager : MonoBehaviour
     }
 
     public List<Player> players;
+    public enum GamePhase { Start, Auction, Handover, Gameplay };
+
     public Deck mainDeck;
     public Deck otherCards;
     private int roundNumber;
@@ -66,12 +68,15 @@ public class GameManager : MonoBehaviour
     public RunLog runLog;
     private bool gameplayFinished = false;
     public bool auctionFinished = false;
+    public GamePhase gamePhase;
+    [SerializeField] private bool forcePlayerChangeDialog;
     [SerializeField] private GameObject t;
     [SerializeField] private GameObject downPlace;
     [SerializeField] private GameObject leftPlace;
     [SerializeField] private GameObject upPlace;
     [SerializeField] private GameObject rightPlace;
     [SerializeField] private GameObject auctionDialog;
+    [SerializeField] private GameObject readyDialog;
     [SerializeField] private GameObject handOverDialog;
     [SerializeField] private GameObject restOfTheDeck;
 
@@ -90,6 +95,8 @@ public class GameManager : MonoBehaviour
         roundNumber = 1;
         firstPlayer = UnityEngine.Random.Range(0, 4);
         currentPlayer = players[firstPlayer];
+        MovePlayerToPosition(currentPlayer, Player.Position.down);
+        gamePhase = GamePhase.Start;
         DealInitialCards();
         teamScore.Add(0);
         teamScore.Add(0);
@@ -200,9 +207,8 @@ public class GameManager : MonoBehaviour
             MovePlayersToNextPositions();
 
         } while (currentPlayer.HasPassed());
-        UpdateCardVisibility();
 
-        DisplayAuctionDialog();
+        ChangePlayer();
     }
     public void NegativeAuctionDialog()
     {
@@ -227,19 +233,13 @@ public class GameManager : MonoBehaviour
             Debug.Log(currentBidder.name + " wins the auction with a bid of " + currentBid + " points.");
             runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].", Color.yellow);
 
-/*            for (int i = 0; i < 4; i++)
-            {
-                Card drawnCard = mainDeck.DrawCard();
-
-                // UNCOMMENT BELOW WHEN CARDS DEALING TO OTHERS IMPLEMENTED
-                //currentBidder.AddCardToHand(drawnCard);
-            }*/
+            gamePhase = GamePhase.Handover;
 
             MovePlayerToPosition(currentBidder, Player.Position.down, true);
-            UpdateCardVisibility();
+            ChangePlayer();
 
             // UNCOMMENT BELOW WHEN CARDS DEALING TO OTHERS IMPLEMENTED
-            DealCardsToOtherPlayers();
+            // OLD DealCardsToOtherPlayers();
         }
         else //Nie wszyscy spasowali -> dilog dla nast�pnego gracza
         {
@@ -249,29 +249,63 @@ public class GameManager : MonoBehaviour
                 MovePlayersToNextPositions();
 
             } while (currentPlayer.HasPassed());
-            UpdateCardVisibility();
 
-            DisplayAuctionDialog();
+            ChangePlayer();
         }
+    }
+
+    void DisplayReadyDialog()
+    {
+        HideAllCards();
+        readyDialog.SetActive(true);
+
+        TextMeshProUGUI readyPlayerNameText = GameObject.Find("ReadyPlayerNameText").GetComponent<TextMeshProUGUI>();
+        readyPlayerNameText.text = currentPlayer.playerName;
+    }
+
+    public void SetPlayerReady()
+    {
+        readyDialog.SetActive(false);
+        UpdateCardVisibility();
+
+        if (gamePhase == GamePhase.Start)
+            Auction();
+        else if (gamePhase == GamePhase.Auction)
+            DisplayAuctionDialog();
+        else if (gamePhase == GamePhase.Handover)
+            DealCardsToOtherPlayers();
     }
 
     void Auction()
     {
         currentBid = 100;
-
-        firstPlayer = (firstPlayer + 1) % players.Count;
-        currentPlayer = players[firstPlayer];     // TODO: Gracz rozpoczynaj�cy dan� tur�
-        currentBidder = currentPlayer;
-        currentPlayer = GetNextPlayer(currentPlayer);
-
-        //MovePlayersToNextPositions();
-        MovePlayerToPosition(currentPlayer, Player.Position.down);
-        UpdateCardVisibility();
+        currentBidder = GetPreviousPlayer(currentPlayer);
+        gamePhase = GamePhase.Auction;
 
         DisplayAuctionDialog();
     }
 
+    void ChangePlayer()
+    {
+        //currentPlayer = GetNextPlayer(currentPlayer);
+        //MovePlayerToPosition(currentPlayer, Player.Position.down);
 
+        if (forcePlayerChangeDialog)
+        {
+            DisplayReadyDialog();
+        }
+        else
+        {
+            UpdateCardVisibility();
+
+            if (gamePhase == GamePhase.Start)
+                Auction();
+            else if (gamePhase == GamePhase.Auction)
+                DisplayAuctionDialog();
+            else if (gamePhase == GamePhase.Handover)
+                DealCardsToOtherPlayers();
+        }
+    }
 
     public Player GetNextPlayer(Player currentPlayer)
     {
@@ -446,8 +480,9 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Starting Round " + roundNumber);
 
-        Auction();
-//        DealCardsToOtherPlayers();
+        ChangePlayer();
+        //Auction();
+        //DealCardsToOtherPlayers();
         StartCoroutine(Gameplay());
         yield return new WaitUntil(() => gameplayFinished);
         gameplayFinished = false;
@@ -686,6 +721,7 @@ public class GameManager : MonoBehaviour
                     if (card != null)
                     {
                         card.SetVisible(true);
+                        card.transform.localRotation = Quaternion.Euler(0, 0, 0);
                     }
                 }
             }
@@ -698,11 +734,30 @@ public class GameManager : MonoBehaviour
                     if (card != null)
                     {
                         card.SetVisible(false);
+                        card.transform.localRotation = Quaternion.Euler(0, 0, 0);
                     }
                 }
             }
 
             currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
+        }
+    }
+
+    public void HideAllCards ()
+    {
+        for (int i = 0; i < players.Count; i++)
+        {
+            GameObject playerObject = players[i].gameObject;
+
+            foreach (Transform cardTransform in playerObject.transform)
+            {
+                Card card = cardTransform.GetComponent<Card>();
+                if (card != null)
+                {
+                    card.SetVisible(false);
+                    card.transform.localRotation = Quaternion.Euler(0, 0, 0);
+                }
+            }
         }
     }
 
