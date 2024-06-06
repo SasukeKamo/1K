@@ -288,6 +288,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: 52907648279877b498bfbb18a0273732, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 52907648279877b498bfbb18a0273732, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 52907648279877b498bfbb18a0273732, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 52907648279877b498bfbb18a0273732, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -408,6 +420,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: 704591418a6b21f4ba8515b36dca12ab, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 704591418a6b21f4ba8515b36dca12ab, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 704591418a6b21f4ba8515b36dca12ab, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 704591418a6b21f4ba8515b36dca12ab, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -517,6 +541,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: 1994322412eff484f858a4d8d028a4f6, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 1994322412eff484f858a4d8d028a4f6, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 1994322412eff484f858a4d8d028a4f6, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 1994322412eff484f858a4d8d028a4f6, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -761,6 +797,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: a4e2ffac5062ce74482a873e77125946, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: a4e2ffac5062ce74482a873e77125946, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: a4e2ffac5062ce74482a873e77125946, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: a4e2ffac5062ce74482a873e77125946, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -885,6 +933,18 @@ PrefabInstance:
       propertyPath: front
       value: 
       objectReference: {fileID: 21300000, guid: 5ae2ec7c7706ff14691621e84d861ef2, type: 3}
+    - target: {fileID: 1728497111536696892, guid: 7e577eb62ccf6774e8eeed06604c2d40, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 7e577eb62ccf6774e8eeed06604c2d40, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 7e577eb62ccf6774e8eeed06604c2d40, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 7e577eb62ccf6774e8eeed06604c2d40, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -2911,7 +2971,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -175.84, y: -270.35928}
+  m_AnchoredPosition: {x: -175.84, y: -270.38498}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &524075331
@@ -3067,6 +3127,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1728497111536696892, guid: 4cab9baa8fca52945923e2ad3b8bda4b, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 4cab9baa8fca52945923e2ad3b8bda4b, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 4cab9baa8fca52945923e2ad3b8bda4b, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 6948992591527876610, guid: 4cab9baa8fca52945923e2ad3b8bda4b, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
       value: 12.4800005
@@ -4106,6 +4178,7 @@ MonoBehaviour:
   currentCardReceiver: {fileID: 0}
   isGivingStage: 0
   runLog: {fileID: 0}
+  auctionFinished: 0
   t: {fileID: 96456797}
   downPlace: {fileID: 867246512}
   leftPlace: {fileID: 719326566}
@@ -4160,6 +4233,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: cf7874fa157b635498cc524ce79c0bec, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: cf7874fa157b635498cc524ce79c0bec, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: cf7874fa157b635498cc524ce79c0bec, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: cf7874fa157b635498cc524ce79c0bec, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -5736,6 +5821,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: 16b9d8790541dbb479744f069c1b9861, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 16b9d8790541dbb479744f069c1b9861, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 16b9d8790541dbb479744f069c1b9861, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 16b9d8790541dbb479744f069c1b9861, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -5916,6 +6013,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1728497111536696892, guid: 49b5dc4539adce842abe881c90f426b2, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 49b5dc4539adce842abe881c90f426b2, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 49b5dc4539adce842abe881c90f426b2, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 2096222932398830091, guid: 49b5dc4539adce842abe881c90f426b2, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
       value: 12.4800005
@@ -6033,6 +6142,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: 2188ab91df4aaea469e22e52a5f29239, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 2188ab91df4aaea469e22e52a5f29239, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 2188ab91df4aaea469e22e52a5f29239, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 2188ab91df4aaea469e22e52a5f29239, type: 3}
       propertyPath: m_FlipX
       value: 0
@@ -6454,6 +6575,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: fb31cf51e95928844a5b724e2993afe2, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: fb31cf51e95928844a5b724e2993afe2, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: fb31cf51e95928844a5b724e2993afe2, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: fb31cf51e95928844a5b724e2993afe2, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -7290,6 +7423,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1728497111536696892, guid: 4f1717b5ae06b3b4bb7c478887d8997d, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 4f1717b5ae06b3b4bb7c478887d8997d, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 4f1717b5ae06b3b4bb7c478887d8997d, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 4f1717b5ae06b3b4bb7c478887d8997d, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -7418,6 +7563,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: e5af85f116ed6454baa53d95fc9443e9, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: e5af85f116ed6454baa53d95fc9443e9, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: e5af85f116ed6454baa53d95fc9443e9, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: e5af85f116ed6454baa53d95fc9443e9, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -7754,6 +7911,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: cfc3ba010b465d54b9d02ce0f6b22af4, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: cfc3ba010b465d54b9d02ce0f6b22af4, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: cfc3ba010b465d54b9d02ce0f6b22af4, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: cfc3ba010b465d54b9d02ce0f6b22af4, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -7867,6 +8036,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1728497111536696892, guid: f036f19e0a88f7b488ca90a0ac082462, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: f036f19e0a88f7b488ca90a0ac082462, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: f036f19e0a88f7b488ca90a0ac082462, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 6214803062950523435, guid: f036f19e0a88f7b488ca90a0ac082462, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
       value: 12.4800005
@@ -8007,6 +8188,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: 88a43e73f5da4d840a2ea40a31628693, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 88a43e73f5da4d840a2ea40a31628693, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 88a43e73f5da4d840a2ea40a31628693, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 88a43e73f5da4d840a2ea40a31628693, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -8116,6 +8309,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: ca7ae65b4cc71e34e97d3eff2781a5b2, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: ca7ae65b4cc71e34e97d3eff2781a5b2, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: ca7ae65b4cc71e34e97d3eff2781a5b2, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: ca7ae65b4cc71e34e97d3eff2781a5b2, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -8217,6 +8422,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1728497111536696892, guid: c782e41f1b93f7b43b3e667705398022, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: c782e41f1b93f7b43b3e667705398022, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: c782e41f1b93f7b43b3e667705398022, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 2449867424241437371, guid: c782e41f1b93f7b43b3e667705398022, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
       value: 12.4800005
@@ -8415,6 +8632,18 @@ PrefabInstance:
       propertyPath: m_SpriteTilingProperty.oldSize.y
       value: 19.36291
       objectReference: {fileID: 0}
+    - target: {fileID: 1728497111536696892, guid: 8791f6c4a637c34458d6c8e6fce2a3c4, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 8791f6c4a637c34458d6c8e6fce2a3c4, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 8791f6c4a637c34458d6c8e6fce2a3c4, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 8791f6c4a637c34458d6c8e6fce2a3c4, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -8889,6 +9118,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1728497111536696892, guid: c6b22af881bfa9b4e91307a5a3632ad2, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: c6b22af881bfa9b4e91307a5a3632ad2, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: c6b22af881bfa9b4e91307a5a3632ad2, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 3131586728878528605, guid: c6b22af881bfa9b4e91307a5a3632ad2, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
       value: 12.4800005
@@ -9644,6 +9885,18 @@ PrefabInstance:
       propertyPath: front
       value: 
       objectReference: {fileID: 21300000, guid: e1b7817bb84a9ba49bf7f5667dfa8249, type: 3}
+    - target: {fileID: 1728497111536696892, guid: 7a19978d378e3f3468cda1990adbcc3d, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 7a19978d378e3f3468cda1990adbcc3d, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 7a19978d378e3f3468cda1990adbcc3d, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 3298203168792214015, guid: 7a19978d378e3f3468cda1990adbcc3d, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
       value: 12.4800005
@@ -9877,7 +10130,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 367829456}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.5000001
+  m_Size: 0.50000006
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -10222,6 +10475,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1728497111536696892, guid: eef4f5e6eaa2cef4499e529dfc665490, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: eef4f5e6eaa2cef4499e529dfc665490, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: eef4f5e6eaa2cef4499e529dfc665490, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 5326879602099548150, guid: eef4f5e6eaa2cef4499e529dfc665490, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
       value: 12.4800005
@@ -10368,6 +10633,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1728497111536696892, guid: 573929fbf417f514e9e7a5f5a03b638e, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 573929fbf417f514e9e7a5f5a03b638e, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 573929fbf417f514e9e7a5f5a03b638e, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 573929fbf417f514e9e7a5f5a03b638e, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -10489,6 +10766,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1728497111536696892, guid: 3f37eadac15da0345b23a9f12cd54f89, type: 3}
+      propertyPath: trick
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 3f37eadac15da0345b23a9f12cd54f89, type: 3}
+      propertyPath: auctionLeftOvers
+      value: 
+      objectReference: {fileID: 458990547}
+    - target: {fileID: 1728497111536696892, guid: 3f37eadac15da0345b23a9f12cd54f89, type: 3}
+      propertyPath: currentPlayerHand
+      value: 
+      objectReference: {fileID: 867246512}
     - target: {fileID: 7162584385662538710, guid: 3f37eadac15da0345b23a9f12cd54f89, type: 3}
       propertyPath: m_Sprite
       value: 

@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviour
         if (_instance == null)
         {
             _instance = this;
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -65,7 +65,7 @@ public class GameManager : MonoBehaviour
     public bool isGivingStage = false;
     public RunLog runLog;
     private bool gameplayFinished = false;
-    private bool auctionFinished = false;
+    public bool auctionFinished = false;
     [SerializeField] private GameObject t;
     [SerializeField] private GameObject downPlace;
     [SerializeField] private GameObject leftPlace;
