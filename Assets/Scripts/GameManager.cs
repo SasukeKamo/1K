@@ -59,7 +59,7 @@ public class GameManager : MonoBehaviour
     private Player currentBidder; // Player who is winning the auction at the moment
     public Player currentPlayer; // Player who is making any move at the moment
     public Player currentCardReceiver;  // Player who is being given a card at the moment
-    private int firstPlayer = 0;
+    private int firstPlayer = 0;    // Player who is starting the round
     private bool played;
     private Card playedCard;
     public bool isGivingStage = false;
@@ -87,8 +87,10 @@ public class GameManager : MonoBehaviour
         mainDeck.Shuffle();
         Debug.Log("Cards shuffled.");
         marriages = new List<Tuple<Player, Card.Suit>>();
-        DealInitialCards();
         roundNumber = 1;
+        firstPlayer = UnityEngine.Random.Range(0, 4);
+        currentPlayer = players[firstPlayer];
+        DealInitialCards();
         teamScore.Add(0);
         teamScore.Add(0);
         Debug.Log($"{teamScore[0]}, {teamScore[1]}");
@@ -257,6 +259,7 @@ public class GameManager : MonoBehaviour
     {
         currentBid = 100;
 
+        firstPlayer = (firstPlayer + 1) % players.Count;
         currentPlayer = players[firstPlayer];     // TODO: Gracz rozpoczynaj�cy dan� tur�
         currentBidder = currentPlayer;
         currentPlayer = GetNextPlayer(currentPlayer);
