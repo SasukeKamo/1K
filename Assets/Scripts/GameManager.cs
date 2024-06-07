@@ -70,6 +70,7 @@ public class GameManager : MonoBehaviour
     private bool gameplayFinished = false;
     public bool auctionFinished = false;
     public GamePhase gamePhase;
+    public string savePath = "save.txt";
     [SerializeField] private bool forcePlayerChangeDialog;
     [SerializeField] private GameObject t;
     [SerializeField] private GameObject downPlace;
@@ -107,6 +108,9 @@ public class GameManager : MonoBehaviour
 
     IEnumerator GameLoop()
     {
+        //LoadGame(); //only for testing
+        //currentPlayer = players[firstPlayer];
+        //MovePlayerToPosition(currentPlayer, Player.Position.down);
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
             Debug.Log("Round Started");
@@ -420,8 +424,6 @@ public class GameManager : MonoBehaviour
 
         //Debug.Log("Gameplay started");
 
-        
-
         Player currentPlayer = currentBidder;
         Player trickWinner = currentBidder;
         List<Card> currentTrick = new List<Card>();
@@ -577,7 +579,7 @@ public class GameManager : MonoBehaviour
                 }
             }
             else{
-                teamScore[i]=tempTeamScore[i];
+                teamScore[i]+=tempTeamScore[i];
             }
         }
         
@@ -768,9 +770,8 @@ public class GameManager : MonoBehaviour
     }
     public void SaveGame()
     {
-        string name = "save.txt";
 
-        using (StreamWriter sw = File.CreateText(name))
+        using (StreamWriter sw = File.CreateText(savePath))
         {
             sw.WriteLine($"{roundNumber} {firstPlayer}");
             foreach (var player in players)
@@ -778,5 +779,46 @@ public class GameManager : MonoBehaviour
                 sw.WriteLine($"{player.playerNumber} {player.playerName} {player.team} {player.GetScore()}");
             }
         }
+    }
+
+    public void LoadGame()
+    {
+        try
+        {
+            using (StreamReader sr = new StreamReader(savePath))
+            {
+                string line;
+
+                line = sr.ReadLine();
+                if (line == null)
+                {
+                    Debug.LogError("Trying to read from empty file");
+                    return;
+                }
+
+                string[] lineSplit = line.Split(' ');
+                roundNumber = int.Parse(lineSplit[0]);
+                firstPlayer = int.Parse(lineSplit[1]);
+
+                while ((line = sr.ReadLine()) != null)
+                {
+                    lineSplit = line.Split(' ');
+                    int pNum = int.Parse(lineSplit[0]);
+                    string pName = lineSplit[1];
+                    int team = int.Parse(lineSplit[2]);
+                    int points = int.Parse(lineSplit[3]);
+
+                    players[pNum-1].playerName = pName;
+                    players[pNum - 1].team = team;
+                    players[pNum - 1].SetScore(points);
+                    teamScore[team-1] = points;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e.Message);
+        }
+        
     }
 }
