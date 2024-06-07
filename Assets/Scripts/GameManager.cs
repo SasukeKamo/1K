@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
@@ -112,6 +113,9 @@ public class GameManager : MonoBehaviour
             yield return StartCoroutine(StartRound());
             EndRound();
             Debug.Log("Round Ended");
+            SaveGame();
+            Debug.Log("Game Saved");
+
         }
     }
 
@@ -416,7 +420,7 @@ public class GameManager : MonoBehaviour
 
         //Debug.Log("Gameplay started");
 
-        auctionFinished = false;
+        
 
         Player currentPlayer = currentBidder;
         Player trickWinner = currentBidder;
@@ -485,7 +489,6 @@ public class GameManager : MonoBehaviour
         //DealCardsToOtherPlayers();
         StartCoroutine(Gameplay());
         yield return new WaitUntil(() => gameplayFinished);
-        gameplayFinished = false;
     }
 
     void ResetDeck()
@@ -532,6 +535,9 @@ public class GameManager : MonoBehaviour
         {
             player.Reset();
         }
+
+        auctionFinished = false;
+        gameplayFinished = false;
 
         //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
         // przygotowanie na nastepna runde
@@ -760,6 +766,17 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+    public void SaveGame()
+    {
+        string name = "save.txt";
 
-
+        using (StreamWriter sw = File.CreateText(name))
+        {
+            sw.WriteLine($"{roundNumber} {firstPlayer}");
+            foreach (var player in players)
+            {
+                sw.WriteLine($"{player.playerNumber} {player.playerName} {player.team} {player.GetScore()}");
+            }
+        }
+    }
 }
