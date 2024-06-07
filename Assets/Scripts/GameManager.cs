@@ -68,6 +68,7 @@ public class GameManager : MonoBehaviour
     public RunLog runLog;
     private bool gameplayFinished = false;
     public bool auctionFinished = false;
+    public bool setupFinished = false;
     public GamePhase gamePhase;
     [SerializeField] private bool forcePlayerChangeDialog;
     [SerializeField] private GameObject t;
@@ -77,13 +78,16 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject rightPlace;
     [SerializeField] private GameObject auctionDialog;
     [SerializeField] private GameObject readyDialog;
+    [SerializeField] private GameObject setupDialog;
     [SerializeField] private GameObject handOverDialog;
     [SerializeField] private GameObject restOfTheDeck;
+    [SerializeField] private GameObject[] nickNames;
 
     void Start()
     {
         runLog = _instance.GetComponent<RunLog>();
-        InitializeGame();
+        //InitializeGame();
+        DisplaySetupDialog();
         StartCoroutine(GameLoop());
     }
 
@@ -106,6 +110,8 @@ public class GameManager : MonoBehaviour
 
     IEnumerator GameLoop()
     {
+        yield return new WaitUntil(() => setupFinished);
+
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
             Debug.Log("Round Started");
@@ -238,8 +244,6 @@ public class GameManager : MonoBehaviour
             MovePlayerToPosition(currentBidder, Player.Position.down, true);
             ChangePlayer();
 
-            // UNCOMMENT BELOW WHEN CARDS DEALING TO OTHERS IMPLEMENTED
-            // OLD DealCardsToOtherPlayers();
         }
         else //Nie wszyscy spasowali -> dilog dla nast�pnego gracza
         {
@@ -274,6 +278,32 @@ public class GameManager : MonoBehaviour
             DisplayAuctionDialog();
         else if (gamePhase == GamePhase.Handover)
             DealCardsToOtherPlayers();
+    }
+
+    void DisplaySetupDialog()
+    {
+        DisplayNicknames(false);
+        setupDialog.SetActive(true);
+    }
+
+    public void FinishSetup()
+    {
+        string player1Name = GameObject.Find("InputName1Text").GetComponent<TextMeshProUGUI>().text;
+        players[0].playerName = player1Name;
+
+        string player2Name = GameObject.Find("InputName2Text").GetComponent<TextMeshProUGUI>().text;
+        players[1].playerName = player2Name;
+
+        string player3Name = GameObject.Find("InputName3Text").GetComponent<TextMeshProUGUI>().text;
+        players[2].playerName = player3Name;
+
+        string player4Name = GameObject.Find("InputName4Text").GetComponent<TextMeshProUGUI>().text;
+        players[3].playerName = player4Name;
+
+        setupDialog.SetActive(false);
+        InitializeGame();
+        DisplayNicknames(true);
+        setupFinished = true;
     }
 
     void Auction()
@@ -759,6 +789,12 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void DisplayNicknames(bool display)
+    {
+        foreach (GameObject obj in nickNames)
+            obj.SetActive(display);
     }
 
 
