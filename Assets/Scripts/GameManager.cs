@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
@@ -70,6 +71,7 @@ public class GameManager : MonoBehaviour
     public bool auctionFinished = false;
     public bool setupFinished = false;
     public GamePhase gamePhase;
+    public string savePath = "save.txt";
     [SerializeField] private bool forcePlayerChangeDialog;
     [SerializeField] private GameObject t;
     [SerializeField] private GameObject downPlace;
@@ -112,12 +114,19 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitUntil(() => setupFinished);
 
+        //LoadGame(); //only for testing
+        //currentPlayer = players[firstPlayer];
+        //MovePlayerToPosition(currentPlayer, Player.Position.down);
+
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
             Debug.Log("Round Started");
             yield return StartCoroutine(StartRound());
             EndRound();
             Debug.Log("Round Ended");
+            SaveGame();
+            Debug.Log("Game Saved");
+
         }
     }
 
@@ -446,8 +455,6 @@ public class GameManager : MonoBehaviour
 
         //Debug.Log("Gameplay started");
 
-        auctionFinished = false;
-
         Player currentPlayer = currentBidder;
         Player trickWinner = currentBidder;
         List<Card> currentTrick = new List<Card>();
@@ -515,7 +522,6 @@ public class GameManager : MonoBehaviour
         //DealCardsToOtherPlayers();
         StartCoroutine(Gameplay());
         yield return new WaitUntil(() => gameplayFinished);
-        gameplayFinished = false;
     }
 
     void ResetDeck()
@@ -563,6 +569,9 @@ public class GameManager : MonoBehaviour
             player.Reset();
         }
 
+        auctionFinished = false;
+        gameplayFinished = false;
+
         //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
         // przygotowanie na nastepna runde
         //tutaj powinnismy karty wlozyc do talii znowu
@@ -601,7 +610,7 @@ public class GameManager : MonoBehaviour
                 }
             }
             else{
-                teamScore[i]=tempTeamScore[i];
+                teamScore[i]+=tempTeamScore[i];
             }
         }
         
@@ -796,6 +805,55 @@ public class GameManager : MonoBehaviour
         foreach (GameObject obj in nickNames)
             obj.SetActive(display);
     }
+    public void SaveGame()
+    {
+        using (StreamWriter sw = File.CreateText(savePath))
+        {
+            sw.WriteLine($"{roundNumber} {firstPlayer}");
+            foreach (var player in players)
+            {
+                sw.WriteLine($"{player.playerNumber} {player.playerName} {player.team} {player.GetScore()}");
+            }
+        }
+    }
+    public void LoadGame()
+    {
+        try
+        {
+            using (StreamReader sr = new StreamReader(savePath))
+            {
+                string line;
 
+                line = sr.ReadLine();
+                if (line == null)
+                {
+                    Debug.LogError("Trying to read from empty file");
+                    return;
+                }
 
+                string[] lineSplit = line.Split(' ');
+                roundNumber = int.Parse(lineSplit[0]);
+                firstPlayer = int.Parse(lineSplit[1]);
+
+                while ((line = sr.ReadLine()) != null)
+                {
+                    lineSplit = line.Split(' ');
+                    int pNum = int.Parse(lineSplit[0]);
+                    string pName = lineSplit[1];
+                    int team = int.Parse(lineSplit[2]);
+                    int points = int.Parse(lineSplit[3]);
+
+                    players[pNum-1].playerName = pName;
+                    players[pNum - 1].team = team;
+                    players[pNum - 1].SetScore(points);
+                    teamScore[team-1] = points;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e.Message);
+        }
+        
+    }
 }
