@@ -405,6 +405,10 @@ public class GameManager : MonoBehaviour
     {
         int lastCard = cards.Count - 1;
         int maxAtu = -1, max = 0;
+
+        if(cards.Count == 1){
+            return false;
+        }
             
         Card.Suit trump = GetAtuSuit();
         if (trump != Card.Suit.None){
@@ -438,10 +442,22 @@ public class GameManager : MonoBehaviour
                 }
             }
             else {
-                if (cards[lastCard].GetSuit() == trump && cards[lastCard].GetValue() > cards[maxAtu].GetValue()){
+                if (cards[lastCard].GetSuit() == trump && lastCard == maxAtu){
                     return true;
                 }
                 return false;
+            }
+        }
+        else{
+            int maxc = 0;
+            for (int i = 0; i < cards.Count; i++)
+            {
+                if (cards[0].GetSuitToString() == cards[i].GetSuitToString() && cards[i].GetValue() > cards[maxc].GetValue()){
+                    maxc = i;
+                }   
+            }
+            if (maxc == cards.Count - 1) {
+                return true;
             }
         }
         return false;
