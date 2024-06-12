@@ -598,6 +598,19 @@ public class GameManager : MonoBehaviour
         DealInitialCards();
     }
 
+    int RoundToNearestTen(int number)
+    {
+        int remainder = number % 10;
+        if (remainder <= 5)
+        {
+            return number - remainder;
+        }
+        else
+        {
+            return number + (10 - remainder);
+        }
+    }
+
     void CalculateRoundScores()
     {
         int bidderTeam = currentBidder.GetTeam();
@@ -615,19 +628,26 @@ public class GameManager : MonoBehaviour
         }
         marriages.Clear();
 
+        tempTeamScore[0]=RoundToNearestTen(tempTeamScore[0]);
+        tempTeamScore[1]=RoundToNearestTen(tempTeamScore[1]);
 
         for (int i=0;i<2;i++){
             if(i == bidderTeam-1){
                 if (tempTeamScore[bidderTeam-1] < currentBid)
                 {
+                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i]);
+                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> lost round. [-" + currentBid + " points]");
                     teamScore[i]-=currentBid;
                 }
                 else
                 {
+                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i]);
+                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> won round.");
                     teamScore[i]+=tempTeamScore[i];
                 }
             }
             else{
+                GameManager.Instance.runLog.logText("<Team " + (i+1) + "> scores " + tempTeamScore[i]);
                 teamScore[i]+=tempTeamScore[i];
             }
         }
