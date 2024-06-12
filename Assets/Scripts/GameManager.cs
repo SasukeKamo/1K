@@ -542,6 +542,14 @@ public class GameManager : MonoBehaviour
         yield return new WaitUntil(() => gameplayFinished);
     }
 
+    private void ResetCardsVariables()
+    {
+        foreach (Card card in mainDeck.cards)
+        {
+            card.ResetCard();
+        }
+    }
+
     void ResetDeck()
     {
         string[] s = { "Hearts", "Diamonds", "Clubs", "Spades" };
@@ -578,6 +586,7 @@ public class GameManager : MonoBehaviour
         CheckForGameEnd();
         roundNumber++;
         ResetDeck();
+        ResetCardsVariables();
 
         firstPlayer = (firstPlayer + 1) % players.Count;
         //Debug.Log(firstPlayer);
@@ -589,6 +598,8 @@ public class GameManager : MonoBehaviour
 
         auctionFinished = false;
         gameplayFinished = false;
+
+        otherCards.cards.Clear();
 
         //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
         // przygotowanie na nastepna runde
@@ -760,6 +771,18 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void AddRestToCurrentPlayer()
+    {
+        Card[] leftOvers = restOfTheDeck.GetComponentsInChildren<Card>();
+        if (leftOvers.Length != 0)
+        {
+            foreach (Card card in leftOvers)
+            {
+                currentPlayer.AddCardToHand(card);
+                card.gameObject.transform.SetParent(currentPlayer.transform);
+            }
+        }
+    }
 
     public void UpdateCardVisibility()
     {
