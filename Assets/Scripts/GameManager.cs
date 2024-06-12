@@ -412,7 +412,7 @@ public class GameManager : MonoBehaviour
             
         Card.Suit trump = GetAtuSuit();
         if (trump != Card.Suit.None){
-            for (int i = 0; i < cards.Count - 1; i++)
+            for (int i = 0; i < cards.Count; i++)
             {
                 if (cards[i].GetSuit() == trump)
                     if (maxAtu == -1) maxAtu = i;
