@@ -115,8 +115,6 @@ public class GameManager : MonoBehaviour
         yield return new WaitUntil(() => setupFinished);
 
         //LoadGame(); //only for testing
-        //currentPlayer = players[firstPlayer];
-        //MovePlayerToPosition(currentPlayer, Player.Position.down);
 
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
@@ -516,6 +514,10 @@ public class GameManager : MonoBehaviour
     IEnumerator StartRound()
     {
         Debug.Log("Starting Round " + roundNumber);
+        firstPlayer = (firstPlayer + 1) % players.Count;
+        currentPlayer = players[firstPlayer];
+        MovePlayerToPosition(currentPlayer, Player.Position.down);
+        gamePhase = GamePhase.Start;
 
         ChangePlayer();
         //Auction();
