@@ -197,14 +197,9 @@ public class InputHandler : MonoBehaviour
             if (GameManager.Instance.isGivingStage && clickedCard.visible)
             {
                 Debug.Log(GameManager.Instance.currentPlayer.name);
-                foreach (Card card in GameManager.Instance.currentPlayer.hand)
-                {
-                    if (clickedCard == card)
-                    {
-                        return;
-                    }
-                }
                 GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
+                if (GameManager.Instance.currentPlayer.hand.Contains(clickedCard))
+                    GameManager.Instance.currentPlayer.hand.Remove(clickedCard);
                 GameObject go = GameObject.Find(clickedCard.name);
 
                 go.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
@@ -225,6 +220,7 @@ public class InputHandler : MonoBehaviour
                     GameObject lastCard = GameObject.Find(clickedCard.name);
                     lastCard.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
                     GameManager.Instance.otherCards.cards.Remove(clickedCard);
+                    GameManager.Instance.AddRestToCurrentPlayer();
 
                     GameManager.Instance.EndDealingStage();
                 }

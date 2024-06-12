@@ -16,6 +16,8 @@ public class Card : MonoBehaviour
     public bool visible;
     private SpriteRenderer spriteRenderer;
     private Vector3 originalScale;
+    private Vector3 startingScale;
+    private Vector3 originalPosition;
     [SerializeField] private GameObject currentPlayerHand;
     [SerializeField] private GameObject auctionLeftOvers;
 
@@ -52,6 +54,11 @@ public class Card : MonoBehaviour
                 value = 11;
                 break;
         }
+    }
+
+    private void Start()
+    {
+
     }
 
     public void SetVisible(bool visible)
@@ -101,7 +108,15 @@ public class Card : MonoBehaviour
         if (transform.parent.parent == currentPlayerHand.transform || transform.parent == auctionLeftOvers.transform)
         {
             transform.localScale = originalScale * 1.1f;
+            this.spriteRenderer.sortingOrder++;
         }
+    }
+
+    public void ResetCard()
+    {
+        spriteRenderer.sortingOrder = 0;
+        startingScale = new Vector3(6, 6, 6);
+        transform.localScale = startingScale;
     }
 
     private void OnMouseExit()
@@ -109,6 +124,8 @@ public class Card : MonoBehaviour
         if (transform.localScale != originalScale)
         {
             transform.localScale = originalScale;
+            if(spriteRenderer.sortingOrder > 0)
+                this.spriteRenderer.sortingOrder--;
         }
     }
 
