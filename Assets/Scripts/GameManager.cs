@@ -206,7 +206,7 @@ public class GameManager : MonoBehaviour
         TextMeshProUGUI currentWinnerText = GameObject.Find("CurrentWinnerText").GetComponent<TextMeshProUGUI>();
 
         currentBidText.text = "CURRENT BID: " + currentBid;
-        currentWinnerText.text = "CURRENT WINNER: " + currentBidder.name;
+        currentWinnerText.text = "CURRENT WINNER: " + currentBidder.playerName;
     }
 
     public void PositiveAuctionDialog()
@@ -247,7 +247,7 @@ public class GameManager : MonoBehaviour
             currentPlayer = currentBidder;
             GameplayCurrentPlayer = currentPlayer;
 
-            Debug.Log(currentBidder.name + " wins the auction with a bid of " + currentBid + " points.");
+            Debug.Log(currentBidder.playerName + " wins the auction with a bid of " + currentBid + " points.");
             runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].", Color.yellow);
 
             gamePhase = GamePhase.Handover;
@@ -301,15 +301,19 @@ public class GameManager : MonoBehaviour
     {
         string player1Name = GameObject.Find("InputName1Text").GetComponent<TextMeshProUGUI>().text;
         players[0].playerName = player1Name;
+        GameObject.Find("NameP1").GetComponent<TextMeshProUGUI>().text = player1Name;
 
         string player2Name = GameObject.Find("InputName2Text").GetComponent<TextMeshProUGUI>().text;
         players[1].playerName = player2Name;
+        GameObject.Find("NameP2").GetComponent<TextMeshProUGUI>().text = player2Name;
 
         string player3Name = GameObject.Find("InputName3Text").GetComponent<TextMeshProUGUI>().text;
         players[2].playerName = player3Name;
+        GameObject.Find("NameP3").GetComponent<TextMeshProUGUI>().text = player3Name;
 
         string player4Name = GameObject.Find("InputName4Text").GetComponent<TextMeshProUGUI>().text;
         players[3].playerName = player4Name;
+        GameObject.Find("NameP4").GetComponent<TextMeshProUGUI>().text = player4Name;
 
         setupDialog.SetActive(false);
         InitializeGame();
