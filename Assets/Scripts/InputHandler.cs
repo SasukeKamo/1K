@@ -40,7 +40,7 @@ public class InputHandler : MonoBehaviour
         }
     }
 
-    private bool ValidateCardOK(Card clickedCard, List<Card> hand) {
+    public bool ValidateCardOK(Card clickedCard, List<Card> hand) {
         Card[] trickCards = trick.GetComponentsInChildren<Card>();
         if (trickCards.Length > 0) {
             Card baseCard = trickCards[0];
@@ -194,6 +194,13 @@ public class InputHandler : MonoBehaviour
         if (hit.collider != null)
         {
             Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
+            
+            Player p = GameManager.Instance.GameplayCurrentPlayer;
+            if(GameManager.onePlayerMode && p != GameManager.Instance.players[GameManager.humanPlayer]){
+                Debug.LogWarning("It's not your move now!");
+                return;
+            }
+
             if (GameManager.Instance.isGivingStage && clickedCard.visible)
             {
                 Debug.Log(GameManager.Instance.currentPlayer.name);
@@ -233,11 +240,61 @@ public class InputHandler : MonoBehaviour
                 if(ValidateCardOK(clickedCard, hand)){
                     PlayCard(clickedCard, hand, current);
                     GameManager.Instance.Play(clickedCard);
-                    GameManager.Instance.MovePlayersToNextPositions();
+                    if(!GameManager.onePlayerMode) GameManager.Instance.MovePlayersToNextPositions();
                     GameManager.Instance.UpdateCardVisibility();
                 }
             }
         }
+    }
+
+    // handle bot move
+    public void OnClickHandle(Card clickedCard)
+    {
+        if (GameManager.Instance.isGivingStage)
+            {
+                GameManager.Instance.runLog.logText("<" + GameManager.Instance.currentPlayer.playerName + "> handles card to <" + 
+                GameManager.Instance.currentCardReceiver.playerName + ">");
+                Debug.Log(GameManager.Instance.currentPlayer.name);
+                GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
+                if (GameManager.Instance.currentPlayer.hand.Contains(clickedCard))
+                    GameManager.Instance.currentPlayer.hand.Remove(clickedCard);
+                GameObject go = GameObject.Find(clickedCard.name);
+
+                go.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
+                go.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+                clickedCard.SetVisible(GameManager.Instance.currentCardReceiver == GameManager.Instance.currentPlayer);
+                GameManager.Instance.otherCards.cards.Remove(clickedCard);
+                cardsToDeal--;
+                GameManager.Instance.currentCardReceiver = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentCardReceiver);
+
+                TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+                currentCardReceiverText.text = "Choose card for player: " + GameManager.Instance.currentCardReceiver.playerName;
+                
+                
+                if (cardsToDeal == 1)
+                {
+                    clickedCard = GameManager.Instance.otherCards.cards[0];
+                    GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
+                    GameObject lastCard = GameObject.Find(clickedCard.name);
+                    lastCard.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
+                    GameManager.Instance.otherCards.cards.Remove(clickedCard);
+                    GameManager.Instance.AddRestToCurrentPlayer();
+
+                    GameManager.Instance.EndDealingStage();
+                }
+
+            }
+            else{
+                Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
+                List<Card> hand = GameManager.Instance.GetPlayerHand(current);
+                if(ValidateCardOK(clickedCard, hand)){
+                    PlayCard(clickedCard, hand, current);
+                    GameManager.Instance.Play(clickedCard);
+                    //GameManager.Instance.MovePlayersToNextPositions();
+                    GameManager.Instance.UpdateCardVisibility();
+                }
+            }
     }
 
     private void PlayCard(Card card, List<Card> hand, Player current)
@@ -247,6 +304,7 @@ public class InputHandler : MonoBehaviour
             card.transform.SetParent(trick.transform);
             card.GetComponent<SpriteRenderer>().sortingOrder = sortingOrder;
             sortingOrder++;
+            card.SetVisible(true);
             Debug.Log("Played card: " + card.gameObject.name);
             VerifyMarriage(card, hand, current);
             current.RemoveCardFromHand(card);

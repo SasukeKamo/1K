@@ -51,6 +51,7 @@ public class GameManager : MonoBehaviour
 
     public List<Player> players;
     public enum GamePhase { Start, Auction, Handover, Gameplay };
+    public const bool onePlayerMode = true; 
 
     public Deck mainDeck;
     public Deck otherCards;
@@ -61,8 +62,10 @@ public class GameManager : MonoBehaviour
     private int currentBid;
     private Player currentBidder; // Player who is winning the auction at the moment
     public Player currentPlayer; // Player who is making any move at the moment
+    public Player GameplayCurrentPlayer;
     public Player currentCardReceiver;  // Player who is being given a card at the moment
     private int firstPlayer = 0;    // Player who is starting the round
+    public const int humanPlayer = 0;    // Human player (if onePlayerMode) is always Player1
     private bool played;
     private Card playedCard;
     public bool isGivingStage = false;
@@ -242,6 +245,7 @@ public class GameManager : MonoBehaviour
         if (passed >= 3) //Wygrana jednego gracza -> oddanie kart innym graczom
         {
             currentPlayer = currentBidder;
+            GameplayCurrentPlayer = currentPlayer;
 
             Debug.Log(currentBidder.name + " wins the auction with a bid of " + currentBid + " points.");
             runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].", Color.yellow);
@@ -313,6 +317,15 @@ public class GameManager : MonoBehaviour
         setupFinished = true;
     }
 
+    void BotAuctionDecision(){
+        // TO BE CHANGED TO ALSO MAKE Positive Auction DECISION WHEN BOT DEALING CARDS FIXED
+
+        //int i = UnityEngine.Random.Range(0, 2);
+        //if(i==0) NegativeAuctionDialog();
+        //else PositiveAuctionDialog();
+        NegativeAuctionDialog();
+    }
+
     void Auction()
     {
         currentBid = 100;
@@ -320,14 +333,27 @@ public class GameManager : MonoBehaviour
         gamePhase = GamePhase.Auction;
 
         DisplayAuctionDialog();
+        if(onePlayerMode && currentPlayer!=players[humanPlayer]){
+            BotAuctionDecision();
+        }
     }
+
+    private IEnumerator BotDealCardsDecision(){
+        List<Card> hand = GetPlayerHand(currentPlayer);
+        for(int i=0; i<4; i++){
+            Card card = hand[0];
+            yield return new WaitForSeconds(1.0f);
+            InputHandler.Instance.OnClickHandle(card);
+        }
+    }
+
 
     void ChangePlayer()
     {
         //currentPlayer = GetNextPlayer(currentPlayer);
         //MovePlayerToPosition(currentPlayer, Player.Position.down);
 
-        if (forcePlayerChangeDialog)
+        if (!onePlayerMode && forcePlayerChangeDialog)
         {
             DisplayReadyDialog();
         }
@@ -337,10 +363,15 @@ public class GameManager : MonoBehaviour
 
             if (gamePhase == GamePhase.Start)
                 Auction();
-            else if (gamePhase == GamePhase.Auction)
-                DisplayAuctionDialog();
+            else if (gamePhase == GamePhase.Auction){
+                if(onePlayerMode && currentPlayer!=players[humanPlayer])
+                    BotAuctionDecision();
+                else DisplayAuctionDialog();
+            }
             else if (gamePhase == GamePhase.Handover)
                 DealCardsToOtherPlayers();
+                if(onePlayerMode && currentPlayer!=players[humanPlayer])
+                    StartCoroutine(BotDealCardsDecision());
         }
     }
 
@@ -463,39 +494,63 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
+    private Card ChooseCardToPlay(Player player){
+        List<Card> hand = GetPlayerHand(player);
+        Card cardToPlay = hand[0];
+        foreach (Card card in hand){
+            cardToPlay = card;
+            if (InputHandler.Instance.ValidateCardOK(cardToPlay, hand)) break;
+        }
+
+        return cardToPlay;
+    }
+    
+    private IEnumerator DelayedBotMove(Player player)
+    {
+        // Wait for before making a move
+        yield return new WaitForSeconds(1.0f);
+
+        InputHandler.Instance.OnClickHandle(ChooseCardToPlay(player));
+    }
+
     private IEnumerator Gameplay()
     {
         yield return new WaitUntil(() => auctionFinished);
 
         //Debug.Log("Gameplay started");
 
-        Player currentPlayer = currentBidder;
+        //GameplayCurrentPlayer = currentBidder;
+        GameplayCurrentPlayer = currentPlayer;
+        Debug.Log("GameplayCurrentPlayer = " + GameplayCurrentPlayer);
         Player trickWinner = currentBidder;
         List<Card> currentTrick = new List<Card>();
 
         gameplayFinished = false;
 
-        int numberOfTurns = currentPlayer.GetCardsInHand();
+        int numberOfTurns = GameplayCurrentPlayer.GetCardsInHand();
 
         for (int i = 0; i < numberOfTurns; i++)
         {
             for (int j = 0; j < players.Count; j++)
             {
+                if (onePlayerMode && GameplayCurrentPlayer != players[humanPlayer]){
+                    StartCoroutine(DelayedBotMove(GameplayCurrentPlayer));
+                }
                 yield return new WaitUntil(() => played);
                 played = false;
                 currentTrick.Add(playedCard);
                 if (IsNewTrickWinner(currentTrick))
                 {
-                    trickWinner = currentPlayer;
+                    trickWinner = GameplayCurrentPlayer;
                 }
-                currentPlayer = GetNextPlayer(currentPlayer);
+                GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
             }
             UpdatePlayerScore(currentTrick, trickWinner);
             currentTrick.Clear();
             DisplayTrumpText();
-            int playerNum = currentPlayer.playerNumber;
-            currentPlayer = trickWinner;
-            MovePlayerToPosition(trickWinner, Player.Position.down, true);
+            int playerNum = GameplayCurrentPlayer.playerNumber;
+            GameplayCurrentPlayer = trickWinner;
+            if(!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true);
             UpdateCardVisibility();
         }
         UpdateMarriageScore();
@@ -530,6 +585,7 @@ public class GameManager : MonoBehaviour
     IEnumerator StartRound()
     {
         Debug.Log("Starting Round " + roundNumber);
+
         firstPlayer = (firstPlayer + 1) % players.Count;
         currentPlayer = players[firstPlayer];
         MovePlayerToPosition(currentPlayer, Player.Position.down);
