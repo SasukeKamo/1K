@@ -51,7 +51,7 @@ public class GameManager : MonoBehaviour
 
     public List<Player> players;
     public enum GamePhase { Start, Auction, Handover, Gameplay };
-    public const bool onePlayerMode = true; 
+    public bool onePlayerMode = true; 
 
     public Deck mainDeck;
     public Deck otherCards;
@@ -297,6 +297,15 @@ public class GameManager : MonoBehaviour
         setupDialog.SetActive(true);
     }
 
+    public void FinishSetupMultiplayer(){
+        onePlayerMode = false;
+        FinishSetup();
+    }
+    public void FinishSetupSinglePlayer(){
+        onePlayerMode = true;
+        FinishSetup();
+    }
+
     public void FinishSetup()
     {
         string player1Name = GameObject.Find("InputName1Text").GetComponent<TextMeshProUGUI>().text;
@@ -322,12 +331,10 @@ public class GameManager : MonoBehaviour
     }
 
     void BotAuctionDecision(){
-        // TO BE CHANGED TO ALSO MAKE Positive Auction DECISION WHEN BOT DEALING CARDS FIXED
-
-        //int i = UnityEngine.Random.Range(0, 2);
-        //if(i==0) NegativeAuctionDialog();
-        //else PositiveAuctionDialog();
-        NegativeAuctionDialog();
+        // PLAYER MUST WIN AUCTION - BOT DEALING CARDS FEATURE NOT WORKING
+        int i = UnityEngine.Random.Range(0, 3);
+        if(i==0) PositiveAuctionDialog();
+        else NegativeAuctionDialog();
     }
 
     void Auction()
@@ -517,6 +524,18 @@ public class GameManager : MonoBehaviour
         InputHandler.Instance.OnClickHandle(ChooseCardToPlay(player));
     }
 
+    private void ClearCurrentPlayerText(){
+        TextMeshProUGUI currentPlayerText = GameObject.Find("CurrentPlayerText").GetComponent<TextMeshProUGUI>();
+        currentPlayerText.text = "";
+    }
+    private void DisplayCurrentPlayerText(){
+        TextMeshProUGUI currentPlayerText = GameObject.Find("CurrentPlayerText").GetComponent<TextMeshProUGUI>();
+        if(GameplayCurrentPlayer == players[humanPlayer]){
+            currentPlayerText.text = "Your turn";
+        }
+        else currentPlayerText.text = GameManager.Instance.GameplayCurrentPlayer.playerName + " turn";
+    }
+
     private IEnumerator Gameplay()
     {
         yield return new WaitUntil(() => auctionFinished);
@@ -537,6 +556,7 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < players.Count; j++)
             {
+                if(onePlayerMode)DisplayCurrentPlayerText();
                 if (onePlayerMode && GameplayCurrentPlayer != players[humanPlayer]){
                     StartCoroutine(DelayedBotMove(GameplayCurrentPlayer));
                 }
@@ -559,6 +579,7 @@ public class GameManager : MonoBehaviour
         }
         UpdateMarriageScore();
         marriages.Clear();
+        ClearCurrentPlayerText();
 
         gameplayFinished = true;
     }

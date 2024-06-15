@@ -196,7 +196,7 @@ public class InputHandler : MonoBehaviour
             Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
             
             Player p = GameManager.Instance.GameplayCurrentPlayer;
-            if(GameManager.onePlayerMode && p != GameManager.Instance.players[GameManager.humanPlayer]){
+            if(GameManager.Instance.onePlayerMode && p != GameManager.Instance.players[GameManager.humanPlayer]){
                 Debug.LogWarning("It's not your move now!");
                 return;
             }
@@ -240,7 +240,7 @@ public class InputHandler : MonoBehaviour
                 if(ValidateCardOK(clickedCard, hand)){
                     PlayCard(clickedCard, hand, current);
                     GameManager.Instance.Play(clickedCard);
-                    if(!GameManager.onePlayerMode) GameManager.Instance.MovePlayersToNextPositions();
+                    if(!GameManager.Instance.onePlayerMode) GameManager.Instance.MovePlayersToNextPositions();
                     GameManager.Instance.UpdateCardVisibility();
                 }
             }
@@ -296,7 +296,6 @@ public class InputHandler : MonoBehaviour
                 }
             }
     }
-
     private void PlayCard(Card card, List<Card> hand, Player current)
     {
         if (card.transform.parent != trick.transform)
