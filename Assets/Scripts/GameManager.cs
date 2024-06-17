@@ -122,6 +122,8 @@ public class GameManager : MonoBehaviour
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
             Debug.Log("Round Started");
+            GameManager.Instance.runLog.logText("");
+            GameManager.Instance.runLog.logText("                  --- Round " + roundNumber + " ---", Color.magenta);
             yield return StartCoroutine(StartRound());
             EndRound();
             Debug.Log("Round Ended");
@@ -215,7 +217,7 @@ public class GameManager : MonoBehaviour
         currentBidder = currentPlayer;
         auctionDialog.SetActive(false);
 
-        runLog.logText("<"+currentBidder.playerName + "> has bidded " + currentBid + ".", Color.white);
+        runLog.logText("<"+currentBidder.playerName + "> has bidded " + currentBid + ".", Color.yellow);
 
         do
         {
@@ -531,9 +533,17 @@ public class GameManager : MonoBehaviour
     private void DisplayCurrentPlayerText(){
         TextMeshProUGUI currentPlayerText = GameObject.Find("CurrentPlayerText").GetComponent<TextMeshProUGUI>();
         if(GameplayCurrentPlayer == players[humanPlayer]){
-            currentPlayerText.text = "Your turn";
+            currentPlayerText.fontSize = 45;
+            currentPlayerText.color = Color.blue;
+            currentPlayerText.text = "Your move";
         }
-        else currentPlayerText.text = GameManager.Instance.GameplayCurrentPlayer.playerName + " turn";
+        else {
+            currentPlayerText.fontSize = 25;
+            currentPlayerText.color = Color.grey;
+            currentPlayerText.text = GameManager.Instance.GameplayCurrentPlayer.playerName + "'s move";
+        }
+        
+        
     }
 
     private IEnumerator Gameplay()
@@ -569,6 +579,8 @@ public class GameManager : MonoBehaviour
                 }
                 GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
             }
+            yield return new WaitForSeconds(1.0f);
+            EndTurn();
             UpdatePlayerScore(currentTrick, trickWinner);
             currentTrick.Clear();
             DisplayTrumpText();
@@ -582,6 +594,16 @@ public class GameManager : MonoBehaviour
         ClearCurrentPlayerText();
 
         gameplayFinished = true;
+    }
+
+    private void EndTurn(){
+        Debug.Log("End of turn.");
+        for(int i=0; i < 4; i++) {
+                    GameObject trickCard = t.transform.GetChild(0).gameObject;
+                    Vector3 p = new Vector3(500, 300, 69);
+                    trickCard.transform.position = p;
+                    trickCard.transform.SetParent(null);
+                }
     }
 
     public void Play(Card card)
@@ -727,19 +749,19 @@ public class GameManager : MonoBehaviour
             if(i == bidderTeam-1){
                 if (tempTeamScore[bidderTeam-1] < currentBid)
                 {
-                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i]);
-                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> lost round. [-" + currentBid + " points]");
+                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i] + " points", Color.red);
+                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> lost round. [-" + currentBid + " points]", Color.red);
                     teamScore[i]-=currentBid;
                 }
                 else
                 {
-                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i]);
-                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> won round.");
+                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i] + " points", Color.green);
+                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> won round.", Color.green);
                     teamScore[i]+=tempTeamScore[i];
                 }
             }
             else{
-                GameManager.Instance.runLog.logText("<Team " + (i+1) + "> scores " + tempTeamScore[i]);
+                GameManager.Instance.runLog.logText("<Team " + (i+1) + "> scores " + tempTeamScore[i]+ " points", Color.yellow);
                 teamScore[i]+=tempTeamScore[i];
             }
         }

@@ -40,6 +40,23 @@ public class InputHandler : MonoBehaviour
         }
     }
 
+
+    private IEnumerator DisplayWrongMoveText(){
+        if(GameManager.Instance.onePlayerMode && GameManager.Instance.GameplayCurrentPlayer == GameManager.Instance.players[GameManager.humanPlayer]){
+            TextMeshProUGUI text = GameObject.Find("WrongMoveText").GetComponent<TextMeshProUGUI>();
+            text.text = "illegal move";
+            yield return new WaitForSeconds(0.5f);
+            text.text = "";
+        }
+        else if(!GameManager.Instance.onePlayerMode){
+            TextMeshProUGUI text = GameObject.Find("WrongMoveText").GetComponent<TextMeshProUGUI>();
+            text.text = "illegal move";
+            yield return new WaitForSeconds(0.5f);
+            text.text = "";
+        }
+        
+    }
+
     public bool ValidateCardOK(Card clickedCard, List<Card> hand) {
         Card[] trickCards = trick.GetComponentsInChildren<Card>();
         if (trickCards.Length > 0) {
@@ -65,6 +82,7 @@ public class InputHandler : MonoBehaviour
                     foreach (Card card in hand){
                         if(card.GetSuitToString() == trickWinner.GetSuitToString() && card.GetValue() > trickWinner.GetValue()){
                             Debug.LogWarning("Invalid move. Need to overtrump with higher value of " + baseCard.GetSuitToString() + "!");
+                            StartCoroutine(DisplayWrongMoveText());
                             return false;
                         }
                     }
@@ -75,6 +93,7 @@ public class InputHandler : MonoBehaviour
                 foreach (Card card in hand){
                     if(card.GetSuitToString() == baseCard.GetSuitToString()){
                             Debug.LogWarning("Invalid move. Need to lay card of " + baseCard.GetSuitToString() + "!");
+                            StartCoroutine(DisplayWrongMoveText());
                             return false;
                         }
                 }
@@ -120,11 +139,13 @@ public class InputHandler : MonoBehaviour
                         }
                         else {
                             Debug.Log("Invalid move. Player has to play with trump!");
+                            StartCoroutine(DisplayWrongMoveText());
                             return false;
                         }
                     }
                     if (highestPlayerAtu.GetValue() > clickedCard.GetValue()){
                         Debug.Log("Invalid move. Player has to overtrump with trump!");
+                        StartCoroutine(DisplayWrongMoveText());
                         return false;
                     }
                     else {
@@ -147,8 +168,8 @@ public class InputHandler : MonoBehaviour
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
-                    GameManager.Instance.runLog.logText("Hand marriage: " + clickedCard.GetSuitToString() + 
-                    " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() + 
+                    " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
                     return true;
                 }
             }
@@ -160,8 +181,8 @@ public class InputHandler : MonoBehaviour
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
-                    GameManager.Instance.runLog.logText("Marriage: " + clickedCard.GetSuitToString() + 
-                    " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() + 
+                    " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
                     return true;
                 }
             }
@@ -177,8 +198,8 @@ public class InputHandler : MonoBehaviour
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
 
                     Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
-                    GameManager.Instance.runLog.logText("Marriage: " + clickedCard.GetSuitToString() + 
-                    " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() + 
+                    " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
                     return true;
                 }
         }
@@ -233,7 +254,8 @@ public class InputHandler : MonoBehaviour
                 }
 
             }
-            else if (clickedCard != null && clickedCard.visible && clickedCard.transform.parent != trick.transform && GameManager.Instance.auctionFinished)
+            else if (clickedCard != null && clickedCard.visible && clickedCard.transform.parent != trick.transform && GameManager.Instance.auctionFinished
+             && trick.GetComponentsInChildren<Card>().Length <= 3)
             {
                 Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
                 List<Card> hand = GameManager.Instance.GetPlayerHand(current);
@@ -280,7 +302,6 @@ public class InputHandler : MonoBehaviour
                     lastCard.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
                     GameManager.Instance.otherCards.cards.Remove(clickedCard);
                     GameManager.Instance.AddRestToCurrentPlayer();
-
                     GameManager.Instance.EndDealingStage();
                 }
 
@@ -296,6 +317,8 @@ public class InputHandler : MonoBehaviour
                 }
             }
     }
+
+
     private void PlayCard(Card card, List<Card> hand, Player current)
     {
         if (card.transform.parent != trick.transform)
@@ -309,8 +332,9 @@ public class InputHandler : MonoBehaviour
             current.RemoveCardFromHand(card);
 
             GameManager.Instance.runLog.logText("<" + current.playerName + "> plays " + card.GetCardFullName() + ".");
-
+        
             // end of turn (4 cards on table)
+            /*
             if (trick.transform.childCount == 4) {
                 Debug.Log("End of turn.");
                 for(int i=0; i < 4; i++) {
@@ -320,6 +344,8 @@ public class InputHandler : MonoBehaviour
                     trickCard.transform.SetParent(null);
                 }
             }
+            */
+
         }
         else
         {
