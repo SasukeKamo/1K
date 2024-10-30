@@ -51,7 +51,7 @@ public class GameManager : MonoBehaviour
 
     public List<Player> players;
     public enum GamePhase { Start, Auction, Handover, Gameplay };
-    public bool onePlayerMode = true; 
+    public bool onePlayerMode = true;
 
     public Deck mainDeck;
     public Deck otherCards;
@@ -77,6 +77,7 @@ public class GameManager : MonoBehaviour
     public string savePath = "save.txt";
     [SerializeField] private bool forcePlayerChangeDialog;
     [SerializeField] private GameObject t;
+    [SerializeField] private TrickManager trickManager;
     [SerializeField] private GameObject downPlace;
     [SerializeField] private GameObject leftPlace;
     [SerializeField] private GameObject upPlace;
@@ -133,7 +134,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void AddMarriage(Player player, Card.Suit suit){
+    public void AddMarriage(Player player, Card.Suit suit)
+    {
         marriages.Add(Tuple.Create(player, suit));
     }
 
@@ -185,15 +187,18 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void DisplayTrumpText(){
+    void DisplayTrumpText()
+    {
         TextMeshProUGUI currentText = GameObject.Find("TrumpText").GetComponent<TextMeshProUGUI>();
 
         Card.Suit trump = GetAtuSuit();
 
-        if (trump != Card.Suit.None){
+        if (trump != Card.Suit.None)
+        {
             currentText.text = " TRUMP " + trump.ToString();
         }
-        else{
+        else
+        {
             currentText.text = "";
         }
     }
@@ -217,7 +222,7 @@ public class GameManager : MonoBehaviour
         currentBidder = currentPlayer;
         auctionDialog.SetActive(false);
 
-        runLog.logText("<"+currentBidder.playerName + "> has bidded " + currentBid + ".", Color.yellow);
+        runLog.logText("<" + currentBidder.playerName + "> has bidded " + currentBid + ".", Color.yellow);
 
         do
         {
@@ -238,7 +243,7 @@ public class GameManager : MonoBehaviour
 
         int passed = 0;
 
-        foreach(Player player in players)
+        foreach (Player player in players)
         {
             if (player.HasPassed())
                 passed++;
@@ -299,11 +304,13 @@ public class GameManager : MonoBehaviour
         setupDialog.SetActive(true);
     }
 
-    public void FinishSetupMultiplayer(){
+    public void FinishSetupMultiplayer()
+    {
         onePlayerMode = false;
         FinishSetup();
     }
-    public void FinishSetupSinglePlayer(){
+    public void FinishSetupSinglePlayer()
+    {
         onePlayerMode = true;
         FinishSetup();
     }
@@ -332,10 +339,11 @@ public class GameManager : MonoBehaviour
         setupFinished = true;
     }
 
-    void BotAuctionDecision(){
+    void BotAuctionDecision()
+    {
         // PLAYER MUST WIN AUCTION - BOT DEALING CARDS FEATURE NOT WORKING
         int i = UnityEngine.Random.Range(0, 3);
-        if(i==0) PositiveAuctionDialog();
+        if (i == 0) PositiveAuctionDialog();
         else NegativeAuctionDialog();
     }
 
@@ -346,14 +354,17 @@ public class GameManager : MonoBehaviour
         gamePhase = GamePhase.Auction;
 
         DisplayAuctionDialog();
-        if(onePlayerMode && currentPlayer!=players[humanPlayer]){
+        if (onePlayerMode && currentPlayer != players[humanPlayer])
+        {
             BotAuctionDecision();
         }
     }
 
-    private IEnumerator BotDealCardsDecision(){
+    private IEnumerator BotDealCardsDecision()
+    {
         List<Card> hand = GetPlayerHand(currentPlayer);
-        for(int i=0; i<4; i++){
+        for (int i = 0; i < 4; i++)
+        {
             Card card = hand[0];
             yield return new WaitForSeconds(1.0f);
             InputHandler.Instance.OnClickHandle(card);
@@ -376,15 +387,16 @@ public class GameManager : MonoBehaviour
 
             if (gamePhase == GamePhase.Start)
                 Auction();
-            else if (gamePhase == GamePhase.Auction){
-                if(onePlayerMode && currentPlayer!=players[humanPlayer])
+            else if (gamePhase == GamePhase.Auction)
+            {
+                if (onePlayerMode && currentPlayer != players[humanPlayer])
                     BotAuctionDecision();
                 else DisplayAuctionDialog();
             }
             else if (gamePhase == GamePhase.Handover)
                 DealCardsToOtherPlayers();
-                if(onePlayerMode && currentPlayer!=players[humanPlayer])
-                    StartCoroutine(BotDealCardsDecision());
+            if (onePlayerMode && currentPlayer != players[humanPlayer])
+                StartCoroutine(BotDealCardsDecision());
         }
     }
 
@@ -417,8 +429,9 @@ public class GameManager : MonoBehaviour
     public Card.Suit GetAtuSuit()
     {
         int size = marriages.Count;
-        if (size > 0){
-            Card.Suit suit = marriages[size-1].Item2;
+        if (size > 0)
+        {
+            Card.Suit suit = marriages[size - 1].Item2;
             return suit;
         }
         return Card.Suit.None;
@@ -434,10 +447,14 @@ public class GameManager : MonoBehaviour
         winner.AddRoundScore(value);
     }
 
-    private void UpdateMarriageScore(){
-        foreach(Player player in players){
-            foreach(Tuple<Player, Card.Suit> marriage in marriages){
-                if(player.playerNumber == marriage.Item1.playerNumber){
+    private void UpdateMarriageScore()
+    {
+        foreach (Player player in players)
+        {
+            foreach (Tuple<Player, Card.Suit> marriage in marriages)
+            {
+                if (player.playerNumber == marriage.Item1.playerNumber)
+                {
                     int score = marriage.Item2.GetValue();
                     player.AddRoundScore(score);
                 }
@@ -450,26 +467,32 @@ public class GameManager : MonoBehaviour
         int lastCard = cards.Count - 1;
         int maxAtu = -1, max = 0;
 
-        if(cards.Count == 1){
+        if (cards.Count == 1)
+        {
             return false;
         }
-            
+
         Card.Suit trump = GetAtuSuit();
-        if (trump != Card.Suit.None){
+        if (trump != Card.Suit.None)
+        {
             for (int i = 0; i < cards.Count; i++)
             {
                 if (cards[i].GetSuit() == trump)
                     if (maxAtu == -1) maxAtu = i;
-                    else if (cards[i].GetValue() > cards[maxAtu].GetValue()){
+                    else if (cards[i].GetValue() > cards[maxAtu].GetValue())
+                    {
                         maxAtu = i;
                     }
             }
 
-            if(maxAtu == -1){
-                if (cards[lastCard].GetSuit() == trump){
+            if (maxAtu == -1)
+            {
+                if (cards[lastCard].GetSuit() == trump)
+                {
                     return true;
                 }
-                else{
+                else
+                {
                     for (int i = 0; i < cards.Count - 1; i++)
                     {
                         if (cards[i].GetValue() > max && cards[0].GetSuitToString() == cards[i].GetSuitToString())
@@ -485,39 +508,46 @@ public class GameManager : MonoBehaviour
                     }
                 }
             }
-            else {
-                if (cards[lastCard].GetSuit() == trump && lastCard == maxAtu){
+            else
+            {
+                if (cards[lastCard].GetSuit() == trump && lastCard == maxAtu)
+                {
                     return true;
                 }
                 return false;
             }
         }
-        else{
+        else
+        {
             int maxc = 0;
             for (int i = 0; i < cards.Count; i++)
             {
-                if (cards[0].GetSuitToString() == cards[i].GetSuitToString() && cards[i].GetValue() > cards[maxc].GetValue()){
+                if (cards[0].GetSuitToString() == cards[i].GetSuitToString() && cards[i].GetValue() > cards[maxc].GetValue())
+                {
                     maxc = i;
-                }   
+                }
             }
-            if (maxc == cards.Count - 1) {
+            if (maxc == cards.Count - 1)
+            {
                 return true;
             }
         }
         return false;
     }
 
-    private Card ChooseCardToPlay(Player player){
+    private Card ChooseCardToPlay(Player player)
+    {
         List<Card> hand = GetPlayerHand(player);
         Card cardToPlay = hand[0];
-        foreach (Card card in hand){
+        foreach (Card card in hand)
+        {
             cardToPlay = card;
             if (InputHandler.Instance.ValidateCardOK(cardToPlay, hand)) break;
         }
 
         return cardToPlay;
     }
-    
+
     private IEnumerator DelayedBotMove(Player player)
     {
         // Wait for before making a move
@@ -526,24 +556,28 @@ public class GameManager : MonoBehaviour
         InputHandler.Instance.OnClickHandle(ChooseCardToPlay(player));
     }
 
-    private void ClearCurrentPlayerText(){
+    private void ClearCurrentPlayerText()
+    {
         TextMeshProUGUI currentPlayerText = GameObject.Find("CurrentPlayerText").GetComponent<TextMeshProUGUI>();
         currentPlayerText.text = "";
     }
-    private void DisplayCurrentPlayerText(){
+    private void DisplayCurrentPlayerText()
+    {
         TextMeshProUGUI currentPlayerText = GameObject.Find("CurrentPlayerText").GetComponent<TextMeshProUGUI>();
-        if(GameplayCurrentPlayer == players[humanPlayer]){
+        if (GameplayCurrentPlayer == players[humanPlayer])
+        {
             currentPlayerText.fontSize = 45;
             currentPlayerText.color = Color.blue;
             currentPlayerText.text = "Your move";
         }
-        else {
+        else
+        {
             currentPlayerText.fontSize = 25;
             currentPlayerText.color = Color.grey;
             currentPlayerText.text = GameManager.Instance.GameplayCurrentPlayer.playerName + "'s move";
         }
-        
-        
+
+
     }
 
     private IEnumerator Gameplay()
@@ -566,8 +600,9 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < players.Count; j++)
             {
-                if(onePlayerMode)DisplayCurrentPlayerText();
-                if (onePlayerMode && GameplayCurrentPlayer != players[humanPlayer]){
+                if (onePlayerMode) DisplayCurrentPlayerText();
+                if (onePlayerMode && GameplayCurrentPlayer != players[humanPlayer])
+                {
                     StartCoroutine(DelayedBotMove(GameplayCurrentPlayer));
                 }
                 yield return new WaitUntil(() => played);
@@ -579,14 +614,20 @@ public class GameManager : MonoBehaviour
                 }
                 GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
             }
-            yield return new WaitForSeconds(1.0f);
+            int counter = 0;
+            yield return new WaitUntil(() => AllCardsReadyForDissolve(currentTrick));
+            foreach (Card card in currentTrick)
+            {
+                card.Dissolve();
+            }
+            yield return new WaitForSeconds(1.5f);
             EndTurn();
             UpdatePlayerScore(currentTrick, trickWinner);
             currentTrick.Clear();
             DisplayTrumpText();
             int playerNum = GameplayCurrentPlayer.playerNumber;
             GameplayCurrentPlayer = trickWinner;
-            if(!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true);
+            if (!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true);
             UpdateCardVisibility();
         }
         UpdateMarriageScore();
@@ -596,14 +637,34 @@ public class GameManager : MonoBehaviour
         gameplayFinished = true;
     }
 
-    private void EndTurn(){
+    private bool AllCardsReadyForDissolve(List<Card> cTrick)
+    {
+        foreach (Card card in cTrick)
+        {
+            if (!card.readyForDissolve)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void EndTurn()
+    {
         Debug.Log("End of turn.");
-        for(int i=0; i < 4; i++) {
-                    GameObject trickCard = t.transform.GetChild(0).gameObject;
-                    Vector3 p = new Vector3(500, 300, 69);
-                    trickCard.transform.position = p;
-                    trickCard.transform.SetParent(null);
-                }
+        for (int i = 0; i < 4; i++)
+        {
+            GameObject trickCard = t.transform.GetChild(0).gameObject;
+            Vector3 p = new Vector3(500, 300, 69);
+            trickCard.transform.position = p;
+            trickCard.transform.SetParent(null);
+            foreach (Card card in trickManager.trickCards)
+            {
+                card.ResetDissolve();
+            }
+            trickManager.ClearTrickCards();
+            InputHandler.Instance.sortingOrder = 1;
+        }
     }
 
     public void Play(Card card)
@@ -732,40 +793,46 @@ public class GameManager : MonoBehaviour
         tempTeamScore.Add(0);
         tempTeamScore.Add(0);
 
-        foreach (Player player in players){
+        foreach (Player player in players)
+        {
             tempTeamScore[player.GetTeam() - 1] += player.GetRoundScore();
-            foreach((Player p, Card.Suit suit) in marriages){
-                if(p==player){
+            foreach ((Player p, Card.Suit suit) in marriages)
+            {
+                if (p == player)
+                {
                     tempTeamScore[player.GetTeam() - 1] += suit.GetValue();
                 }
             }
         }
         marriages.Clear();
 
-        tempTeamScore[0]=RoundToNearestTen(tempTeamScore[0]);
-        tempTeamScore[1]=RoundToNearestTen(tempTeamScore[1]);
+        tempTeamScore[0] = RoundToNearestTen(tempTeamScore[0]);
+        tempTeamScore[1] = RoundToNearestTen(tempTeamScore[1]);
 
-        for (int i=0;i<2;i++){
-            if(i == bidderTeam-1){
-                if (tempTeamScore[bidderTeam-1] < currentBid)
+        for (int i = 0; i < 2; i++)
+        {
+            if (i == bidderTeam - 1)
+            {
+                if (tempTeamScore[bidderTeam - 1] < currentBid)
                 {
                     GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i] + " points", Color.red);
                     GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> lost round. [-" + currentBid + " points]", Color.red);
-                    teamScore[i]-=currentBid;
+                    teamScore[i] -= currentBid;
                 }
                 else
                 {
                     GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i] + " points", Color.green);
                     GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> won round.", Color.green);
-                    teamScore[i]+=tempTeamScore[i];
+                    teamScore[i] += tempTeamScore[i];
                 }
             }
-            else{
-                GameManager.Instance.runLog.logText("<Team " + (i+1) + "> scores " + tempTeamScore[i]+ " points", Color.yellow);
-                teamScore[i]+=tempTeamScore[i];
+            else
+            {
+                GameManager.Instance.runLog.logText("<Team " + (i + 1) + "> scores " + tempTeamScore[i] + " points", Color.yellow);
+                teamScore[i] += tempTeamScore[i];
             }
         }
-        
+
         foreach (Player player in players)
         {
             if (player.GetTeam() == 1)
@@ -810,10 +877,13 @@ public class GameManager : MonoBehaviour
         return null;
     }
 
-    public List<Card> GetPlayerHand(Player current) {
+    public List<Card> GetPlayerHand(Player current)
+    {
         List<Card> hand = null;
-        foreach (Player player in GameManager.Instance.players) {
-            if (player == current){
+        foreach (Player player in GameManager.Instance.players)
+        {
+            if (player == current)
+            {
                 return player.hand;
             }
         }
@@ -946,7 +1016,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void HideAllCards ()
+    public void HideAllCards()
     {
         for (int i = 0; i < players.Count; i++)
         {
@@ -1007,10 +1077,10 @@ public class GameManager : MonoBehaviour
                     int team = int.Parse(lineSplit[2]);
                     int points = int.Parse(lineSplit[3]);
 
-                    players[pNum-1].playerName = pName;
+                    players[pNum - 1].playerName = pName;
                     players[pNum - 1].team = team;
                     players[pNum - 1].SetScore(points);
-                    teamScore[team-1] = points;
+                    teamScore[team - 1] = points;
                 }
             }
         }
@@ -1018,6 +1088,6 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError(e.Message);
         }
-        
+
     }
 }

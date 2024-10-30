@@ -14,19 +14,21 @@ public class Card : MonoBehaviour
     [SerializeField] private Sprite back;
 
     public bool visible;
-    private SpriteRenderer spriteRenderer;
+    public SpriteRenderer spriteRenderer;
     private Vector3 originalScale;
     private Vector3 startingScale;
     private Vector3 originalPosition;
     [SerializeField] private GameObject currentPlayerHand;
     [SerializeField] private GameObject auctionLeftOvers;
-
+    private float dissolveRate = 0.01f;
+    private float refreshRate = 0.01f;
+    public bool readyForDissolve = false;
 
     [SerializeField] private Suit suit;
     [SerializeField] private Rank rank;
     private int value;
 
-    
+
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -119,12 +121,35 @@ public class Card : MonoBehaviour
         transform.localScale = startingScale;
     }
 
+    public void Dissolve()
+    {
+        StartCoroutine(DissolveIEnumerator());
+    }
+
+    public IEnumerator DissolveIEnumerator()
+    {
+
+        float counter = 0.8f;
+        while (spriteRenderer.material.GetFloat("_Progress") > 0)
+        {
+            counter -= dissolveRate;
+            spriteRenderer.material.SetFloat("_Progress", counter);
+            yield return new WaitForSeconds(refreshRate);
+        }
+    }
+
+    public void ResetDissolve()
+    {
+        spriteRenderer.material.SetFloat("_Progress", 0.8f);
+        readyForDissolve = false;
+    }
+
     private void OnMouseExit()
     {
         if (transform.localScale != originalScale)
         {
             transform.localScale = originalScale;
-            if(spriteRenderer.sortingOrder > 0)
+            if (spriteRenderer.sortingOrder > 0)
                 this.spriteRenderer.sortingOrder--;
         }
     }

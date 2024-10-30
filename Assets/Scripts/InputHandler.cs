@@ -5,11 +5,13 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using DG.Tweening;
 
 public class InputHandler : MonoBehaviour
 {
     [SerializeField] private GameObject trick;
-    private int sortingOrder = 1;
+    [SerializeField] private TrickManager trickManager;
+    public int sortingOrder = 1;
     private int cardsToDeal = 4;
 
     private static InputHandler _instance;
@@ -41,46 +43,58 @@ public class InputHandler : MonoBehaviour
     }
 
 
-    private IEnumerator DisplayWrongMoveText(){
-        if(GameManager.Instance.onePlayerMode && GameManager.Instance.GameplayCurrentPlayer == GameManager.Instance.players[GameManager.humanPlayer]){
+    private IEnumerator DisplayWrongMoveText()
+    {
+        if (GameManager.Instance.onePlayerMode && GameManager.Instance.GameplayCurrentPlayer == GameManager.Instance.players[GameManager.humanPlayer])
+        {
             TextMeshProUGUI text = GameObject.Find("WrongMoveText").GetComponent<TextMeshProUGUI>();
             text.text = "illegal move";
             yield return new WaitForSeconds(0.5f);
             text.text = "";
         }
-        else if(!GameManager.Instance.onePlayerMode){
+        else if (!GameManager.Instance.onePlayerMode)
+        {
             TextMeshProUGUI text = GameObject.Find("WrongMoveText").GetComponent<TextMeshProUGUI>();
             text.text = "illegal move";
             yield return new WaitForSeconds(0.5f);
             text.text = "";
         }
-        
+
     }
 
-    public bool ValidateCardOK(Card clickedCard, List<Card> hand) {
-        Card[] trickCards = trick.GetComponentsInChildren<Card>();
-        if (trickCards.Length > 0) {
+    public bool ValidateCardOK(Card clickedCard, List<Card> hand)
+    {
+        Card[] trickCards = trickManager.GetTrickCards();
+        if (trickCards.Length > 0)
+        {
             Card baseCard = trickCards[0];
 
             // Rule 1. Same suit
-            if (clickedCard.GetSuitToString() == baseCard.GetSuitToString()) {
+            if (clickedCard.GetSuitToString() == baseCard.GetSuitToString())
+            {
                 // Rule 2. Overtrump
-                if (clickedCard.GetValue() > baseCard.GetValue()){
+                if (clickedCard.GetValue() > baseCard.GetValue())
+                {
                     return true;
                 }
-                else {
+                else
+                {
                     // verify player can overtrump
 
                     // Case 1: Player has card of current suit
                     Card trickWinner = trickCards[0];
-                    foreach (Card card in trickCards){
-                        if(card.GetSuitToString() == trickWinner.GetSuitToString() && card.GetValue() > trickWinner.GetValue()){
+                    foreach (Card card in trickCards)
+                    {
+                        if (card.GetSuitToString() == trickWinner.GetSuitToString() && card.GetValue() > trickWinner.GetValue())
+                        {
                             trickWinner = card;
                         }
                     }
 
-                    foreach (Card card in hand){
-                        if(card.GetSuitToString() == trickWinner.GetSuitToString() && card.GetValue() > trickWinner.GetValue()){
+                    foreach (Card card in hand)
+                    {
+                        if (card.GetSuitToString() == trickWinner.GetSuitToString() && card.GetValue() > trickWinner.GetValue())
+                        {
                             Debug.LogWarning("Invalid move. Need to overtrump with higher value of " + baseCard.GetSuitToString() + "!");
                             StartCoroutine(DisplayWrongMoveText());
                             return false;
@@ -88,30 +102,39 @@ public class InputHandler : MonoBehaviour
                     }
                 }
             }
-            else {
+            else
+            {
                 // Player has cards of the current suit
-                foreach (Card card in hand){
-                    if(card.GetSuitToString() == baseCard.GetSuitToString()){
-                            Debug.LogWarning("Invalid move. Need to lay card of " + baseCard.GetSuitToString() + "!");
-                            StartCoroutine(DisplayWrongMoveText());
-                            return false;
-                        }
+                foreach (Card card in hand)
+                {
+                    if (card.GetSuitToString() == baseCard.GetSuitToString())
+                    {
+                        Debug.LogWarning("Invalid move. Need to lay card of " + baseCard.GetSuitToString() + "!");
+                        StartCoroutine(DisplayWrongMoveText());
+                        return false;
+                    }
                 }
 
                 // Player can overtrump with atu
                 Card.Suit currentAtuSuit = GameManager.Instance.GetAtuSuit();
-                if (currentAtuSuit != Card.Suit.None){
+                if (currentAtuSuit != Card.Suit.None)
+                {
                     List<Card> handTrumps = new List<Card>();
-                    foreach (Card card in hand){
-                        if (card.GetSuit() == currentAtuSuit){
+                    foreach (Card card in hand)
+                    {
+                        if (card.GetSuit() == currentAtuSuit)
+                        {
                             handTrumps.Add(card);
                         }
                     }
                     Card highestPlayerAtu;
-                    if(handTrumps.Count > 0){
+                    if (handTrumps.Count > 0)
+                    {
                         highestPlayerAtu = handTrumps[0];
-                        foreach (Card card in handTrumps){
-                            if (card.GetValue() > highestPlayerAtu.GetValue()){
+                        foreach (Card card in handTrumps)
+                        {
+                            if (card.GetValue() > highestPlayerAtu.GetValue())
+                            {
                                 highestPlayerAtu = card;
                             }
                         }
@@ -119,36 +142,46 @@ public class InputHandler : MonoBehaviour
                     else return true;
 
                     List<Card> trickTrumps = new List<Card>();
-                    foreach (Card card in trickCards){
-                        if (card.GetSuit() == currentAtuSuit){
+                    foreach (Card card in trickCards)
+                    {
+                        if (card.GetSuit() == currentAtuSuit)
+                        {
                             trickTrumps.Add(card);
                         }
                     }
                     Card highestTrickAtu;
-                    if(trickTrumps.Count > 0){
+                    if (trickTrumps.Count > 0)
+                    {
                         highestTrickAtu = trickTrumps[0];
-                        foreach (Card card in trickTrumps){
-                            if (card.GetValue() > highestTrickAtu.GetValue()){
+                        foreach (Card card in trickTrumps)
+                        {
+                            if (card.GetValue() > highestTrickAtu.GetValue())
+                            {
                                 highestTrickAtu = card;
                             }
                         }
                     }
-                    else {
-                        if(clickedCard.GetSuit() == currentAtuSuit){
+                    else
+                    {
+                        if (clickedCard.GetSuit() == currentAtuSuit)
+                        {
                             return true;
                         }
-                        else {
+                        else
+                        {
                             Debug.Log("Invalid move. Player has to play with trump!");
                             StartCoroutine(DisplayWrongMoveText());
                             return false;
                         }
                     }
-                    if (highestPlayerAtu.GetValue() > clickedCard.GetValue()){
+                    if (highestPlayerAtu.GetValue() > clickedCard.GetValue())
+                    {
                         Debug.Log("Invalid move. Player has to overtrump with trump!");
                         StartCoroutine(DisplayWrongMoveText());
                         return false;
                     }
-                    else {
+                    else
+                    {
                         return true;
                     }
                 }
@@ -157,31 +190,38 @@ public class InputHandler : MonoBehaviour
         return true;
     }
 
-    private bool VerifyMarriage(Card clickedCard, List<Card> hand, Player currentPlayer) {
-        Card[] trickCards = trick.GetComponentsInChildren<Card>();
+    private bool VerifyMarriage(Card clickedCard, List<Card> hand, Player currentPlayer)
+    {
+        Card[] trickCards = trickManager.GetTrickCards();
 
         // hand marriage
-        if (clickedCard.GetRank() == "Queen" && trickCards.Length == 1){
-            foreach (Card card in hand){
-                if(card.GetRank()== "King" && card.GetSuitToString() == clickedCard.GetSuitToString()) {
+        if (clickedCard.GetRank() == "Queen" && trickCards.Length == 1)
+        {
+            foreach (Card card in hand)
+            {
+                if (card.GetRank() == "King" && card.GetSuitToString() == clickedCard.GetSuitToString())
+                {
                     Card.Suit suit = clickedCard.GetSuit();
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
-                    GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() + 
+                    GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
                     " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
                     return true;
                 }
             }
         }
-        else if (clickedCard.GetRank() == "King" && trickCards.Length == 1){
-            foreach (Card card in hand){
-                if(card.GetRank()== "Queen" && card.GetSuitToString() == clickedCard.GetSuitToString()) {
+        else if (clickedCard.GetRank() == "King" && trickCards.Length == 1)
+        {
+            foreach (Card card in hand)
+            {
+                if (card.GetRank() == "Queen" && card.GetSuitToString() == clickedCard.GetSuitToString())
+                {
                     Card.Suit suit = clickedCard.GetSuit();
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
-                    GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() + 
+                    GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
                     " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
                     return true;
                 }
@@ -190,18 +230,20 @@ public class InputHandler : MonoBehaviour
 
         // king-on-queen marriage
         int trickSize = trickCards.Length;
-        if(trickSize > 1) {
-            if( trickCards[trickSize-2].GetSuit() == trickCards[trickSize-1].GetSuit() &&
-                trickCards[trickSize-2].GetRank() == "Queen" &&
-                trickCards[trickSize-1].GetRank() == "King" ) {
-                    Card.Suit suit = clickedCard.GetSuit();
-                    GameManager.Instance.AddMarriage(currentPlayer, suit);
+        if (trickSize > 1)
+        {
+            if (trickCards[trickSize - 2].GetSuit() == trickCards[trickSize - 1].GetSuit() &&
+                trickCards[trickSize - 2].GetRank() == "Queen" &&
+                trickCards[trickSize - 1].GetRank() == "King")
+            {
+                Card.Suit suit = clickedCard.GetSuit();
+                GameManager.Instance.AddMarriage(currentPlayer, suit);
 
-                    Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
-                    GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() + 
-                    " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
-                    return true;
-                }
+                Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
+                " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
+                return true;
+            }
         }
 
         return false;
@@ -215,9 +257,10 @@ public class InputHandler : MonoBehaviour
         if (hit.collider != null)
         {
             Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
-            
+
             Player p = GameManager.Instance.GameplayCurrentPlayer;
-            if(GameManager.Instance.onePlayerMode && p != GameManager.Instance.players[GameManager.humanPlayer]){
+            if (GameManager.Instance.onePlayerMode && p != GameManager.Instance.players[GameManager.humanPlayer])
+            {
                 Debug.LogWarning("It's not your move now!");
                 return;
             }
@@ -259,10 +302,11 @@ public class InputHandler : MonoBehaviour
             {
                 Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
                 List<Card> hand = GameManager.Instance.GetPlayerHand(current);
-                if(ValidateCardOK(clickedCard, hand)){
+                if (ValidateCardOK(clickedCard, hand))
+                {
                     PlayCard(clickedCard, hand, current);
                     GameManager.Instance.Play(clickedCard);
-                    if(!GameManager.Instance.onePlayerMode) GameManager.Instance.MovePlayersToNextPositions();
+                    if (!GameManager.Instance.onePlayerMode) GameManager.Instance.MovePlayersToNextPositions();
                     GameManager.Instance.UpdateCardVisibility();
                 }
             }
@@ -273,49 +317,51 @@ public class InputHandler : MonoBehaviour
     public void OnClickHandle(Card clickedCard)
     {
         if (GameManager.Instance.isGivingStage)
+        {
+            GameManager.Instance.runLog.logText("<" + GameManager.Instance.currentPlayer.playerName + "> handles card to <" +
+            GameManager.Instance.currentCardReceiver.playerName + ">");
+            Debug.Log(GameManager.Instance.currentPlayer.name);
+            GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
+            if (GameManager.Instance.currentPlayer.hand.Contains(clickedCard))
+                GameManager.Instance.currentPlayer.hand.Remove(clickedCard);
+            GameObject go = GameObject.Find(clickedCard.name);
+
+            go.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
+            go.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+            clickedCard.SetVisible(GameManager.Instance.currentCardReceiver == GameManager.Instance.currentPlayer);
+            GameManager.Instance.otherCards.cards.Remove(clickedCard);
+            cardsToDeal--;
+            GameManager.Instance.currentCardReceiver = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentCardReceiver);
+
+            TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+            currentCardReceiverText.text = "Choose card for player: " + GameManager.Instance.currentCardReceiver.playerName;
+
+
+            if (cardsToDeal == 1)
             {
-                GameManager.Instance.runLog.logText("<" + GameManager.Instance.currentPlayer.playerName + "> handles card to <" + 
-                GameManager.Instance.currentCardReceiver.playerName + ">");
-                Debug.Log(GameManager.Instance.currentPlayer.name);
+                clickedCard = GameManager.Instance.otherCards.cards[0];
                 GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
-                if (GameManager.Instance.currentPlayer.hand.Contains(clickedCard))
-                    GameManager.Instance.currentPlayer.hand.Remove(clickedCard);
-                GameObject go = GameObject.Find(clickedCard.name);
-
-                go.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
-                go.transform.localRotation = Quaternion.Euler(0, 0, 0);
-
-                clickedCard.SetVisible(GameManager.Instance.currentCardReceiver == GameManager.Instance.currentPlayer);
+                GameObject lastCard = GameObject.Find(clickedCard.name);
+                lastCard.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
                 GameManager.Instance.otherCards.cards.Remove(clickedCard);
-                cardsToDeal--;
-                GameManager.Instance.currentCardReceiver = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentCardReceiver);
-
-                TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
-                currentCardReceiverText.text = "Choose card for player: " + GameManager.Instance.currentCardReceiver.playerName;
-                
-                
-                if (cardsToDeal == 1)
-                {
-                    clickedCard = GameManager.Instance.otherCards.cards[0];
-                    GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
-                    GameObject lastCard = GameObject.Find(clickedCard.name);
-                    lastCard.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
-                    GameManager.Instance.otherCards.cards.Remove(clickedCard);
-                    GameManager.Instance.AddRestToCurrentPlayer();
-                    GameManager.Instance.EndDealingStage();
-                }
-
+                GameManager.Instance.AddRestToCurrentPlayer();
+                GameManager.Instance.EndDealingStage();
             }
-            else{
-                Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
-                List<Card> hand = GameManager.Instance.GetPlayerHand(current);
-                if(ValidateCardOK(clickedCard, hand)){
-                    PlayCard(clickedCard, hand, current);
-                    GameManager.Instance.Play(clickedCard);
-                    //GameManager.Instance.MovePlayersToNextPositions();
-                    GameManager.Instance.UpdateCardVisibility();
-                }
+
+        }
+        else
+        {
+            Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
+            List<Card> hand = GameManager.Instance.GetPlayerHand(current);
+            if (ValidateCardOK(clickedCard, hand))
+            {
+                PlayCard(clickedCard, hand, current);
+                GameManager.Instance.Play(clickedCard);
+                //GameManager.Instance.MovePlayersToNextPositions();
+                GameManager.Instance.UpdateCardVisibility();
             }
+        }
     }
 
 
@@ -323,16 +369,19 @@ public class InputHandler : MonoBehaviour
     {
         if (card.transform.parent != trick.transform)
         {
-            card.transform.SetParent(trick.transform);
+            trickManager.AddCard(card);
             card.GetComponent<SpriteRenderer>().sortingOrder = sortingOrder;
             sortingOrder++;
+            card.transform.SetParent(trick.transform);
             card.SetVisible(true);
             Debug.Log("Played card: " + card.gameObject.name);
             VerifyMarriage(card, hand, current);
             current.RemoveCardFromHand(card);
 
             GameManager.Instance.runLog.logText("<" + current.playerName + "> plays " + card.GetCardFullName() + ".");
-        
+
+            AnimateCardToCenter(card);
+
             // end of turn (4 cards on table)
             /*
             if (trick.transform.childCount == 4) {
@@ -352,6 +401,25 @@ public class InputHandler : MonoBehaviour
             Debug.Log("Cannot add card already in the trick area.");
         }
     }
+
+    private void AnimateCardToCenter(Card card)
+    {
+        Vector3 originalScale = card.transform.localScale;
+        Vector3 targetPosition = trick.transform.position;
+        int originalSO = card.spriteRenderer.sortingOrder;
+        card.spriteRenderer.sortingOrder = 100; //always on the first place;
+
+        DG.Tweening.Sequence mySequence = DOTween.Sequence();
+        mySequence.Append(card.transform.DOMove(targetPosition, 0.5f))
+                  .Join(card.transform.DOScale(originalScale * 1.2f, 0.25f))
+                  .Append(card.transform.DOScale(originalScale, 0.25f))
+                  .OnComplete(() =>
+                  {
+                      card.spriteRenderer.sortingOrder = originalSO;
+                      card.readyForDissolve = true;
+                  });
+    }
+
 
     public void ResetCardsToDeal()
     {
