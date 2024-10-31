@@ -124,7 +124,7 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("Round Started");
             GameManager.Instance.runLog.logText("");
-            GameManager.Instance.runLog.logText("                  --- Round " + roundNumber + " ---", Color.magenta);
+            GameManager.Instance.runLog.logText("                      --- Round " + roundNumber + " ---", Color.magenta);
             yield return StartCoroutine(StartRound());
             EndRound();
             Debug.Log("Round Ended");
@@ -212,8 +212,8 @@ public class GameManager : MonoBehaviour
         TextMeshProUGUI currentBidText = GameObject.Find("CurrentBidText").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI currentWinnerText = GameObject.Find("CurrentWinnerText").GetComponent<TextMeshProUGUI>();
 
-        currentBidText.text = "CURRENT BID: " + currentBid;
-        currentWinnerText.text = "CURRENT WINNER: " + currentBidder.playerName;
+        currentBidText.text = "Current Bid: " + currentBid;
+        currentWinnerText.text = "Current winner: " + currentBidder.playerName;
     }
 
     public void PositiveAuctionDialog()
