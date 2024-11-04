@@ -9,10 +9,12 @@ using DG.Tweening;
 
 public class InputHandler : MonoBehaviour
 {
+    const int trickOffset_Y = 20;
     [SerializeField] private GameObject trick;
     [SerializeField] private TrickManager trickManager;
     public int sortingOrder = 1;
     private int cardsToDeal = 4;
+    private bool isAnyCardInAnim = false;
 
     private static InputHandler _instance;
 
@@ -252,11 +254,13 @@ public class InputHandler : MonoBehaviour
     public void OnClick(InputAction.CallbackContext context)
     {
         if (!context.started) return;
+        if (isAnyCardInAnim) return;
 
         RaycastHit2D hit = Physics2D.GetRayIntersection(Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue()));
         if (hit.collider != null)
         {
             Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
+            if (!clickedCard.selected) return;
 
             Player p = GameManager.Instance.GameplayCurrentPlayer;
             if (GameManager.Instance.onePlayerMode && p != GameManager.Instance.players[GameManager.humanPlayer])
@@ -306,11 +310,17 @@ public class InputHandler : MonoBehaviour
                 {
                     PlayCard(clickedCard, hand, current);
                     GameManager.Instance.Play(clickedCard);
-                    if (!GameManager.Instance.onePlayerMode) GameManager.Instance.MovePlayersToNextPositions();
-                    GameManager.Instance.UpdateCardVisibility();
+                    StartCoroutine(WaitForAnimEnd(clickedCard, true));
+                    
                 }
             }
         }
+    }
+
+    private void AfterClickUpdate(bool moveToNextPos)
+    {
+        if (!GameManager.Instance.onePlayerMode && moveToNextPos) GameManager.Instance.MovePlayersToNextPositions();
+        GameManager.Instance.UpdateCardVisibility();
     }
 
     // handle bot move
@@ -359,7 +369,7 @@ public class InputHandler : MonoBehaviour
                 PlayCard(clickedCard, hand, current);
                 GameManager.Instance.Play(clickedCard);
                 //GameManager.Instance.MovePlayersToNextPositions();
-                GameManager.Instance.UpdateCardVisibility();
+                StartCoroutine(WaitForAnimEnd(clickedCard, false));
             }
         }
     }
@@ -372,7 +382,7 @@ public class InputHandler : MonoBehaviour
             trickManager.AddCard(card);
             card.GetComponent<SpriteRenderer>().sortingOrder = sortingOrder;
             sortingOrder++;
-            card.transform.SetParent(trick.transform);
+            
             card.SetVisible(true);
             Debug.Log("Played card: " + card.gameObject.name);
             VerifyMarriage(card, hand, current);
@@ -405,9 +415,11 @@ public class InputHandler : MonoBehaviour
     private void AnimateCardToCenter(Card card)
     {
         Vector3 originalScale = card.transform.localScale;
-        Vector3 targetPosition = trick.transform.position;
+        Vector3 targetPosition = new Vector3(trick.transform.position.x, trick.transform.position.y + trickOffset_Y, trick.transform.position.z);
         int originalSO = card.spriteRenderer.sortingOrder;
         card.spriteRenderer.sortingOrder = 100; //always on the first place;
+        card.isDotweenAnimStarted = true;
+        isAnyCardInAnim = true;
 
         DG.Tweening.Sequence mySequence = DOTween.Sequence();
         mySequence.Append(card.transform.DOMove(targetPosition, 0.5f))
@@ -417,7 +429,16 @@ public class InputHandler : MonoBehaviour
                   {
                       card.spriteRenderer.sortingOrder = originalSO;
                       card.readyForDissolve = true;
+                      card.transform.SetParent(trick.transform);
+                      card.isDotweenAnimEnded = true;
+                      isAnyCardInAnim = false;
                   });
+    }
+
+    private IEnumerator WaitForAnimEnd(Card card, bool move)
+    {
+        yield return new WaitUntil(() => card.isDotweenAnimEnded);
+        AfterClickUpdate(move);
     }
 
 

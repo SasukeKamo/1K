@@ -23,6 +23,9 @@ public class Card : MonoBehaviour
     private float dissolveRate = 0.01f;
     private float refreshRate = 0.01f;
     public bool readyForDissolve = false;
+    public bool isDotweenAnimStarted = false;
+    public bool isDotweenAnimEnded = false;
+    public bool selected = false;
 
     [SerializeField] private Suit suit;
     [SerializeField] private Rank rank;
@@ -106,11 +109,15 @@ public class Card : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        originalScale = transform.localScale;
-        if (transform.parent.parent == currentPlayerHand.transform || transform.parent == auctionLeftOvers.transform)
+        if (!isDotweenAnimStarted)
         {
-            transform.localScale = originalScale * 1.1f;
-            this.spriteRenderer.sortingOrder++;
+            originalScale = transform.localScale;
+            if (transform.parent.parent == currentPlayerHand.transform || transform.parent == auctionLeftOvers.transform)
+            {
+                transform.localScale = originalScale * 1.1f;
+                this.spriteRenderer.sortingOrder++;
+                selected = true;
+            }
         }
     }
 
@@ -119,6 +126,8 @@ public class Card : MonoBehaviour
         spriteRenderer.sortingOrder = 0;
         startingScale = new Vector3(6, 6, 6);
         transform.localScale = startingScale;
+        isDotweenAnimStarted = false;
+        isDotweenAnimEnded = false;
     }
 
     public void Dissolve()
@@ -146,11 +155,15 @@ public class Card : MonoBehaviour
 
     private void OnMouseExit()
     {
-        if (transform.localScale != originalScale)
+        if (!isDotweenAnimStarted)
         {
-            transform.localScale = originalScale;
-            if (spriteRenderer.sortingOrder > 0)
-                this.spriteRenderer.sortingOrder--;
+            if (transform.localScale != originalScale)
+            {
+                transform.localScale = originalScale;
+                if (spriteRenderer.sortingOrder > 0)
+                    this.spriteRenderer.sortingOrder--;
+                selected = false;
+            }
         }
     }
 
