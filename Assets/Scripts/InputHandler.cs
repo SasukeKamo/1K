@@ -311,7 +311,7 @@ public class InputHandler : MonoBehaviour
                     PlayCard(clickedCard, hand, current);
                     GameManager.Instance.Play(clickedCard);
                     StartCoroutine(WaitForAnimEnd(clickedCard, true));
-                    
+
                 }
             }
         }
@@ -344,19 +344,13 @@ public class InputHandler : MonoBehaviour
             cardsToDeal--;
             GameManager.Instance.currentCardReceiver = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentCardReceiver);
 
-            TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
-            currentCardReceiverText.text = "Choose card for player: " + GameManager.Instance.currentCardReceiver.playerName;
-
-
+            GameManager.Instance.runLog.logText("Cards left to deal:" + cardsToDeal);
+            GameManager.Instance.UpdateCardVisibility();
             if (cardsToDeal == 1)
             {
-                clickedCard = GameManager.Instance.otherCards.cards[0];
-                GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
-                GameObject lastCard = GameObject.Find(clickedCard.name);
-                lastCard.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
-                GameManager.Instance.otherCards.cards.Remove(clickedCard);
                 GameManager.Instance.AddRestToCurrentPlayer();
                 GameManager.Instance.EndDealingStage();
+                GameManager.Instance.UpdateCardVisibility();
             }
 
         }
@@ -382,7 +376,7 @@ public class InputHandler : MonoBehaviour
             trickManager.AddCard(card);
             card.GetComponent<SpriteRenderer>().sortingOrder = sortingOrder;
             sortingOrder++;
-            
+
             card.SetVisible(true);
             Debug.Log("Played card: " + card.gameObject.name);
             VerifyMarriage(card, hand, current);
@@ -391,20 +385,6 @@ public class InputHandler : MonoBehaviour
             GameManager.Instance.runLog.logText("<" + current.playerName + "> plays " + card.GetCardFullName() + ".");
 
             AnimateCardToCenter(card);
-
-            // end of turn (4 cards on table)
-            /*
-            if (trick.transform.childCount == 4) {
-                Debug.Log("End of turn.");
-                for(int i=0; i < 4; i++) {
-                    GameObject trickCard = trick.transform.GetChild(0).gameObject;
-                    Vector3 p = new Vector3(500, 300, 69);
-                    trickCard.transform.position = p;
-                    trickCard.transform.SetParent(null);
-                }
-            }
-            */
-
         }
         else
         {

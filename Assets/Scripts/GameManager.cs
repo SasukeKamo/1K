@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TMPro;
 using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
@@ -259,7 +260,7 @@ public class GameManager : MonoBehaviour
 
             gamePhase = GamePhase.Handover;
 
-            MovePlayerToPosition(currentBidder, Player.Position.down, true);
+            if (!onePlayerMode) MovePlayerToPosition(currentBidder, Player.Position.down, true);
             ChangePlayer();
 
         }
@@ -295,7 +296,17 @@ public class GameManager : MonoBehaviour
         else if (gamePhase == GamePhase.Auction)
             DisplayAuctionDialog();
         else if (gamePhase == GamePhase.Handover)
-            DealCardsToOtherPlayers();
+        {
+            if (onePlayerMode && currentPlayer != players[humanPlayer])
+            {
+                //StartCoroutine(ShowTrickCards());
+                StartCoroutine(BotDealCardsDecision());
+            }
+            else
+            {
+                DealCardsToOtherPlayers();
+            }
+        }
     }
 
     void DisplaySetupDialog()
@@ -341,7 +352,6 @@ public class GameManager : MonoBehaviour
 
     void BotAuctionDecision()
     {
-        // PLAYER MUST WIN AUCTION - BOT DEALING CARDS FEATURE NOT WORKING
         int i = UnityEngine.Random.Range(0, 3);
         if (i == 0) PositiveAuctionDialog();
         else NegativeAuctionDialog();
@@ -362,10 +372,42 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator BotDealCardsDecision()
     {
-        List<Card> hand = GetPlayerHand(currentPlayer);
+        // show trick section
+        Card[] leftOvers = restOfTheDeck.GetComponentsInChildren<Card>();
+
+        foreach (Card card in leftOvers)
+        {
+            trickManager.AddCard(card);
+            card.GetComponent<SpriteRenderer>().sortingOrder = InputHandler.Instance.sortingOrder;
+            InputHandler.Instance.sortingOrder++;
+            card.gameObject.transform.SetParent(t.transform);
+        }
+
+        yield return new WaitForSeconds(3.0f);
+
+        Card[] trickCards = trickManager.GetTrickCards();
+
         for (int i = 0; i < 4; i++)
         {
-            Card card = hand[0];
+            GameObject trickCard = t.transform.GetChild(0).gameObject;
+            trickCard.transform.SetParent(currentPlayer.transform);
+            currentPlayer.AddCardToHand(trickCards[i]);
+        }
+        trickManager.ClearTrickCards();
+        InputHandler.Instance.sortingOrder = 1;
+        UpdateCardVisibility();
+
+        // handle dealing cards to other players
+        List<Card> hand = GetPlayerHand(currentPlayer);
+        isGivingStage = true;
+
+        Player pp = currentPlayer;
+        for (int i = 0; i < 3; i++)
+        {
+            currentCardReceiver = GetNextPlayer(pp);
+            pp = currentCardReceiver;
+            // simulate card click
+            Card card = hand.First();
             yield return new WaitForSeconds(1.0f);
             InputHandler.Instance.OnClickHandle(card);
         }
@@ -374,9 +416,6 @@ public class GameManager : MonoBehaviour
 
     void ChangePlayer()
     {
-        //currentPlayer = GetNextPlayer(currentPlayer);
-        //MovePlayerToPosition(currentPlayer, Player.Position.down);
-
         if (!onePlayerMode && forcePlayerChangeDialog)
         {
             DisplayReadyDialog();
@@ -394,9 +433,16 @@ public class GameManager : MonoBehaviour
                 else DisplayAuctionDialog();
             }
             else if (gamePhase == GamePhase.Handover)
-                DealCardsToOtherPlayers();
-            if (onePlayerMode && currentPlayer != players[humanPlayer])
-                StartCoroutine(BotDealCardsDecision());
+            {
+                if (onePlayerMode && currentPlayer != players[humanPlayer])
+                {
+                    StartCoroutine(BotDealCardsDecision());
+                }
+                else
+                {
+                    DealCardsToOtherPlayers();
+                }
+            }
         }
     }
 
@@ -614,7 +660,6 @@ public class GameManager : MonoBehaviour
                 }
                 GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
             }
-            int counter = 0;
             yield return new WaitUntil(() => AllCardsReadyForDissolve(currentTrick));
             foreach (Card card in currentTrick)
             {
@@ -923,6 +968,7 @@ public class GameManager : MonoBehaviour
 
     public void MovePlayerToPosition(Player playerPivot, Player.Position positionPivot, bool moveOtherPlayers = true)
     {
+        if (onePlayerMode) return;
         int p = 1;
         if (moveOtherPlayers) p = players.Count;
 
