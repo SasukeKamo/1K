@@ -344,7 +344,6 @@ public class InputHandler : MonoBehaviour
             cardsToDeal--;
             GameManager.Instance.currentCardReceiver = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentCardReceiver);
 
-            GameManager.Instance.runLog.logText("Cards left to deal:" + cardsToDeal);
             GameManager.Instance.UpdateCardVisibility();
             if (cardsToDeal == 1)
             {
