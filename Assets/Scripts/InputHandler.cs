@@ -16,6 +16,9 @@ public class InputHandler : MonoBehaviour
     private int cardsToDeal = 4;
     private bool isAnyCardInAnim = false;
 
+    private int leftPlayer = 1;
+    private int rightPlayer = 3;
+
     private static InputHandler _instance;
 
     public static InputHandler Instance
@@ -355,6 +358,7 @@ public class InputHandler : MonoBehaviour
         }
         else
         {
+            clickedCard.ForceScale();
             Player current = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
             List<Card> hand = GameManager.Instance.GetPlayerHand(current);
             if (ValidateCardOK(clickedCard, hand))
@@ -383,7 +387,7 @@ public class InputHandler : MonoBehaviour
 
             GameManager.Instance.runLog.logText("<" + current.playerName + "> plays " + card.GetCardFullName() + ".");
 
-            AnimateCardToCenter(card);
+            AnimateCardToCenter(card, current);
         }
         else
         {
@@ -391,7 +395,7 @@ public class InputHandler : MonoBehaviour
         }
     }
 
-    private void AnimateCardToCenter(Card card)
+    private void AnimateCardToCenter(Card card, Player currentPlayer)
     {
         Vector3 originalScale = card.transform.localScale;
         Vector3 targetPosition = new Vector3(trick.transform.position.x, trick.transform.position.y + trickOffset_Y, trick.transform.position.z);
@@ -409,6 +413,8 @@ public class InputHandler : MonoBehaviour
                       card.spriteRenderer.sortingOrder = originalSO;
                       card.readyForDissolve = true;
                       card.transform.SetParent(trick.transform);
+                      if (GameManager.Instance.onePlayerMode && (currentPlayer == GameManager.Instance.players[leftPlayer] || currentPlayer == GameManager.Instance.players[rightPlayer]))
+                          card.gameObject.transform.Rotate(0, 0, 90);
                       card.isDotweenAnimEnded = true;
                       isAnyCardInAnim = false;
                   });

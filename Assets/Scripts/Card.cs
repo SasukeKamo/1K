@@ -121,6 +121,19 @@ public class Card : MonoBehaviour
         }
     }
 
+    public void SetSortingOrder(int i)
+    {
+        spriteRenderer.sortingOrder = i;
+    }
+
+    public void ForceScale()
+    {
+        originalScale = transform.localScale;
+        transform.localScale = originalScale * 1.1f;
+        this.spriteRenderer.sortingOrder++;
+    }
+
+
     public void ResetCard()
     {
         spriteRenderer.sortingOrder = 0;
