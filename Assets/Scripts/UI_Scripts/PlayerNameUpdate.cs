@@ -6,13 +6,11 @@ using UnityEngine;
 public class PlayerNameUpdate : MonoBehaviour
 {
 
-    // Start is called before the first frame update
     void Start()
     {
         gameObject.GetComponent<TextMeshProUGUI>().text = "Player Name";
     }
 
-    // Update is called once per frame
     void Update()
     {
         string playerName = "Unknown Player";
