@@ -7,11 +7,13 @@ using UnityCard = Card;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-static class ComputerPlayer{
-
-    private static List<PlayerCard> Map(List<UnityCard> unityCards){
+static class ComputerPlayer
+{
+    private static List<PlayerCard> Map(List<UnityCard> unityCards)
+    {
         var playerCards = new List<PlayerCard>();
-        foreach(UnityCard unityCard in unityCards){
+        foreach (UnityCard unityCard in unityCards)
+        {
             var suit = (PlayerCard.Suit)unityCard.GetSuit();
             var rank = (PlayerCard.Rank)unityCard.GetRankAsRank();
             var playerCard = new PlayerCard(suit, rank);
@@ -19,7 +21,8 @@ static class ComputerPlayer{
         }
         return playerCards;
     }
-    public static UnityCard GetBestCardToPlay(List<UnityCard> hand, List<UnityCard> cardsAlreadyPlayed, List<UnityCard> outerTrick, UnityCard.Suit? atu){
+    public static UnityCard GetBestCardToPlay(List<UnityCard> hand, List<UnityCard> cardsAlreadyPlayed, List<UnityCard> outerTrick, UnityCard.Suit? atu)
+    {
 
         List<PlayerCard> _hand = Map(hand);
         List<PlayerCard> _played = Map(cardsAlreadyPlayed);
@@ -27,8 +30,22 @@ static class ComputerPlayer{
         PlayerCard.Suit? _atu = (atu == UnityCard.Suit.None) ? null : (PlayerCard.Suit)atu;
 
         Debug.Log("Already played cards: " + _played.Count);
-        PlayerCard _card = _1K_ComputerPlayer.TurnOptimizingPlayer.GetBestCardToPlay(_hand, _played, _trick, _atu);
+        (_, PlayerCard _card) = _1K_ComputerPlayer.TurnOptimizingPlayer.GetBestCardToPlay(_hand, _played, _trick, _atu);
 
-        return hand.Find(c => (c.GetRankAsRank() == (UnityCard.Rank)_card.rank && c.GetSuit() == (UnityCard.Suit)_card.suit));
+        return hand.Find(c => c.GetRankAsRank() == (UnityCard.Rank)_card.rank && c.GetSuit() == (UnityCard.Suit)_card.suit);
+    }
+
+    public static UnityCard GetCardToDeal(List<UnityCard> hand, bool isMaximizingPlayer)
+    {
+        List<PlayerCard> _hand = Map(hand);
+        PlayerCard _card = _1K_ComputerPlayer.TurnOptimizingPlayer.GetCardToDeal(_hand, isMaximizingPlayer);
+
+        return hand.Find(c => c.GetRankAsRank() == (UnityCard.Rank)_card.rank && c.GetSuit() == (UnityCard.Suit)_card.suit);
+    }
+
+    public static bool ShouldBid(List<UnityCard> hand, int expectedBid)
+    {
+        List<PlayerCard> _hand = Map(hand);
+        return _1K_ComputerPlayer.TurnOptimizingPlayer.ShouldBid(_hand, expectedBid);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using _1K_ComputerPlayer;
 using TMPro;
 using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
@@ -353,8 +354,15 @@ public class GameManager : MonoBehaviour
 
     void BotAuctionDecision()
     {
+        /* RANDOM DECISION
         int i = UnityEngine.Random.Range(0, 3);
         if (i == 0) PositiveAuctionDialog();
+        else NegativeAuctionDialog();
+        */
+        // AI decision
+        List<Card> hand = GetPlayerHand(currentPlayer);
+        bool shouldBid = ComputerPlayer.ShouldBid(hand, currentBid);
+        if(shouldBid) PositiveAuctionDialog();
         else NegativeAuctionDialog();
     }
 
@@ -395,8 +403,16 @@ public class GameManager : MonoBehaviour
         {
             currentCardReceiver = GetNextPlayer(pp);
             pp = currentCardReceiver;
+
             // simulate card click
-            Card card = hand.First();
+
+            // random decision
+            //Card card = hand.First();
+
+            // AI decision
+            bool isMaximizingPlayer = pp.team == currentPlayer.team;
+            Card card = ComputerPlayer.GetCardToDeal(hand, isMaximizingPlayer);
+
             yield return new WaitForSeconds(1.0f);
             InputHandler.Instance.OnClickHandle(card);
         }

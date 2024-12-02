@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using Debug = UnityEngine.Debug;
 
 namespace _1K_ComputerPlayer
 {
-	internal static class TurnOptimizingPlayer
+	static class TurnOptimizingPlayer
 	{
+		const int NumberOfSimulations = 1000;
+		const bool IsDebug = false;
+
 		private static List<Card> CreateWholeDeck()
 		{
 			var deck = new List<Card>();
@@ -21,11 +24,58 @@ namespace _1K_ComputerPlayer
 
 			return deck;
 		}
-		
-		public static Card GetBestCardToPlay(List<Card> hand, List<Card> cardsAlreadyPlayed, List<Card> outerTrick, Card.Suit? atu)
+
+		private static int CalculateExpectedScore(List<Card> hand)
 		{
-			bool DEBUG = false;
-			const int NumberOfSimulations = 1000;
+			List<Card> _hand = new List<Card>(hand);
+			int cardScore = 0;
+			for (int i = 0; i < hand.Count; i++)
+			{
+				int score;
+				Card card;
+				(score, card) = GetBestCardToPlay(_hand, new List<Card>(), new List<Card>(), null);
+				//if (IsDebug) Console.WriteLine(card + " -> score: " + score / NumberOfSimulations);
+				if (score < 0) break;
+				cardScore += score / NumberOfSimulations;
+				_hand.Remove(card);
+			}
+			//if(IsDebug)Console.WriteLine("Expected total score: " + cardScore);
+			return cardScore;
+		}
+
+		public static Card GetCardToDeal(List<Card> hand, bool isMaximizingPlayer)
+		{
+			var _hand = new List<Card>(hand);
+			var _sortedHand = new List<Card>();
+			var cardScore = new int[_hand.Count];
+
+			for (int i = 0; i < hand.Count; i++)
+			{
+				int score;
+				Card card;
+				(score, card) = GetBestCardToPlay(_hand, new List<Card>(), new List<Card>(), null);
+				//if (IsDebug) Console.WriteLine(card + " -> score: " + score / NumberOfSimulations);
+				cardScore[i] = score;
+				_hand.Remove(card);
+				_sortedHand.Add(card);
+			}
+
+			if (!isMaximizingPlayer) return _sortedHand.Last();
+			var averageIndex = (int)Math.Ceiling((decimal)(hand.Count / 2));
+			return _sortedHand[averageIndex];
+		}
+
+		public static bool ShouldBid(List<Card> hand, int expectedBid)
+		{
+			const double RiskFactor = 2.0;
+
+			var expectedScore = CalculateExpectedScore(hand);
+			Debug.Log(expectedScore * RiskFactor);
+			return (expectedScore * RiskFactor >= expectedBid);
+		}
+
+		public static (int, Card) GetBestCardToPlay(List<Card> hand, List<Card> cardsAlreadyPlayed, List<Card> outerTrick, Card.Suit? atu)
+		{
 			List<Card> _deck = new();
 			Random _rand = new();
 
@@ -33,9 +83,9 @@ namespace _1K_ComputerPlayer
 			_deck.RemoveAll(cardsAlreadyPlayed.Contains);
 			_deck.RemoveAll(hand.Contains);
 			_deck.RemoveAll(outerTrick.Contains);
-			if(DEBUG) Console.WriteLine("\nDECK REVISED: [" + _deck.Count + "]\n" + string.Join("\n", _deck));
-			if (DEBUG) Console.WriteLine("\nHAND: [" + hand.Count + "]\n" + string.Join("\n", hand));
-			if (DEBUG) Console.WriteLine("\nTRICK: [" + outerTrick.Count + "]\n" + string.Join("\n", outerTrick));
+			//if (IsDebug) Console.WriteLine("\nDECK REVISED: [" + _deck.Count + "]\n" + string.Join("\n", _deck));
+			//if (IsDebug) Console.WriteLine("\nHAND: [" + hand.Count + "]\n" + string.Join("\n", hand));
+			//if (IsDebug) Console.WriteLine("\nTRICK: [" + outerTrick.Count + "]\n" + string.Join("\n", outerTrick));
 
 			var cardScore = new int[hand.Count];
 			var trick = new List<Card>();
@@ -46,7 +96,6 @@ namespace _1K_ComputerPlayer
 				{
 					trick.Clear();
 					trick = new List<Card>(outerTrick);
-
 					//Console.WriteLine("\nTrick:\n" + string.Join("\n", trick));
 					var card = hand[j];
 					var isWinning = false;
@@ -77,12 +126,12 @@ namespace _1K_ComputerPlayer
 			}
 
 			// evaluation
-			if (DEBUG) Console.WriteLine("\nFINAL SCORE:\n" + string.Join("\n", cardScore));
+			//if (IsDebug) Console.WriteLine("\nFINAL SCORE:\n" + string.Join("\n", cardScore));
 
 			var maxValue = cardScore.Where(score => score != 0).DefaultIfEmpty(int.MinValue).Max();
 			var maxIndex = Array.IndexOf(cardScore, maxValue);
-			if (DEBUG) Console.WriteLine("\nbest to play: " + hand[maxIndex]);
-			return hand[maxIndex];
+			//if (IsDebug) Console.WriteLine("\nbest to play: " + hand[maxIndex]);
+			return (cardScore[maxIndex], hand[maxIndex]);
 		}
 	}
 }
