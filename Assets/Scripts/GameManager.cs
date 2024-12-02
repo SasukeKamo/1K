@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using _1K_ComputerPlayer;
 using TMPro;
-using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -190,7 +189,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void DisplayTrumpText()
+    public void DisplayTrumpText()
     {
         TextMeshProUGUI currentText = GameObject.Find("TrumpText").GetComponent<TextMeshProUGUI>();
 
@@ -198,7 +197,7 @@ public class GameManager : MonoBehaviour
 
         if (trump != Card.Suit.None)
         {
-            currentText.text = " TRUMP " + trump.ToString();
+            currentText.text = " TRUMP " + trump.ToString() + " " + trump.AsSymbol();
         }
         else
         {
@@ -362,7 +361,7 @@ public class GameManager : MonoBehaviour
         // AI decision
         List<Card> hand = GetPlayerHand(currentPlayer);
         bool shouldBid = ComputerPlayer.ShouldBid(hand, currentBid);
-        if(shouldBid) PositiveAuctionDialog();
+        if (shouldBid) PositiveAuctionDialog();
         else NegativeAuctionDialog();
     }
 
@@ -510,7 +509,7 @@ public class GameManager : MonoBehaviour
         winner.AddRoundScore(value);
     }
 
-    private void UpdateMarriageScore()
+    public void UpdateMarriageScore()
     {
         foreach (Player player in players)
         {

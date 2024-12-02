@@ -87,6 +87,11 @@ public class Card : MonoBehaviour
         return rankString + " of " + suitString;
     }
 
+    public string GetCardName()
+    {
+        return rank.AsSymbol() + suit.AsSymbol();
+    }
+
     public string GetSuitToString()
     {
         return suit.ToString();

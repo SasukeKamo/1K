@@ -67,7 +67,7 @@ namespace _1K_ComputerPlayer
 
 		public static bool ShouldBid(List<Card> hand, int expectedBid)
 		{
-			const double RiskFactor = 2.0;
+			const double RiskFactor = 1.7;
 
 			var expectedScore = CalculateExpectedScore(hand);
 			Debug.Log(expectedScore * RiskFactor);

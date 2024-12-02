@@ -386,7 +386,7 @@ public class InputHandler : MonoBehaviour
             VerifyMarriage(card, hand, current);
             current.RemoveCardFromHand(card);
 
-            GameManager.Instance.runLog.logText("<" + current.playerName + "> plays " + card.GetCardFullName() + ".");
+            GameManager.Instance.runLog.logText("<" + current.playerName + "> plays " + card.GetCardName() + ".");
 
             AnimateCardToCenter(card, current);
         }
