@@ -377,6 +377,7 @@ public class InputHandler : MonoBehaviour
         if (card.transform.parent != trick.transform)
         {
             trickManager.AddCard(card);
+            trickManager.AddCardToPlayed(card);
             card.GetComponent<SpriteRenderer>().sortingOrder = sortingOrder;
             sortingOrder++;
 

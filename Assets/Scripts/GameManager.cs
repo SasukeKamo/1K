@@ -585,6 +585,13 @@ public class GameManager : MonoBehaviour
     private Card ChooseCardToPlay(Player player)
     {
         List<Card> hand = GetPlayerHand(player);
+        List<Card> played = trickManager.GetPlayedCards();
+        List<Card> trick = trickManager.GetTrick();
+        Card.Suit atu = GetAtuSuit();
+
+        return ComputerPlayer.GetBestCardToPlay(hand, played, trick, atu);
+        /*
+        List<Card> hand = GetPlayerHand(player);
         Card cardToPlay = hand[0];
         foreach (Card card in hand)
         {
@@ -593,6 +600,7 @@ public class GameManager : MonoBehaviour
         }
 
         return cardToPlay;
+        */
     }
 
     private IEnumerator DelayedBotMove(Player player)
@@ -797,6 +805,7 @@ public class GameManager : MonoBehaviour
         roundNumber++;
         ResetDeck();
         ResetCardsVariables();
+        trickManager.ClearPlayedCards();
 
         firstPlayer = (firstPlayer + 1) % players.Count;
         //Debug.Log(firstPlayer);

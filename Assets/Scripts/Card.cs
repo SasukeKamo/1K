@@ -101,6 +101,10 @@ public class Card : MonoBehaviour
     {
         return rank.ToString();
     }
+    public Rank GetRankAsRank()
+    {
+        return rank;
+    }
 
     public int GetValue()
     {
