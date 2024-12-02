@@ -8703,6 +8703,7 @@ GameObject:
   - component: {fileID: 1143098070}
   - component: {fileID: 1143098072}
   - component: {fileID: 1143098073}
+  - component: {fileID: 1143098074}
   m_Layer: 0
   m_Name: P4 Hand
   m_TagString: Untagged
@@ -8850,6 +8851,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ca95ddbbe89a1f40b35760535be6aaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1143098074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1143098064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 1
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 4
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1163371535
 GameObject:
   m_ObjectHideFlags: 0
@@ -9573,6 +9596,7 @@ GameObject:
   - component: {fileID: 1208012949}
   - component: {fileID: 1208012951}
   - component: {fileID: 1208012952}
+  - component: {fileID: 1208012953}
   m_Layer: 0
   m_Name: P2 Hand
   m_TagString: Untagged
@@ -9720,6 +9744,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ca95ddbbe89a1f40b35760535be6aaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1208012953
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1208012943}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 1
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 2
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1225342677
 GameObject:
   m_ObjectHideFlags: 0
@@ -10584,6 +10630,7 @@ GameObject:
   - component: {fileID: 1390741629}
   - component: {fileID: 1390741631}
   - component: {fileID: 1390741632}
+  - component: {fileID: 1390741633}
   m_Layer: 0
   m_Name: P3 Hand
   m_TagString: Untagged
@@ -10731,6 +10778,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ca95ddbbe89a1f40b35760535be6aaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1390741633
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1390741623}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 1
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 3
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1393966195
 GameObject:
   m_ObjectHideFlags: 0
@@ -15243,6 +15312,7 @@ GameObject:
   - component: {fileID: 2071428664}
   - component: {fileID: 2071428666}
   - component: {fileID: 2071428667}
+  - component: {fileID: 2071428668}
   m_Layer: 0
   m_Name: P1 Hand
   m_TagString: Untagged
@@ -15390,6 +15460,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ca95ddbbe89a1f40b35760535be6aaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2071428668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2071428658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 1
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 1
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!114 &2077045105 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1728497111536696892, guid: cf7874fa157b635498cc524ce79c0bec, type: 3}

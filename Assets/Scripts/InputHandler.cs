@@ -275,12 +275,11 @@ public class InputHandler : MonoBehaviour
 
             if (GameManager.Instance.gameMode == GameManager.GameMode.Multiplayer)
             {
-                // Synchronizacja ruchu w trybie multiplayer
+                // synchronizacja ruchu w multi
                 GameManager.Instance.photonView.RPC("SyncPlayerMove", RpcTarget.All, clickedCard.GetCardFullName());
             }
             else
             {
-                // Singleplayer obs³ugiwany lokalnie
                 HandlePlayerMove(clickedCard);
             }
         }
