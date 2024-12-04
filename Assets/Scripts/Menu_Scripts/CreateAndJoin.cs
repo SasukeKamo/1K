@@ -12,7 +12,9 @@ public class CreateAndJoin : MonoBehaviourPunCallbacks
 
     public void CreateRoom()
     {
+        Debug.Log("Creating Room '"+input_Create.text+"'");
         PhotonNetwork.CreateRoom(input_Create.text, new RoomOptions() {MaxPlayers = 4, IsVisible = true, IsOpen = true});
+        Debug.Log("Created Room '" + input_Create.text + "'");
     }
 
     public void JoinRoom()
@@ -28,6 +30,6 @@ public class CreateAndJoin : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         //PhotonNetwork.LoadLevel("SampleScene");
-        print("Joined Room");
+        print("Joined Room '"+PhotonNetwork.CurrentRoom.Name+"'");
     }
 }

@@ -10,11 +10,15 @@ public class RoomList : MonoBehaviourPunCallbacks
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-        for (int i = 0; i < roomList.Count; i++)
+        foreach (Transform child in GameObject.Find("RoomListContent").transform)
         {
-            GameObject room = Instantiate(roomPrefab, Vector3.zero, Quaternion.identity,
-                GameObject.Find("RoomListContent").transform);
-            room.GetComponent<Room>().Name.text = roomList[i].Name;
+            Destroy(child.gameObject);
+        }
+
+        foreach (var r in roomList)
+        {
+            GameObject room = Instantiate(roomPrefab, GameObject.Find("RoomListContent").transform);
+            room.GetComponent<Room>().Name.text = r.Name;
         }
     }
 }

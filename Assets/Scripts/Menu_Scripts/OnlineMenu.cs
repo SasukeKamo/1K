@@ -20,8 +20,20 @@ public class OnlineMenu : MonoBehaviour
         
     }
 
+    public void OnEnter()
+    {
+        NetworkManager.Instance.JoinLobby();
+    }
+
+    public void OnExit()
+    {
+        NetworkManager.Instance.LeaveLobby();
+    }
+
     public void Back()
     {
+        OnExit();
+
         MainMenu.gameObject.SetActive(true);
         gameObject.SetActive(false);
     }

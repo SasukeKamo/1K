@@ -10,7 +10,7 @@ namespace Assets.Scripts.Menu_Scripts
 
         public void JoinRoom()
         {
-            GameObject.Find("CreateAndJoin").GetComponent<CreateAndJoin>().JoinRoomInList(Name.text);
+            NetworkManager.Instance.JoinRoom(Name.text);
         }
     }
 }

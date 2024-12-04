@@ -42,6 +42,8 @@ public class MainMenu : MonoBehaviour
         OnlineMenu.SetActive(true);
         SettingsMenu.SetActive(false);
         gameObject.SetActive(false);
+
+        OnlineMenu.GetComponent<OnlineMenu>().OnEnter();
     }
 
     public void Exit()
