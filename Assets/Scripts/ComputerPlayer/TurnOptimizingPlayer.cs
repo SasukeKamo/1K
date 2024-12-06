@@ -88,6 +88,7 @@ namespace _1K_ComputerPlayer
 			//if (IsDebug) Console.WriteLine("\nTRICK: [" + outerTrick.Count + "]\n" + string.Join("\n", outerTrick));
 
 			var cardScore = new int[hand.Count];
+			var lossCount = new int[hand.Count];
 			var trick = new List<Card>();
 
 			for (var i = 0; i < NumberOfSimulations; i++)
@@ -104,6 +105,7 @@ namespace _1K_ComputerPlayer
 					{
 						trick.Add(card);
 						if (Validate.IsNewTrickWinner(trick, atu)) isWinning = true;
+						else lossCount[j]++;
 						cardScore[j] += Validate.GetMarriageScore(card, hand, trick);
 
 						while (trick.Count < 4)
@@ -111,7 +113,11 @@ namespace _1K_ComputerPlayer
 							//Console.WriteLine("in while" + card);
 							var randCard = _deck[_rand.Next(0, _deck.Count)];
 							trick.Add(randCard);
-							if (Validate.IsNewTrickWinner(trick, atu)) isWinning = false;
+							if (Validate.IsNewTrickWinner(trick, atu))
+							{
+								isWinning = false;
+								lossCount[j]++;
+							}
 						}
 
 						var turnScore = Validate.GetTrickScore(trick);
@@ -126,8 +132,27 @@ namespace _1K_ComputerPlayer
 			}
 
 			// evaluation
-			//if (IsDebug) Console.WriteLine("\nFINAL SCORE:\n" + string.Join("\n", cardScore));
+			//Console.WriteLine("\nHAND: [" + hand.Count + "]\n" + string.Join("\n", hand));
+			//Console.WriteLine("\nFINAL SCORE:\n" + string.Join("\n", cardScore));
+			//Console.WriteLine("\nLOSS COUNT:\n" + string.Join("\n", lossCount));
 
+			var winCardIndexes = lossCount
+				.Select((loss, index) => new { Loss = loss, Index = index })
+				.Where(x => x.Loss == 0)
+				.Select(x => x.Index)
+				.ToList();
+			
+			if (winCardIndexes.Any())
+			{
+				var sortedIndexes = winCardIndexes
+					.OrderByDescending(index => hand[index].value);
+				foreach(int index in sortedIndexes){
+					if(cardScore[index] != 0){
+						return (cardScore[index], hand[index]);	
+					}
+				}
+			}
+			
 			var maxValue = cardScore.Where(score => score != 0).DefaultIfEmpty(int.MinValue).Max();
 			var maxIndex = Array.IndexOf(cardScore, maxValue);
 			//if (IsDebug) Console.WriteLine("\nbest to play: " + hand[maxIndex]);
