@@ -59,6 +59,8 @@ MonoBehaviour:
   - PlayCardOnTable
   - EndDealingStageRPC
   - SetMultiplayerMode
+  - SyncAddCardToHand
+  - SyncVisibility
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

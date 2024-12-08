@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System.IO;
+using Photon.Pun;
 
 public class Player : MonoBehaviour
 {
@@ -57,12 +58,22 @@ public class Player : MonoBehaviour
     public void AddCardToHand(Card card)
     {
         hand.Add(card);
-        //card.gameObject.transform.Rotate(0, 0, 90);
 
-        // Rotationg card to match hand rotation
-        //Vector3 currentRotation = transform.eulerAngles;
-        //currentRotation.z = 0;
-        //card.gameObject.transform.eulerAngles = currentRotation;
+        if (GameManager.IsMultiplayerMode)
+        {
+            PhotonView photonView = PhotonView.Get(this);
+            photonView.RPC("SyncAddCardToHand", RpcTarget.OthersBuffered, card.name);
+        }
+    }
+
+    [PunRPC]
+    void SyncAddCardToHand(string cardName)
+    {
+        Card card = GameObject.Find(cardName).GetComponent<Card>();
+        if (card != null)
+        {
+            hand.Add(card);
+        }
     }
 
     public void RemoveCardFromHand(Card card)

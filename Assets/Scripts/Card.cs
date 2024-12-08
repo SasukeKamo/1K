@@ -1,3 +1,4 @@
+using Photon.Pun;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -68,16 +69,21 @@ public class Card : MonoBehaviour
 
     public void SetVisible(bool visible)
     {
-        if (visible)
+        this.visible = visible;
+        spriteRenderer.sprite = visible ? front : back;
+
+        if (GameManager.IsMultiplayerMode)
         {
-            this.visible = true;
-            spriteRenderer.sprite = front;
+            PhotonView photonView = PhotonView.Get(this);
+            photonView.RPC("SyncVisibility", RpcTarget.OthersBuffered, visible);
         }
-        else
-        {
-            this.visible = false;
-            spriteRenderer.sprite = back;
-        }
+    }
+
+    [PunRPC]
+    void SyncVisibility(bool visible)
+    {
+        this.visible = visible;
+        spriteRenderer.sprite = visible ? front : back;
     }
 
     public string GetCardFullName() //mozna uzyc do debugu

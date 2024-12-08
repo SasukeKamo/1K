@@ -108,7 +108,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         //InitializeGame();
         if (IsMultiplayerMode)
         {
-            PhotonPeer.RegisterType(typeof(Player), (byte)'P', Player.SerializePlayer, Player.DeserializePlayer);
+            //PhotonPeer.RegisterType(typeof(Player), (byte)'P', Player.SerializePlayer, Player.DeserializePlayer);
             PhotonNetwork.AutomaticallySyncScene = true;
             onePlayerMode = false;
             SetupMultiplayerGame();
@@ -154,7 +154,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsMasterClient)
         {
             mainDeck.Shuffle();
-            photonView.RPC("SyncDeck", RpcTarget.Others, mainDeck.cards.ToArray());
+            SendDeck();
         }
 
         marriages = new List<Tuple<Player, Card.Suit>>();
@@ -185,13 +185,39 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    void SyncDeck(Card[] cards)
+    public void SyncDeck(object[] deckData)
     {
-        mainDeck.cards = cards.ToList();
+        mainDeck.cards.Clear();
+
+        foreach (object cardData in deckData)
+        {
+            string cardName = (string)cardData;
+            GameObject cardObject = GameObject.Find(cardName);
+            if (cardObject != null)
+            {
+                Card card = cardObject.GetComponent<Card>();
+                if (card != null)
+                {
+                    mainDeck.AddCard(card);
+                }
+            }
+        }
+    }
+
+    void SendDeck()
+    {
+        List<object> deckData = new List<object>();
+
+        foreach (Card card in mainDeck.cards)
+        {
+            deckData.Add(card.name); // Przesyłaj nazwę karty
+        }
+
+        photonView.RPC("SyncDeck", RpcTarget.Others, deckData.ToArray());
     }
 
     [PunRPC]
-    void SetFirstPlayer(int index)
+    public void SetFirstPlayer(int index)
     {
         firstPlayer = index;
         currentPlayer = players[firstPlayer];
@@ -257,7 +283,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                     }
                 }
 
-                photonView.RPC("SyncPlayerHands", RpcTarget.Others, players.Select(p => p.hand.ToArray()).ToArray());
+                SendPlayerHands();
             }
         }
         else
@@ -296,12 +322,45 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    void SyncPlayerHands(Card[][] hands)
+    public void SyncPlayerHands(object[][] handsData)
     {
         for (int i = 0; i < players.Count; i++)
         {
-            players[i].hand = hands[i].ToList();
+            players[i].hand.Clear();
+
+            foreach (object cardData in handsData[i])
+            {
+                string cardName = (string)cardData;
+                GameObject cardObject = GameObject.Find(cardName);
+                if (cardObject != null)
+                {
+                    Card card = cardObject.GetComponent<Card>();
+                    if (card != null)
+                    {
+                        players[i].hand.Add(card);  
+                    }
+                }
+            }
         }
+    }
+
+    void SendPlayerHands()
+    {
+        List<object[]> handsData = new List<object[]>();
+
+        foreach (Player player in players)
+        {
+            List<object> playerHandData = new List<object>();
+
+            foreach (Card card in player.hand)
+            {
+                playerHandData.Add(card.name);
+            }
+
+            handsData.Add(playerHandData.ToArray());
+        }
+
+        photonView.RPC("SyncPlayerHands", RpcTarget.AllBuffered, handsData.ToArray());
     }
 
     private void SaveRestOfTheCards()
@@ -317,7 +376,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                     otherCards.AddCard(currentCard);
                 }
 
-                photonView.RPC("SyncRestOfDeck", RpcTarget.Others, otherCards.cards.ToArray());
+                SendRestOfDeck();
             }
         }
         else
@@ -338,11 +397,36 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    void SyncRestOfDeck(Card[] restOfDeck)
+    public void SyncRestOfDeck(object[] restOfDeckData)
     {
-        otherCards.cards = restOfDeck.ToList();
+        otherCards.cards.Clear();
+
+        foreach (object cardData in restOfDeckData)
+        {
+            string cardName = (string)cardData;
+            GameObject cardObject = GameObject.Find(cardName);
+            if (cardObject != null)
+            {
+                Card card = cardObject.GetComponent<Card>();
+                if (card != null)
+                {
+                    otherCards.AddCard(card);
+                }
+            }
+        }
     }
 
+    void SendRestOfDeck()
+    {
+        List<object> restOfDeckData = new List<object>();
+
+        foreach (Card card in otherCards.cards)
+        {
+            restOfDeckData.Add(card.name);
+        }
+
+        photonView.RPC("SyncRestOfDeck", RpcTarget.Others, restOfDeckData.ToArray());
+    }
 
     public void DisplayTrumpText()
     {
@@ -382,7 +466,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    void ShowWaitingForOtherPlayers(string currentPlayerName)
+    public void ShowWaitingForOtherPlayers(string currentPlayerName)
     {
         if (PhotonNetwork.NickName != currentPlayerName)
         {
@@ -396,7 +480,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    void ShowWaitingForOtherPlayerToDeal(string currentPlayerName)
+    public void ShowWaitingForOtherPlayerToDeal(string currentPlayerName)
     {
         if (PhotonNetwork.NickName != currentPlayerName)
         {
@@ -542,42 +626,36 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsMasterClient)
         {
             players = new List<Player>();
+            List<object> serializedPlayers = new List<object>();
+
             foreach (Photon.Realtime.Player photonPlayer in PhotonNetwork.PlayerList)
             {
-                players.Add(new Player
+                // Tworzenie GameObjectu dla gracza
+                GameObject playerObject = new GameObject(photonPlayer.NickName);
+                Player player = playerObject.AddComponent<Player>();
+
+                player.playerName = photonPlayer.NickName;
+                player.playerNumber = photonPlayer.ActorNumber;
+                player.team = photonPlayer.ActorNumber % 2 == 0 ? 1 : 2;
+
+                if (player.playerName == PhotonNetwork.NickName)
                 {
-                    playerName = photonPlayer.NickName,
-                    playerNumber = photonPlayer.ActorNumber,
-                    team = photonPlayer.ActorNumber % 2 == 0 ? 1 : 2
+                    player.position = Player.Position.down; // Lokalny gracz na dole
+                }
+
+                players.Add(player);
+
+                // Serializowanie danych gracza
+                serializedPlayers.Add(new object[]
+                {
+                player.playerName,
+                player.playerNumber,
+                player.team,
+                (int)player.position
                 });
             }
 
-            localPlayer = players.FirstOrDefault(p => p.playerName == PhotonNetwork.NickName);
-            if (localPlayer != null)
-            {
-                localPlayer.position = Player.Position.down;
-            }
-
-            int index = 0;
-            foreach (Player player in players)
-            {
-                if (player != localPlayer)
-                {
-                    if (player.team == localPlayer.team)
-                    {
-                        player.position = Player.Position.up;
-                    }
-                    else
-                    {
-                        player.position = index == 0 ? Player.Position.left : Player.Position.right;
-                        index++;
-                    }
-                }
-
-                SetPlayerTextOnUI(player);
-            }
-
-            photonView.RPC("SynchronizeGameStart", RpcTarget.AllBuffered, players.ToArray());
+            photonView.RPC("SynchronizeGameStart", RpcTarget.AllBuffered, serializedPlayers.ToArray());
         }
     }
 
@@ -613,13 +691,33 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    void SynchronizeGameStart(Player[] playersData)
+    public void SynchronizeGameStart(object[] playersData)
     {
-        players = playersData.ToList();
-        foreach (Player player in players)
+        players = new List<Player>();
+
+        foreach (object playerData in playersData)
         {
+            object[] data = (object[])playerData;
+
+            string playerName = (string)data[0];
+            int playerNumber = (int)data[1];
+            int team = (int)data[2];
+            Player.Position position = (Player.Position)(int)data[3];
+
+            // Tworzenie GameObjectu dla każdego gracza
+            GameObject playerObject = new GameObject(playerName);
+            Player player = playerObject.AddComponent<Player>();
+
+            player.playerName = playerName;
+            player.playerNumber = playerNumber;
+            player.team = team;
+            player.position = position;
+
+            players.Add(player);
             SetPlayerTextOnUI(player);
         }
+
+        localPlayer = players.FirstOrDefault(p => p.playerName == PhotonNetwork.NickName);
         InitializeGame();
         DisplayNicknames(true);
         setupFinished = true;
@@ -1116,7 +1214,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    void SyncFirstPlayer(int firstPlayerIndex)
+    public void SyncFirstPlayer(int firstPlayerIndex)
     {
         firstPlayer = firstPlayerIndex;
         currentPlayer = players[firstPlayer];
