@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using _1K_ComputerPlayer;
-using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Photon.Pun;
+using Photon.Realtime;
 
-public class GameManager : MonoBehaviourPun
+public class GameManager : MonoBehaviourPunCallbacks
 {
     private static GameManager _instance;
 
@@ -27,9 +28,6 @@ public class GameManager : MonoBehaviourPun
         }
     }
 
-    public enum GameMode { Singleplayer, Multiplayer}
-    public GameMode gameMode;
-
     void Awake()
     {
         if (_instance == null)
@@ -41,7 +39,17 @@ public class GameManager : MonoBehaviourPun
         {
             Destroy(gameObject);
         }
+
+        if (IsMultiplayerMode)
+        {
+            PhotonNetwork.AutomaticallySyncScene = true;
+        }
+        else
+        {
+            Debug.LogError("Not connected to Photon.");
+        }
     }
+
 
 
     void Update()
@@ -80,6 +88,10 @@ public class GameManager : MonoBehaviourPun
     public bool setupFinished = false;
     public GamePhase gamePhase;
     public string savePath = "save.txt";
+
+    private Player localPlayer;
+    public static bool IsMultiplayerMode = false;
+    private bool IsRoundSynced = false;
     [SerializeField] private bool forcePlayerChangeDialog;
     [SerializeField] private GameObject t;
     [SerializeField] private TrickManager trickManager;
@@ -91,6 +103,7 @@ public class GameManager : MonoBehaviourPun
     [SerializeField] private GameObject readyDialog;
     [SerializeField] private GameObject setupDialog;
     [SerializeField] private GameObject handOverDialog;
+    [SerializeField] private GameObject waitingDialog;
     [SerializeField] private GameObject restOfTheDeck;
     [SerializeField] private GameObject[] nickNames;
 
@@ -99,22 +112,34 @@ public class GameManager : MonoBehaviourPun
     {
         runLog = _instance.GetComponent<RunLog>();
         //InitializeGame();
-        DisplaySetupDialog();
-        StartCoroutine(GameLoop());
+        if (IsMultiplayerMode)
+        {
+            onePlayerMode = false;
+            SetupMultiplayerGame();
+        }
+        else
+        {
+            DisplaySetupDialog();
+            StartCoroutine(GameLoop());
+        }
     }
 
     void InitializeGame()
     {
-        if (gameMode == GameMode.Multiplayer && PhotonNetwork.IsMasterClient)
+        if (IsMultiplayerMode)
         {
-            mainDeck.Shuffle();
-            photonView.RPC("SyncDeck", RpcTarget.Others, SerializeDeck(mainDeck.cards));
+            InitializeMultiplayerGame();
         }
-        else if (gameMode == GameMode.Singleplayer)
+        else
         {
-            mainDeck.Shuffle();
+            InitializeLocalGame();
         }
+    }
 
+    void InitializeLocalGame()
+    {
+        mainDeck.Shuffle();
+        Debug.Log("Cards shuffled.");
         marriages = new List<Tuple<Player, Card.Suit>>();
         roundNumber = 1;
         firstPlayer = UnityEngine.Random.Range(0, 4);
@@ -125,47 +150,92 @@ public class GameManager : MonoBehaviourPun
         teamScore.Add(0);
         teamScore.Add(0);
         Debug.Log($"{teamScore[0]}, {teamScore[1]}");
+
     }
 
-    // Synchronizacja talii w multiplayer
+    void InitializeMultiplayerGame()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            mainDeck.Shuffle();
+            photonView.RPC("SyncDeck", RpcTarget.Others, mainDeck.cards.ToArray());
+        }
+
+        marriages = new List<Tuple<Player, Card.Suit>>();
+        roundNumber = 1;
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            firstPlayer = UnityEngine.Random.Range(0, players.Count);
+            photonView.RPC("SetFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
+        }
+
+        currentPlayer = players[firstPlayer];
+        if (currentPlayer == localPlayer)
+        {
+            MovePlayerToPosition(currentPlayer, Player.Position.down);
+        }
+
+        gamePhase = GamePhase.Start;
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            DealInitialCards();
+        }
+
+        teamScore.Add(0);
+        teamScore.Add(0);
+        Debug.Log($"{teamScore[0]}, {teamScore[1]}");
+    }
+
     [PunRPC]
-    private void SyncDeck(string serializedDeck)
+    void SyncDeck(Card[] cards)
     {
-        mainDeck.cards = DeserializeDeck(serializedDeck);
+        mainDeck.cards = cards.ToList();
     }
 
-    private string SerializeDeck(List<Card> cards)
+    [PunRPC]
+    void SetFirstPlayer(int index)
     {
-        return string.Join(",", cards.Select(card => card.GetCardFullName()));
-    }
-
-    private List<Card> DeserializeDeck(string serializedDeck)
-    {
-        return serializedDeck.Split(',').Select(cardName => FindCardByName(cardName)).ToList();
-    }
-
-    public Card FindCardByName(string cardName)
-    {
-        return mainDeck.cards.Find(card => card.GetCardFullName() == cardName);
+        firstPlayer = index;
+        currentPlayer = players[firstPlayer];
     }
 
     IEnumerator GameLoop()
     {
         yield return new WaitUntil(() => setupFinished);
 
-        //LoadGame(); //only for testing
-
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
             Debug.Log("Round Started");
             GameManager.Instance.runLog.logText("");
             GameManager.Instance.runLog.logText("                      --- Round " + roundNumber + " ---", Color.magenta);
-            yield return StartCoroutine(StartRound());
-            EndRound();
-            Debug.Log("Round Ended");
-            SaveGame();
-            Debug.Log("Game Saved");
 
+            if (IsMultiplayerMode)
+            {
+                // master zarzadza rundami
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    yield return StartCoroutine(StartRound());
+                    EndRound(); //Trzeba bedzie zsynchronizowac
+                    //SaveGame();
+                    Debug.Log("Round Ended");
+                }
+                else
+                {
+                    // pozostali czekaja na synchronizacje
+                    yield return new WaitUntil(() => !PhotonNetwork.IsMasterClient || IsRoundSynced);
+                }
+            }
+            else
+            {
+                // Lokalne tryby gry (singleplayer i multiplayer lokalny)
+                yield return StartCoroutine(StartRound());
+                EndRound();
+                Debug.Log("Round Ended");
+                SaveGame();
+                Debug.Log("Game Saved");
+            }
         }
     }
 
@@ -176,134 +246,107 @@ public class GameManager : MonoBehaviourPun
 
     void DealInitialCards()
     {
-        int initialCardCount = 5;
-
-        // W przypadku multiplayer, tylko MasterClient rozdaje karty
-        if (PhotonNetwork.IsConnected && PhotonNetwork.IsMasterClient)
+        if (IsMultiplayerMode)
         {
-            for (int p = 0; p < players.Count; p++)
+            if (PhotonNetwork.IsMasterClient)
             {
-                for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
+                int initialCardCount = 5;
+
+                for (int p = 0; p < players.Count; p++)
                 {
-                    Card currentCard = mainDeck.cards[i];
-                    string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
-                    GameObject go = GameObject.Find(cardName);
-
-                    go.transform.SetParent(players[p].transform);
-                    players[p].AddCardToHand(currentCard);
-
-                    // Synchronizacja przypisania karty w multiplayer
-                    photonView.RPC("SyncCardAssignment", RpcTarget.Others, cardName, p);
-
-                    // Ustawianie widoczności kart w MasterClient
-                    if (p == 0)
+                    for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
                     {
-                        go.GetComponent<Card>().SetVisible(true);
-                    }
-                    else if (p == 2)
-                    {
-                        go.GetComponent<Card>().SetVisible(false);
-                    }
-                    else
-                    {
-                        go.transform.Rotate(0, 0, 90);
-                        go.GetComponent<Card>().SetVisible(false);
+                        Card currentCard = mainDeck.cards[i];
+                        players[p].AddCardToHand(currentCard);
                     }
                 }
+
+                photonView.RPC("SyncPlayerHands", RpcTarget.Others, players.Select(p => p.hand.ToArray()).ToArray());
             }
-
-            // Synchronizuj pozostałe karty w multiplayer
-            SaveRestOfTheCards();
-        }
-        else if (!PhotonNetwork.IsConnected) // Single Player
-        {
-            for (int p = 0; p < players.Count; p++)
-            {
-                for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
-                {
-                    Card currentCard = mainDeck.cards[i];
-                    string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
-                    GameObject go = GameObject.Find(cardName);
-
-                    go.transform.SetParent(players[p].transform);
-                    players[p].AddCardToHand(currentCard);
-
-                    // Widoczność kart
-                    if (p == 0)
-                    {
-                        go.GetComponent<Card>().SetVisible(true);
-                    }
-                    else if (p == 2)
-                    {
-                        go.GetComponent<Card>().SetVisible(false);
-                    }
-                    else
-                    {
-                        go.transform.Rotate(0, 0, 90);
-                        go.GetComponent<Card>().SetVisible(false);
-                    }
-                }
-            }
-
-            SaveRestOfTheCards();
-        }
-    }
-
-    // Synchronizacja przydziału kart w multiplayer
-    [PunRPC]
-    void SyncCardAssignment(string cardName, int playerIndex)
-    {
-        GameObject cardObject = GameObject.Find(cardName);
-        Card currentCard = cardObject.GetComponent<Card>();
-        Player targetPlayer = players[playerIndex];
-
-        cardObject.transform.SetParent(targetPlayer.transform);
-        targetPlayer.AddCardToHand(currentCard);
-
-        // Widoczność karty zależna od gracza
-        if (playerIndex == 0) // Lokalny gracz
-        {
-            currentCard.SetVisible(true);
         }
         else
         {
-            currentCard.SetVisible(false);
-        }
-    }
+            // rozdanie kart w trybie lokalnym
+            int initialCardCount = 5;
 
-    void StartDealInitialCards()
-    {
-        if (PhotonNetwork.IsConnected && PhotonNetwork.IsMasterClient)
-        {
-            DealInitialCards();
+            for (int p = 0; p < players.Count; p++)
+            {
+                for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
+                {
+                    Card currentCard = mainDeck.cards[i];
+                    string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
+                    GameObject go = GameObject.Find(cardName);
+                    go.transform.SetParent(players[p].transform);
+                    players[p].AddCardToHand(currentCard);
+
+                    if (p == 0)
+                    {
+                        go.GetComponent<Card>().SetVisible(true);
+                    }
+                    else if (p == 2)
+                    {
+                        go.GetComponent<Card>().SetVisible(false);
+                    }
+                    else
+                    {
+                        go.transform.Rotate(0, 0, 90);
+                        go.GetComponent<Card>().SetVisible(false);
+                    }
+                }
+            }
         }
-        else if (!PhotonNetwork.IsConnected)
-        {
-            DealInitialCards(); // Tryb jednoosobowy
-        }
+
+        SaveRestOfTheCards();
     }
 
     [PunRPC]
-    void AddCardToPlayer(int playerIndex, string cardName)
+    void SyncPlayerHands(Card[][] hands)
     {
-        Card card = FindCardByName(cardName);
-        players[playerIndex].AddCardToHand(card);
+        for (int i = 0; i < players.Count; i++)
+        {
+            players[i].hand = hands[i].ToList();
+        }
     }
 
     private void SaveRestOfTheCards()
     {
-        int initialCardCount = 5;
-        for (int i = players.Count * initialCardCount; i < mainDeck.cards.Count; i++)
+        if (IsMultiplayerMode)
         {
-            Card currentCard = mainDeck.cards[i];
-            otherCards.AddCard(currentCard);
-            string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
+            if (PhotonNetwork.IsMasterClient)
+            {
+                int initialCardCount = 5;
+                for (int i = players.Count * initialCardCount; i < mainDeck.cards.Count; i++)
+                {
+                    Card currentCard = mainDeck.cards[i];
+                    otherCards.AddCard(currentCard);
+                }
 
-            GameObject go = GameObject.Find(cardName);
-            go.transform.SetParent(restOfTheDeck.transform);
-            currentCard.SetVisible(true);
+                photonView.RPC("SyncRestOfDeck", RpcTarget.Others, otherCards.cards.ToArray());
+            }
+        }
+        else
+        {
+            // tryb lokalny
+            int initialCardCount = 5;
+            for (int i = players.Count * initialCardCount; i < mainDeck.cards.Count; i++)
+            {
+                Card currentCard = mainDeck.cards[i];
+                otherCards.AddCard(currentCard);
+                string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
+
+                GameObject go = GameObject.Find(cardName);
+                go.transform.SetParent(restOfTheDeck.transform);
+                currentCard.SetVisible(true);
+            }
         }
     }
+
+    [PunRPC]
+    void SyncRestOfDeck(Card[] restOfDeck)
+    {
+        otherCards.cards = restOfDeck.ToList();
+    }
+
 
     public void DisplayTrumpText()
     {
@@ -323,6 +366,9 @@ public class GameManager : MonoBehaviourPun
 
     void DisplayAuctionDialog()
     {
+        if (waitingDialog.activeInHierarchy)
+            waitingDialog.SetActive(false);
+
         auctionDialog.SetActive(true);
 
         GameObject text = GameObject.Find("CurrentBidText");
@@ -332,6 +378,20 @@ public class GameManager : MonoBehaviourPun
 
         currentBidText.text = "Current Bid: " + currentBid;
         currentWinnerText.text = "Current winner: " + currentBidder.playerName;
+    }
+
+    void DisplayWaitingDialog()
+    {
+        waitingDialog.SetActive(true);
+    }
+
+    [PunRPC]
+    void ShowWaitingForOtherPlayers(string currentPlayerName)
+    {
+        if (PhotonNetwork.NickName != currentPlayerName)
+        {
+            DisplayWaitingDialog();
+        }
     }
 
     public void PositiveAuctionDialog()
@@ -446,23 +506,20 @@ public class GameManager : MonoBehaviourPun
     public void FinishSetup()
     {
         string player1Name = GameObject.Find("InputName1Text").GetComponent<TextMeshProUGUI>().text;
+        players[0].playerName = player1Name;
+        GameObject.Find("NameP1").GetComponent<TextMeshProUGUI>().text = player1Name;
+
         string player2Name = GameObject.Find("InputName2Text").GetComponent<TextMeshProUGUI>().text;
+        players[1].playerName = player2Name;
+        GameObject.Find("NameP2").GetComponent<TextMeshProUGUI>().text = player2Name;
+
         string player3Name = GameObject.Find("InputName3Text").GetComponent<TextMeshProUGUI>().text;
+        players[2].playerName = player3Name;
+        GameObject.Find("NameP3").GetComponent<TextMeshProUGUI>().text = player3Name;
+
         string player4Name = GameObject.Find("InputName4Text").GetComponent<TextMeshProUGUI>().text;
-
-        if (gameMode == GameMode.Multiplayer && PhotonNetwork.IsMasterClient)
-        {
-            photonView.RPC("SyncPlayerNames", RpcTarget.All, player1Name, player2Name, player3Name, player4Name);
-        }
-        else
-        {
-            players[0].playerName = player1Name;
-            players[1].playerName = player2Name;
-            players[2].playerName = player3Name;
-            players[3].playerName = player4Name;
-
-            UpdatePlayerNameUI();
-        }
+        players[3].playerName = player4Name;
+        GameObject.Find("NameP4").GetComponent<TextMeshProUGUI>().text = player4Name;
 
         setupDialog.SetActive(false);
         InitializeGame();
@@ -470,27 +527,90 @@ public class GameManager : MonoBehaviourPun
         setupFinished = true;
     }
 
-    // Metoda do aktualizacji UI lokalnie (singleplayer i multiplayer)
-    private void UpdatePlayerNameUI()
+    void SetupMultiplayerGame()
     {
-        GameObject.Find("NameP1").GetComponent<TextMeshProUGUI>().text = players[0].playerName;
-        GameObject.Find("NameP2").GetComponent<TextMeshProUGUI>().text = players[1].playerName;
-        GameObject.Find("NameP3").GetComponent<TextMeshProUGUI>().text = players[2].playerName;
-        GameObject.Find("NameP4").GetComponent<TextMeshProUGUI>().text = players[3].playerName;
+        players = new List<Player>();
+        foreach (Photon.Realtime.Player photonPlayer in PhotonNetwork.PlayerList)
+        {
+            players.Add(new Player
+            {
+                playerName = photonPlayer.NickName,
+                playerNumber = photonPlayer.ActorNumber,
+                team = photonPlayer.ActorNumber % 2 == 0 ? 1 : 2
+            });
+        }
+
+        localPlayer = players.FirstOrDefault(p => p.playerName == PhotonNetwork.NickName);
+        if (localPlayer != null)
+        {
+            localPlayer.position = Player.Position.down;
+        }
+
+        int index = 0;
+        foreach (Player player in players)
+        {
+            if (player != localPlayer)
+            {
+                if (player.team == localPlayer.team)
+                {
+                    player.position = Player.Position.up;
+                }
+                else
+                {
+                    player.position = index == 0 ? Player.Position.left : Player.Position.right;
+                    index++;
+                }
+            }
+
+            SetPlayerTextOnUI(player);
+        }
+
+        photonView.RPC("SynchronizeGameStart", RpcTarget.AllBuffered, players.ToArray());
     }
 
-    // RPC do synchronizacji nazw w multiplayer
+    void SetPlayerTextOnUI(Player player)
+    {
+        string textObjectName = "";
+
+        switch (player.position)
+        {
+            case Player.Position.down:
+                textObjectName = "NameP1";
+                break;
+            case Player.Position.up:
+                textObjectName = "NameP3";
+                break;
+            case Player.Position.left:
+                textObjectName = "NameP2";
+                break;
+            case Player.Position.right:
+                textObjectName = "NameP4";
+                break;
+        }
+
+        TextMeshProUGUI playerNameText = GameObject.Find(textObjectName).GetComponent<TextMeshProUGUI>();
+        if (playerNameText != null)
+        {
+            playerNameText.text = player.playerName;
+        }
+        else
+        {
+            Debug.LogWarning($"Could not find UI object {textObjectName} for player {player.playerName}");
+        }
+    }
+
     [PunRPC]
-    void SyncPlayerNames(string name1, string name2, string name3, string name4)
+    void SynchronizeGameStart(Player[] playersData)
     {
-        players[0].playerName = name1;
-        players[1].playerName = name2;
-        players[2].playerName = name3;
-        players[3].playerName = name4;
-
-        UpdatePlayerNameUI();
+        players = playersData.ToList();
+        foreach (Player player in players)
+        {
+            SetPlayerTextOnUI(player);
+        }
+        InitializeGame();
+        DisplayNicknames(true);
+        setupFinished = true;
     }
-
 
     void BotAuctionDecision()
     {
@@ -512,12 +632,25 @@ public class GameManager : MonoBehaviourPun
         currentBidder = GetPreviousPlayer(currentPlayer);
         gamePhase = GamePhase.Auction;
 
-        DisplayAuctionDialog();
-        if (onePlayerMode && currentPlayer != players[humanPlayer])
+        if (IsMultiplayerMode)
         {
-            BotAuctionDecision();
+            if (PhotonNetwork.IsMasterClient)
+            {
+                DisplayAuctionDialog();
+                photonView.RPC("ShowWaitingForOtherPlayers", RpcTarget.Others, currentPlayer.playerName);
+            }
+        }
+        else
+        {
+            DisplayAuctionDialog();
+
+            if (onePlayerMode && currentPlayer != players[humanPlayer])
+            {
+                BotAuctionDecision();
+            }
         }
     }
+
 
     private IEnumerator BotDealCardsDecision()
     {
@@ -573,34 +706,24 @@ public class GameManager : MonoBehaviourPun
 
     void ChangePlayer()
     {
-        if (gameMode == GameMode.Multiplayer)
+        if (!onePlayerMode && !IsMultiplayerMode && forcePlayerChangeDialog)
         {
-            if (PhotonNetwork.IsMasterClient) // Tylko MasterClient zmienia gracza
-            {
-                currentPlayer = GetNextPlayer(currentPlayer);
-                photonView.RPC("SyncCurrentPlayer", RpcTarget.All, players.IndexOf(currentPlayer));
-
-                // Dodajemy synchronizację fazy gry w multiplayer
-                photonView.RPC("SyncGamePhase", RpcTarget.All, (int)gamePhase);
-            }
+            // lokalny multi
+            DisplayReadyDialog();
         }
-        else // Tryb Singleplayer
+        else
         {
-            if (!onePlayerMode && forcePlayerChangeDialog)
-            {
-                DisplayReadyDialog();
-            }
-            else
-            {
-                UpdateCardVisibility();
+            UpdateCardVisibility();
 
-                if (gamePhase == GamePhase.Start)
+            if (gamePhase == GamePhase.Start)
+            {
+                Auction();
+            }
+            else if (gamePhase == GamePhase.Auction)
+            {
+                if (onePlayerMode)
                 {
-                    Auction();
-                }
-                else if (gamePhase == GamePhase.Auction)
-                {
-                    if (onePlayerMode && currentPlayer != players[humanPlayer])
+                    if (currentPlayer != players[humanPlayer])
                     {
                         BotAuctionDecision();
                     }
@@ -609,34 +732,32 @@ public class GameManager : MonoBehaviourPun
                         DisplayAuctionDialog();
                     }
                 }
-                else if (gamePhase == GamePhase.Handover)
+                else if (IsMultiplayerMode)
                 {
-                    if (onePlayerMode && currentPlayer != players[humanPlayer])
+                    if (PhotonNetwork.IsMasterClient)
                     {
-                        StartCoroutine(BotDealCardsDecision());
+                        DisplayAuctionDialog();
+                        photonView.RPC("ShowWaitingForOtherPlayers", RpcTarget.Others, currentPlayer.playerName);
                     }
-                    else
-                    {
-                        DealCardsToOtherPlayers();
-                    }
+                }
+                else
+                {
+                    DisplayAuctionDialog();
+                }
+            }
+            else if (gamePhase == GamePhase.Handover)
+            {
+                if (onePlayerMode && currentPlayer != players[humanPlayer])
+                {
+                    StartCoroutine(BotDealCardsDecision());
+                }
+                else
+                {
+                    DealCardsToOtherPlayers();
                 }
             }
         }
     }
-
-    [PunRPC]
-    void SyncCurrentPlayer(int playerIndex)
-    {
-        currentPlayer = players[playerIndex];
-        UpdateCardVisibility();
-    }
-
-    [PunRPC]
-    void SyncGamePhase(int phase)
-    {
-        gamePhase = (GamePhase)phase;
-    }
-
 
     public Player GetNextPlayer(Player currentPlayer)
     {
@@ -914,21 +1035,7 @@ public class GameManager : MonoBehaviourPun
 
     public void Play(Card card)
     {
-        if (gameMode == GameMode.Multiplayer)
-        {
-            photonView.RPC("SyncPlayCard", RpcTarget.All, card.GetCardFullName());
-        }
-        else
-        {
-            playedCard = card;
-            played = true;
-        }
-    }
-
-    [PunRPC]
-    void SyncPlayCard(string cardName)
-    {
-        playedCard = FindCardByName(cardName);
+        playedCard = card;
         played = true;
     }
 
@@ -953,17 +1060,37 @@ public class GameManager : MonoBehaviourPun
     {
         Debug.Log("Starting Round " + roundNumber);
 
-        firstPlayer = (firstPlayer + 1) % players.Count;
+        if (IsMultiplayerMode && PhotonNetwork.IsMasterClient)
+        {
+            firstPlayer = (firstPlayer + 1) % players.Count;
+            photonView.RPC("SyncFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
+        }
+        else if (!IsMultiplayerMode)
+        {
+            firstPlayer = (firstPlayer + 1) % players.Count;
+        }
+
         currentPlayer = players[firstPlayer];
-        MovePlayerToPosition(currentPlayer, Player.Position.down);
+        if (!IsMultiplayerMode || currentPlayer == localPlayer)
+        {
+            MovePlayerToPosition(currentPlayer, Player.Position.down);
+        }
+
         gamePhase = GamePhase.Start;
 
         ChangePlayer();
-        //Auction();
-        //DealCardsToOtherPlayers();
+
         StartCoroutine(Gameplay());
         yield return new WaitUntil(() => gameplayFinished);
     }
+
+    [PunRPC]
+    void SyncFirstPlayer(int firstPlayerIndex)
+    {
+        firstPlayer = firstPlayerIndex;
+        currentPlayer = players[firstPlayer];
+    }
+
 
     private void ResetCardsVariables()
     {
@@ -1013,6 +1140,7 @@ public class GameManager : MonoBehaviourPun
         trickManager.ClearPlayedCards();
 
         firstPlayer = (firstPlayer + 1) % players.Count;
+        //Debug.Log(firstPlayer);
         InputHandler.Instance.ResetCardsToDeal();
         foreach (Player player in players)
         {
@@ -1024,19 +1152,13 @@ public class GameManager : MonoBehaviourPun
 
         otherCards.cards.Clear();
 
-        if (gameMode == GameMode.Multiplayer && PhotonNetwork.IsMasterClient)
-        {
-            mainDeck.Shuffle();
-            photonView.RPC("SyncDeck", RpcTarget.All, SerializeDeck(mainDeck.cards));
-        }
-        else if (gameMode == GameMode.Singleplayer)
-        {
-            mainDeck.Shuffle();
-        }
-
+        //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
+        // przygotowanie na nastepna runde
+        //tutaj powinnismy karty wlozyc do talii znowu
+        mainDeck.Shuffle();
+        //AudioManager.Instance.PlayDealCardSound();
         DealInitialCards();
     }
-
 
     int RoundToNearestTen(int number)
     {
@@ -1157,31 +1279,34 @@ public class GameManager : MonoBehaviourPun
 
     public void MovePlayersToNextPositions()
     {
-        for (int i = 0; i < players.Count; i++)
+        if (!IsMultiplayerMode)
         {
-            GameObject playerObject = players[i].gameObject;
-            Player player = players[i];
+            for (int i = 0; i < players.Count; i++)
+            {
+                GameObject playerObject = players[i].gameObject;
+                Player player = players[i];
 
-            // Przesuniecie gracza na kolejna pozycje
-            if (player.position == Player.Position.right)
-            {
-                MovePlayerToPosition(player, Player.Position.up, false);
-            }
-            else if (player.position == Player.Position.up)
-            {
-                MovePlayerToPosition(player, Player.Position.left, false);
-            }
-            else if (player.position == Player.Position.left)
-            {
-                MovePlayerToPosition(player, Player.Position.down, false);
-            }
-            else if (player.position == Player.Position.down)
-            {
-                MovePlayerToPosition(player, Player.Position.right, false);
-            }
-            else
-            {
-                Debug.LogWarning("Unsupported player position!");
+                // Przesuniecie gracza na kolejna pozycje
+                if (player.position == Player.Position.right)
+                {
+                    MovePlayerToPosition(player, Player.Position.up, false);
+                }
+                else if (player.position == Player.Position.up)
+                {
+                    MovePlayerToPosition(player, Player.Position.left, false);
+                }
+                else if (player.position == Player.Position.left)
+                {
+                    MovePlayerToPosition(player, Player.Position.down, false);
+                }
+                else if (player.position == Player.Position.down)
+                {
+                    MovePlayerToPosition(player, Player.Position.right, false);
+                }
+                else
+                {
+                    Debug.LogWarning("Unsupported player position!");
+                }
             }
         }
     }

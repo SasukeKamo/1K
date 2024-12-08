@@ -5,7 +5,7 @@ public class PlayerNetwork : MonoBehaviourPun
 {
     private void Start()
     {
-        if (GameManager.Instance.gameMode == GameManager.GameMode.Singleplayer)
+        if (!GameManager.IsMultiplayerMode)
         {
             this.enabled = false;
             return;
