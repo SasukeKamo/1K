@@ -6,6 +6,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using DG.Tweening;
+using Photon.Pun;
 
 public class InputHandler : MonoBehaviour
 {
@@ -254,7 +255,7 @@ public class InputHandler : MonoBehaviour
         return false;
     }
 
-    public void OnClick(InputAction.CallbackContext context)
+    /*public void OnClick(InputAction.CallbackContext context)
     {
         if (!context.started) return;
         if (isAnyCardInAnim) return;
@@ -317,6 +318,170 @@ public class InputHandler : MonoBehaviour
 
                 }
             }
+        }
+    }*/
+
+    public void OnClick(InputAction.CallbackContext context)
+    {
+        if (!context.started) return;
+        if (isAnyCardInAnim) return;
+
+        RaycastHit2D hit = Physics2D.GetRayIntersection(Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue()));
+        if (hit.collider != null)
+        {
+            Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
+            if (!clickedCard.selected) return;
+
+            Player currentPlayer = GameManager.Instance.GameplayCurrentPlayer;
+
+            if (GameManager.Instance.onePlayerMode && currentPlayer != GameManager.Instance.players[GameManager.humanPlayer])
+            {
+                Debug.LogWarning("It's not your move now!");
+                return;
+            }
+
+            // rozdawanie kart
+            if (GameManager.Instance.isGivingStage && clickedCard.visible)
+            {
+                if (GameManager.IsMultiplayerMode)
+                {
+                    GameManager.Instance.photonView.RPC("DistributeCardToPlayer", RpcTarget.All,
+                        clickedCard.name,
+                        GameManager.Instance.currentPlayer.playerName,
+                        GameManager.Instance.currentCardReceiver.playerName);
+                }
+                else
+                {
+                    HandleCardDistribution(clickedCard);
+                }
+            }
+            // zagrywanie kart
+            else if (clickedCard != null && clickedCard.visible && clickedCard.transform.parent != trick.transform
+                     && GameManager.Instance.auctionFinished && trick.GetComponentsInChildren<Card>().Length <= 3)
+            {
+                Player cardOwner = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
+                List<Card> hand = GameManager.Instance.GetPlayerHand(cardOwner);
+
+                if (ValidateCardOK(clickedCard, hand))
+                {
+                    if (GameManager.IsMultiplayerMode)
+                    {
+                        GameManager.Instance.photonView.RPC("PlayCardOnTable", RpcTarget.All,
+                            clickedCard.name,
+                            cardOwner.playerName);
+                    }
+                    else
+                    {
+                        HandleCardPlay(clickedCard, hand, cardOwner);
+                    }
+                }
+            }
+        }
+    }
+
+    void HandleCardDistribution(Card clickedCard)
+    {
+        GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
+
+        if (GameManager.Instance.currentPlayer.hand.Contains(clickedCard))
+            GameManager.Instance.currentPlayer.hand.Remove(clickedCard);
+
+        GameObject cardObject = GameObject.Find(clickedCard.name);
+        cardObject.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
+        cardObject.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+        clickedCard.SetVisible(GameManager.Instance.currentCardReceiver == GameManager.Instance.currentPlayer);
+        GameManager.Instance.otherCards.cards.Remove(clickedCard);
+
+        cardsToDeal--;
+        GameManager.Instance.currentCardReceiver = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentCardReceiver);
+
+        TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+        currentCardReceiverText.text = "Choose card for player: " + GameManager.Instance.currentCardReceiver.playerName;
+
+        if (cardsToDeal == 1)
+        {
+            Card lastCard = GameManager.Instance.otherCards.cards[0];
+            GameManager.Instance.currentCardReceiver.AddCardToHand(lastCard);
+
+            GameObject lastCardObject = GameObject.Find(lastCard.name);
+            lastCardObject.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
+
+            GameManager.Instance.otherCards.cards.Remove(lastCard);
+            GameManager.Instance.AddRestToCurrentPlayer();
+
+            GameManager.Instance.EndDealingStage();
+        }
+    }
+
+    void HandleCardPlay(Card clickedCard, List<Card> hand, Player cardOwner)
+    {
+        PlayCard(clickedCard, hand, cardOwner);
+        GameManager.Instance.Play(clickedCard);
+        StartCoroutine(WaitForAnimEnd(clickedCard, true));
+    }
+
+    [PunRPC]
+    void DistributeCardToPlayer(string cardName, string giverName, string receiverName)
+    {
+        Card card = GameObject.Find(cardName).GetComponent<Card>();
+        Player giver = GameManager.Instance.players.FirstOrDefault(p => p.playerName == giverName);
+        Player receiver = GameManager.Instance.players.FirstOrDefault(p => p.playerName == receiverName);
+
+        if (card != null && giver != null && receiver != null)
+        {
+            receiver.AddCardToHand(card);
+            giver.hand.Remove(card);
+
+            GameObject cardObject = GameObject.Find(card.name);
+            cardObject.transform.SetParent(receiver.transform);
+            cardObject.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+            card.SetVisible(receiver.playerName == PhotonNetwork.NickName);
+
+            if (giver.playerName == PhotonNetwork.NickName)
+            {
+                cardsToDeal--;
+                GameManager.Instance.currentCardReceiver = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentCardReceiver);
+
+                TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+                currentCardReceiverText.text = "Choose card for player: " + GameManager.Instance.currentCardReceiver.playerName;
+
+                if (cardsToDeal == 1)
+                {
+                    Card lastCard = GameManager.Instance.otherCards.cards[0];
+                    GameManager.Instance.currentCardReceiver.AddCardToHand(lastCard);
+
+                    GameObject lastCardObject = GameObject.Find(lastCard.name);
+                    lastCardObject.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
+
+                    GameManager.Instance.otherCards.cards.Remove(lastCard);
+
+                    GameManager.Instance.AddRestToCurrentPlayer();
+                      
+                    GameManager.Instance.photonView.RPC("EndDealingStageRPC", RpcTarget.All);
+                }
+            }
+        }
+    }
+
+
+    [PunRPC]
+    void EndDealingStageRPC()
+    {
+        GameManager.Instance.EndDealingStage();
+    }
+
+    [PunRPC]
+    void PlayCardOnTable(string cardName, string playerName)
+    {
+        Card card = GameObject.Find(cardName).GetComponent<Card>();
+        Player cardOwner = GameManager.Instance.players.FirstOrDefault(p => p.playerName == playerName);
+
+        if (card != null && cardOwner != null)
+        {
+            List<Card> hand = GameManager.Instance.GetPlayerHand(cardOwner);
+            HandleCardPlay(card, hand, cardOwner);
         }
     }
 

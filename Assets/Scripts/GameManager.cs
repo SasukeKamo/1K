@@ -104,6 +104,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject setupDialog;
     [SerializeField] private GameObject handOverDialog;
     [SerializeField] private GameObject waitingDialog;
+    [SerializeField] private GameObject waitingForCardDialog;
     [SerializeField] private GameObject restOfTheDeck;
     [SerializeField] private GameObject[] nickNames;
 
@@ -391,6 +392,20 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.NickName != currentPlayerName)
         {
             DisplayWaitingDialog();
+        }
+    }
+
+    void DisplayWaitingForCardDialog()
+    {
+        waitingForCardDialog.SetActive(true);
+    }
+
+    [PunRPC]
+    void ShowWaitingForOtherPlayerToDeal(string currentPlayerName)
+    {
+        if (PhotonNetwork.NickName != currentPlayerName)
+        {
+            DisplayWaitingForCardDialog();
         }
     }
 
@@ -1041,18 +1056,36 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     void DealCardsToOtherPlayers()
     {
-        handOverDialog.SetActive(true);
-        isGivingStage = true;
-        currentCardReceiver = GetNextPlayer(currentPlayer);
+        if (IsMultiplayerMode)
+        {
+            if (PhotonNetwork.NickName == currentPlayer.playerName)
+            {
+                handOverDialog.SetActive(true);
+                isGivingStage = true;
+                currentCardReceiver = GetNextPlayer(currentPlayer);
 
-        TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
-        currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+                TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+                currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+
+                photonView.RPC("ShowWaitingForOtherPlayerToDeal", RpcTarget.Others, currentPlayer.playerName);
+            }
+        }
+        else
+        {
+            handOverDialog.SetActive(true);
+            isGivingStage = true;
+            currentCardReceiver = GetNextPlayer(currentPlayer);
+
+            TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+            currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+        }
     }
 
     public void EndDealingStage()
     {
         isGivingStage = false;
         handOverDialog.SetActive(false);
+        waitingForCardDialog.SetActive(false);
         auctionFinished = true;
     }
 
