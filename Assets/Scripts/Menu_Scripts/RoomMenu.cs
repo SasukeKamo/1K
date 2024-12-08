@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static UnityEngine.Rendering.DebugUI;
 
-public class RoomMenu : MonoBehaviour
+public class RoomMenu : MonoBehaviourPun
 {
     [SerializeField]
     OnlineMenu OnlineMenu;
@@ -57,7 +57,15 @@ public class RoomMenu : MonoBehaviour
 
     public void StartGame()
     {
+        GameManager.IsMultiplayerMode = true;
+        photonView.RPC("SetMultiplayerMode", RpcTarget.AllBuffered);
         PhotonNetwork.LoadLevel("GameScene");
+    }
+
+    [PunRPC]
+    void SetMultiplayerMode()
+    {
+        GameManager.IsMultiplayerMode = true;
     }
 
     [PunRPC]

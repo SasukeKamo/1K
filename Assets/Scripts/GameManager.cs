@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
+using ExitGames.Client.Photon;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
@@ -39,15 +40,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             Destroy(gameObject);
         }
-
-        if (IsMultiplayerMode)
-        {
-            PhotonNetwork.AutomaticallySyncScene = true;
-        }
-        else
-        {
-            Debug.LogError("Not connected to Photon.");
-        }
     }
 
 
@@ -58,6 +50,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             // Load the Menu scene
+            IsMultiplayerMode = false;
             SceneManager.LoadScene("Menu");
         }
     }
@@ -115,6 +108,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         //InitializeGame();
         if (IsMultiplayerMode)
         {
+            PhotonPeer.RegisterType(typeof(Player), (byte)'P', Player.SerializePlayer, Player.DeserializePlayer);
+            PhotonNetwork.AutomaticallySyncScene = true;
             onePlayerMode = false;
             SetupMultiplayerGame();
         }
@@ -544,43 +539,46 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     void SetupMultiplayerGame()
     {
-        players = new List<Player>();
-        foreach (Photon.Realtime.Player photonPlayer in PhotonNetwork.PlayerList)
+        if (PhotonNetwork.IsMasterClient)
         {
-            players.Add(new Player
+            players = new List<Player>();
+            foreach (Photon.Realtime.Player photonPlayer in PhotonNetwork.PlayerList)
             {
-                playerName = photonPlayer.NickName,
-                playerNumber = photonPlayer.ActorNumber,
-                team = photonPlayer.ActorNumber % 2 == 0 ? 1 : 2
-            });
-        }
-
-        localPlayer = players.FirstOrDefault(p => p.playerName == PhotonNetwork.NickName);
-        if (localPlayer != null)
-        {
-            localPlayer.position = Player.Position.down;
-        }
-
-        int index = 0;
-        foreach (Player player in players)
-        {
-            if (player != localPlayer)
-            {
-                if (player.team == localPlayer.team)
+                players.Add(new Player
                 {
-                    player.position = Player.Position.up;
-                }
-                else
-                {
-                    player.position = index == 0 ? Player.Position.left : Player.Position.right;
-                    index++;
-                }
+                    playerName = photonPlayer.NickName,
+                    playerNumber = photonPlayer.ActorNumber,
+                    team = photonPlayer.ActorNumber % 2 == 0 ? 1 : 2
+                });
             }
 
-            SetPlayerTextOnUI(player);
-        }
+            localPlayer = players.FirstOrDefault(p => p.playerName == PhotonNetwork.NickName);
+            if (localPlayer != null)
+            {
+                localPlayer.position = Player.Position.down;
+            }
 
-        photonView.RPC("SynchronizeGameStart", RpcTarget.AllBuffered, players.ToArray());
+            int index = 0;
+            foreach (Player player in players)
+            {
+                if (player != localPlayer)
+                {
+                    if (player.team == localPlayer.team)
+                    {
+                        player.position = Player.Position.up;
+                    }
+                    else
+                    {
+                        player.position = index == 0 ? Player.Position.left : Player.Position.right;
+                        index++;
+                    }
+                }
+
+                SetPlayerTextOnUI(player);
+            }
+
+            photonView.RPC("SynchronizeGameStart", RpcTarget.AllBuffered, players.ToArray());
+        }
     }
 
     void SetPlayerTextOnUI(Player player)

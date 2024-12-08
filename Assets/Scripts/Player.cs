@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.IO;
 
 public class Player : MonoBehaviour
 {
@@ -151,5 +152,69 @@ public class Player : MonoBehaviour
         hasBidded = false;
         hasPassed = false;
     }
+
+    public static byte[] SerializePlayer(object customType)
+    {
+        Player player = (Player)customType;
+
+        using (MemoryStream ms = new MemoryStream())
+        {
+            using (BinaryWriter writer = new BinaryWriter(ms))
+            {
+                writer.Write(player.playerName);
+                writer.Write((int)player.position);
+                writer.Write(player.team);
+                writer.Write(player.score);
+                writer.Write(player.roundScore);
+                writer.Write(player.hasPassed);
+                writer.Write(player.hasBidded);
+                writer.Write(player.playerNumber);
+
+                writer.Write(player.hand.Count);
+                foreach (Card card in player.hand)
+                {
+                    writer.Write(card.name);
+                }
+
+                return ms.ToArray();
+            }
+        }
+    }
+
+    public static object DeserializePlayer(byte[] data)
+    {
+        using (MemoryStream ms = new MemoryStream(data))
+        {
+            using (BinaryReader reader = new BinaryReader(ms))
+            {
+                string playerName = reader.ReadString();
+                Player player = GameObject.Find(playerName)?.GetComponent<Player>() ?? new Player();
+
+                player.playerName = playerName;
+                player.position = (Player.Position)reader.ReadInt32();
+                player.team = reader.ReadInt32();
+                player.score = reader.ReadInt32();
+                player.roundScore = reader.ReadInt32();
+                player.hasPassed = reader.ReadBoolean();
+                player.hasBidded = reader.ReadBoolean();
+                player.playerNumber = reader.ReadInt32();
+
+                int handCount = reader.ReadInt32();
+                player.hand = new List<Card>();
+                for (int i = 0; i < handCount; i++)
+                {
+                    string cardName = reader.ReadString();
+                    Card card = GameObject.Find(cardName)?.GetComponent<Card>();
+                    if (card != null)
+                    {
+                        player.hand.Add(card);
+                    }
+                }
+
+                return player;
+            }
+        }
+    }
+
 
 }
