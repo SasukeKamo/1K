@@ -6,9 +6,9 @@ using UnityEngine.SceneManagement;
 public class MainMenu : MonoBehaviour
 {
     [SerializeField]
-    GameObject SettingsMenu;
+    SettingsMenu SettingsMenu;
     [SerializeField]
-    GameObject OnlineMenu;
+    OnlineMenu OnlineMenu;
 
     // Start is called before the first frame update
     void Start()
@@ -29,21 +29,27 @@ public class MainMenu : MonoBehaviour
         SceneManager.LoadScene("SampleScene");
     }
 
+    public void OnEnter()
+    {
+        gameObject.SetActive(true);
+    }
+
+    public void OnExit()
+    {
+        gameObject.SetActive(false);
+    }
+
 
     public void EnterSettingsMenu()
     {
-        SettingsMenu.SetActive(true);
-        OnlineMenu.SetActive(false);
-        gameObject.SetActive(false);
+        SettingsMenu.OnEnter();
+        OnExit();
     }
 
     public void EnterOnlineMenu()
     {
-        OnlineMenu.SetActive(true);
-        SettingsMenu.SetActive(false);
-        gameObject.SetActive(false);
-
-        OnlineMenu.GetComponent<OnlineMenu>().OnEnter();
+        OnlineMenu.OnEnter();
+        OnExit();
     }
 
     public void Exit()

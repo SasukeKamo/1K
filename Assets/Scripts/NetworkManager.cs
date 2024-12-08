@@ -4,15 +4,17 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Room = Assets.Scripts.Menu_Scripts.Room;
+using PhotonNetwork = Photon.Pun.PhotonNetwork;
 
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
     private static NetworkManager _instance;
 
-    public TMP_InputField input_Create;
-    public TMP_InputField input_Join;
+    [SerializeField]
+    RoomMenu RoomMenu;
 
+    [SerializeField] 
+    OnlineMenu OnlineMenu;
 
     public static NetworkManager Instance
     {
@@ -74,21 +76,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         // gui do wyboru pokoju
     }
 
-    public void CreateRoom()
-    {
-        CreateRoom(input_Create.text);
-    }
-
     public void CreateRoom(string roomName)
     {
-        //Debug.Log("Creating Room '" + input_Create.text + "'");1
         PhotonNetwork.CreateRoom(roomName, new RoomOptions() { MaxPlayers = 4, IsVisible = true, IsOpen = true });
-        //Debug.Log("Created Room '" + input_Create.text + "'");
-    }
 
-    public void JoinRoom()
-    {
-        JoinRoom(input_Join.text);
     }
 
     public void JoinRoom(string roomName)
@@ -98,7 +89,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnJoinedRoom()
     {
-        Debug.Log("Joined Room");
+        Debug.Log("Joined Room '"+PhotonNetwork.CurrentRoom.Name+"'");
+
+        OnlineMenu.OnExit();
+        RoomMenu.OnJoinedRoom();
+
         // wczytanie sceny
         //SceneManager.LoadScene("GameScene");
     }

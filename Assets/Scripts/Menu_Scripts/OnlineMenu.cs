@@ -1,12 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
+using Photon.Pun.Demo.Cockpit.Forms;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class OnlineMenu : MonoBehaviour
 {
     [SerializeField]
-    GameObject MainMenu;
+    MainMenu MainMenu;
+
+    [SerializeField]
+    RoomMenu RoomMenu;
+
+    [SerializeField] TMP_InputField input_Create;
 
     // Start is called before the first frame update
     void Start()
@@ -23,19 +30,29 @@ public class OnlineMenu : MonoBehaviour
     public void OnEnter()
     {
         NetworkManager.Instance.JoinLobby();
+        gameObject.SetActive(true);
     }
 
     public void OnExit()
     {
         NetworkManager.Instance.LeaveLobby();
+        gameObject.SetActive(false);
     }
 
     public void Back()
     {
+        MainMenu.OnEnter();
         OnExit();
+    }
+    
+    public void CreateRoom()
+    {
+        NetworkManager.Instance.CreateRoom(input_Create.text);
+    }
 
-        MainMenu.gameObject.SetActive(true);
-        gameObject.SetActive(false);
+    public void JoinRoom(string roomName)
+    {
+        NetworkManager.Instance.JoinRoom(roomName);
     }
 }
 
