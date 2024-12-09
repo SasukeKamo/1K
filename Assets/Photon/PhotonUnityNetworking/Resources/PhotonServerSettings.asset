@@ -61,6 +61,8 @@ MonoBehaviour:
   - SetMultiplayerMode
   - SyncAddCardToHand
   - SyncVisibility
+  - AddCardsToPlay
+  - SyncPlayerHand
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

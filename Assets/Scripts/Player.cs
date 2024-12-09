@@ -6,7 +6,7 @@ using TMPro;
 using System.IO;
 using Photon.Pun;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviourPun
 {
     public enum Position { down, left, up, right };
     public Position position;
@@ -24,13 +24,38 @@ public class Player : MonoBehaviour
     private bool hasBidded = false;
     public int playerNumber;
 
+    public string ToDebugString()
+    {
+        return $"Player: {playerName}, " +
+               $"Player Number: {playerNumber}, " +
+               $"Position: {position}, " +
+               $"Score: {score}, " +
+               $"Round Score: {roundScore}, " +
+               $"Team: {team}, " +
+               $"Has Passed: {hasPassed}, " +
+               $"Has Bidded: {hasBidded}, " +
+               $"ScoreText: {scoreText}, "+
+               $"RoundScoreText: {roundScoreText}, "+
+               $"Hand: [{string.Join(", ", hand ?? new List<Card>())}]";
+    }
+
     void Awake()
     {
-        if (playerNumber == 1 || playerNumber == 2) scoreText = GameObject.Find("ScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
+    }
+
+    public void Setup()
+    {
+        Debug.Log("Player"+playerNumber+" -> Setup()");
+
+        if (playerNumber == 1 || playerNumber == 2) scoreText = GameObject.Find("ScoreP" + playerNumber).GetComponent<TextMeshProUGUI>();
         if (playerNumber == 1 || playerNumber == 2) scoreText.text = score.ToString();
 
         roundScoreText = GameObject.Find("RoundScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
         roundScoreText.text = roundScore.ToString();
+
+        hand = new List<Card>();
+
+        Debug.Log(ToDebugString());
     }
 
     public int GetCardsInHand()
@@ -61,18 +86,7 @@ public class Player : MonoBehaviour
 
         if (GameManager.IsMultiplayerMode)
         {
-            PhotonView photonView = PhotonView.Get(this);
-            photonView.RPC("SyncAddCardToHand", RpcTarget.OthersBuffered, card.name);
-        }
-    }
-
-    [PunRPC]
-    void SyncAddCardToHand(string cardName)
-    {
-        Card card = GameObject.Find(cardName).GetComponent<Card>();
-        if (card != null)
-        {
-            hand.Add(card);
+            photonView.RPC("SyncAddCardToHand", RpcTarget.OthersBuffered, this, card.name);
         }
     }
 

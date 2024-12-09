@@ -11,6 +11,7 @@ using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using UnityEngine.XR;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
@@ -108,10 +109,13 @@ public class GameManager : MonoBehaviourPunCallbacks
         //InitializeGame();
         if (IsMultiplayerMode)
         {
+            Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> Start()");
             //PhotonPeer.RegisterType(typeof(Player), (byte)'P', Player.SerializePlayer, Player.DeserializePlayer);
             PhotonNetwork.AutomaticallySyncScene = true;
             onePlayerMode = false;
             SetupMultiplayerGame();
+
+            Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager <- Start()");
         }
         else
         {
@@ -135,7 +139,6 @@ public class GameManager : MonoBehaviourPunCallbacks
     void InitializeLocalGame()
     {
         mainDeck.Shuffle();
-        Debug.Log("Cards shuffled.");
         marriages = new List<Tuple<Player, Card.Suit>>();
         roundNumber = 1;
         firstPlayer = UnityEngine.Random.Range(0, 4);
@@ -145,12 +148,12 @@ public class GameManager : MonoBehaviourPunCallbacks
         DealInitialCards();
         teamScore.Add(0);
         teamScore.Add(0);
-        Debug.Log($"{teamScore[0]}, {teamScore[1]}");
-
     }
 
     void InitializeMultiplayerGame()
     {
+        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> InitializeMultiplayerGame()");
+
         if (PhotonNetwork.IsMasterClient)
         {
             mainDeck.Shuffle();
@@ -166,11 +169,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             photonView.RPC("SetFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
         }
 
-        currentPlayer = players[firstPlayer];
-        if (currentPlayer == localPlayer)
-        {
-            MovePlayerToPosition(currentPlayer, Player.Position.down);
-        }
+        MovePlayerToPosition(players[PhotonNetwork.LocalPlayer.ActorNumber-1], Player.Position.down);
 
         gamePhase = GamePhase.Start;
 
@@ -181,7 +180,6 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         teamScore.Add(0);
         teamScore.Add(0);
-        Debug.Log($"{teamScore[0]}, {teamScore[1]}");
     }
 
     [PunRPC]
@@ -229,7 +227,6 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
-            Debug.Log("Round Started");
             GameManager.Instance.runLog.logText("");
             GameManager.Instance.runLog.logText("                      --- Round " + roundNumber + " ---", Color.magenta);
 
@@ -254,9 +251,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 // Lokalne tryby gry (singleplayer i multiplayer lokalny)
                 yield return StartCoroutine(StartRound());
                 EndRound();
-                Debug.Log("Round Ended");
                 SaveGame();
-                Debug.Log("Game Saved");
             }
         }
     }
@@ -279,6 +274,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                     for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
                     {
                         Card currentCard = mainDeck.cards[i];
+                        Debug.LogError("Adding card '"+currentCard.GetCardFullName()+"' to player '"+players[p].playerName+"'");
                         players[p].AddCardToHand(currentCard);
                     }
                 }
@@ -320,6 +316,27 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         SaveRestOfTheCards();
     }
+
+    [PunRPC]
+    public void SyncAddCardToHand(Player player, string cardName)
+    {
+        Card card = GameObject.Find(cardName).GetComponent<Card>();
+        if (card != null)
+        {
+            player.hand.Add(card);
+        }
+    }
+
+    // [PunRPC]
+    // public void SyncPlayerHand(Player player, string[] cards)
+    // {
+    //     foreach (var card in cards)
+    //     {
+    //         var c = GameObject.Find(card).GetComponent<Card>();
+    //         player.AddCardToHand(c);
+    //     }
+    // }
+
 
     [PunRPC]
     public void SyncPlayerHands(object[][] handsData)
@@ -526,7 +543,6 @@ public class GameManager : MonoBehaviourPunCallbacks
             currentPlayer = currentBidder;
             GameplayCurrentPlayer = currentPlayer;
 
-            Debug.Log(currentBidder.playerName + " wins the auction with a bid of " + currentBid + " points.");
             runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].", Color.yellow);
 
             gamePhase = GamePhase.Handover;
@@ -623,6 +639,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     void SetupMultiplayerGame()
     {
+        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> SetupMultiplayerGame()");
+
         if (PhotonNetwork.IsMasterClient)
         {
             players = new List<Player>();
@@ -636,7 +654,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
                 player.playerName = photonPlayer.NickName;
                 player.playerNumber = photonPlayer.ActorNumber;
-                player.team = photonPlayer.ActorNumber % 2 == 0 ? 1 : 2;
+                player.team = photonPlayer.ActorNumber % 2 == 1 ? 1 : 2;
 
                 if (player.playerName == PhotonNetwork.NickName)
                 {
@@ -648,15 +666,17 @@ public class GameManager : MonoBehaviourPunCallbacks
                 // Serializowanie danych gracza
                 serializedPlayers.Add(new object[]
                 {
-                player.playerName,
-                player.playerNumber,
-                player.team,
-                (int)player.position
+                    player.playerName,
+                    player.playerNumber,
+                    player.team,
+                    (int)player.position
                 });
             }
 
             photonView.RPC("SynchronizeGameStart", RpcTarget.AllBuffered, serializedPlayers.ToArray());
         }
+
+        Debug.Log("<P"+PhotonNetwork.LocalPlayer.ActorNumber+"> Gamemanager <- SetupMultiplayerGame()");
     }
 
     void SetPlayerTextOnUI(Player player)
@@ -693,6 +713,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     [PunRPC]
     public void SynchronizeGameStart(object[] playersData)
     {
+        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> SynchronizeGameStart()");
+
         players = new List<Player>();
 
         foreach (object playerData in playersData)
@@ -712,15 +734,27 @@ public class GameManager : MonoBehaviourPunCallbacks
             player.playerNumber = playerNumber;
             player.team = team;
             player.position = position;
+            player.Setup();
 
             players.Add(player);
             SetPlayerTextOnUI(player);
         }
 
         localPlayer = players.FirstOrDefault(p => p.playerName == PhotonNetwork.NickName);
+
+        foreach (var player in players)
+        {
+            Debug.Log(player.ToDebugString());
+            if(player == localPlayer)
+                Debug.Log("^^^ this is localplayer ^^^");
+        }
+
+        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> SynchronizeGameStart() -> InitializeGame()");
         InitializeGame();
-        DisplayNicknames(true);
-        setupFinished = true;
+        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> SynchronizeGameStart() <- InitializeGame()");
+        //>DisplayNicknames(true);
+        //>setupFinished = true;
+        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager <- SynchronizeGameStart()");
     }
 
     void BotAuctionDecision()
@@ -1062,11 +1096,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         yield return new WaitUntil(() => auctionFinished);
 
-        //Debug.Log("Gameplay started");
-
-        //GameplayCurrentPlayer = currentBidder;
         GameplayCurrentPlayer = currentPlayer;
-        Debug.Log("GameplayCurrentPlayer = " + GameplayCurrentPlayer);
         Player trickWinner = currentBidder;
         List<Card> currentTrick = new List<Card>();
 
@@ -1128,7 +1158,6 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void EndTurn()
     {
-        Debug.Log("End of turn.");
         for (int i = 0; i < 4; i++)
         {
             GameObject trickCard = t.transform.GetChild(0).gameObject;
@@ -1187,8 +1216,6 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     IEnumerator StartRound()
     {
-        Debug.Log("Starting Round " + roundNumber);
-
         if (IsMultiplayerMode && PhotonNetwork.IsMasterClient)
         {
             firstPlayer = (firstPlayer + 1) % players.Count;
@@ -1259,7 +1286,6 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     void EndRound()
     {
-        Debug.Log("Ending Round " + roundNumber);
         DisplayTrumpText();
         CalculateRoundScores();
         CheckForGameEnd();
@@ -1269,7 +1295,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         trickManager.ClearPlayedCards();
 
         firstPlayer = (firstPlayer + 1) % players.Count;
-        //Debug.Log(firstPlayer);
         InputHandler.Instance.ResetCardsToDeal();
         foreach (Player player in players)
         {

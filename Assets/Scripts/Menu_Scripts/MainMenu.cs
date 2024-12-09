@@ -26,7 +26,7 @@ public class MainMenu : MonoBehaviour
     public void PlayLocalGame()
     {
         Debug.Log("Loading HotSeat scene.");
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("GameScene");
     }
 
     public void OnEnter()
