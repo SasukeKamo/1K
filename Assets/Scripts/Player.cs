@@ -9,6 +9,7 @@ using Photon.Pun;
 public class Player : MonoBehaviourPun
 {
     public enum Position { down, left, up, right };
+
     public Position position;
 
     [SerializeField] 
@@ -41,21 +42,13 @@ public class Player : MonoBehaviourPun
 
     void Awake()
     {
-    }
-
-    public void Setup()
-    {
-        Debug.Log("Player"+playerNumber+" -> Setup()");
-
-        if (playerNumber == 1 || playerNumber == 2) scoreText = GameObject.Find("ScoreP" + playerNumber).GetComponent<TextMeshProUGUI>();
+        if (playerNumber == 1 || playerNumber == 2) scoreText = GameObject.Find("ScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
         if (playerNumber == 1 || playerNumber == 2) scoreText.text = score.ToString();
 
         roundScoreText = GameObject.Find("RoundScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
         roundScoreText.text = roundScore.ToString();
 
-        hand = new List<Card>();
-
-        Debug.Log(ToDebugString());
+        //hand = new List<Card>();
     }
 
     public int GetCardsInHand()
@@ -84,10 +77,10 @@ public class Player : MonoBehaviourPun
     {
         hand.Add(card);
 
-        if (GameManager.IsMultiplayerMode)
-        {
-            photonView.RPC("SyncAddCardToHand", RpcTarget.OthersBuffered, this, card.name);
-        }
+        // if (GameManager.IsMultiplayerMode)
+        // {
+        //     //photonView.RPC("SyncAddCardToHand", RpcTarget.OthersBuffered, playerNumber, card.name);
+        // }
     }
 
     public void RemoveCardFromHand(Card card)

@@ -11,6 +11,7 @@ using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using UnityEngine.Rendering;
 using UnityEngine.XR;
 
 public class GameManager : MonoBehaviourPunCallbacks
@@ -273,10 +274,20 @@ public class GameManager : MonoBehaviourPunCallbacks
                 {
                     for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
                     {
+                        Debug.LogError("VALUES: p="+p+", i="+i+", players.Count="+players.Count);
+
                         Card currentCard = mainDeck.cards[i];
+                        string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
+                        GameObject go = GameObject.Find(cardName);
+                        go.transform.SetParent(players[p].transform);
                         Debug.LogError("Adding card '"+currentCard.GetCardFullName()+"' to player '"+players[p].playerName+"'");
                         players[p].AddCardToHand(currentCard);
                     }
+                }
+
+                for (int p = 0; p < players.Count; p++)
+                {
+                    Debug.Log("Player"+p+" hand: "+players[p].hand.Count);
                 }
 
                 SendPlayerHands();
@@ -318,24 +329,14 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    public void SyncAddCardToHand(Player player, string cardName)
+    public void SyncAddCardToHand(int playernumber, string cardName)
     {
         Card card = GameObject.Find(cardName).GetComponent<Card>();
         if (card != null)
         {
-            player.hand.Add(card);
+            players[playernumber].hand.Add(card);
         }
     }
-
-    // [PunRPC]
-    // public void SyncPlayerHand(Player player, string[] cards)
-    // {
-    //     foreach (var card in cards)
-    //     {
-    //         var c = GameObject.Find(card).GetComponent<Card>();
-    //         player.AddCardToHand(c);
-    //     }
-    // }
 
 
     [PunRPC]
@@ -358,6 +359,8 @@ public class GameManager : MonoBehaviourPunCallbacks
                     }
                 }
             }
+
+            Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Player"+(i+1)+" after synced cards: "+players[i].ToDebugString());
         }
     }
 
@@ -377,6 +380,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             handsData.Add(playerHandData.ToArray());
         }
 
+        Debug.Log("Sending player hands as array...");
         photonView.RPC("SyncPlayerHands", RpcTarget.AllBuffered, handsData.ToArray());
     }
 
@@ -390,6 +394,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 for (int i = players.Count * initialCardCount; i < mainDeck.cards.Count; i++)
                 {
                     Card currentCard = mainDeck.cards[i];
+                    Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Player" + (i + 1) + " adds card '" + currentCard.GetCardFullName()+"' to rest");
                     otherCards.AddCard(currentCard);
                 }
 
@@ -431,6 +436,9 @@ public class GameManager : MonoBehaviourPunCallbacks
                 }
             }
         }
+
+        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> Rest after synced cards: [{string.Join(", ", otherCards.cards ?? new List<Card>())}]");
+
     }
 
     void SendRestOfDeck()
@@ -641,120 +649,27 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> SetupMultiplayerGame()");
 
-        if (PhotonNetwork.IsMasterClient)
+        foreach (Photon.Realtime.Player photonPlayer in PhotonNetwork.PlayerList)
         {
-            players = new List<Player>();
-            List<object> serializedPlayers = new List<object>();
+            Player player = GameObject.Find("P" + photonPlayer.ActorNumber + " Hand").GetComponent<Player>();
 
-            foreach (Photon.Realtime.Player photonPlayer in PhotonNetwork.PlayerList)
-            {
-                // Tworzenie GameObjectu dla gracza
-                GameObject playerObject = new GameObject(photonPlayer.NickName);
-                Player player = playerObject.AddComponent<Player>();
+            player.playerName = photonPlayer.NickName;
 
-                player.playerName = photonPlayer.NickName;
-                player.playerNumber = photonPlayer.ActorNumber;
-                player.team = photonPlayer.ActorNumber % 2 == 1 ? 1 : 2;
+            //player.playerNumber = photonPlayer.ActorNumber;
+            //player.team = photonPlayer.ActorNumber % 2 == 1 ? 1 : 2;
+            // if (player.playerName == PhotonNetwork.NickName)
+            // {
+            //     player.position = Player.Position.down; // Lokalny gracz na dole
+            // }
+            //players.Add(player);
 
-                if (player.playerName == PhotonNetwork.NickName)
-                {
-                    player.position = Player.Position.down; // Lokalny gracz na dole
-                }
-
-                players.Add(player);
-
-                // Serializowanie danych gracza
-                serializedPlayers.Add(new object[]
-                {
-                    player.playerName,
-                    player.playerNumber,
-                    player.team,
-                    (int)player.position
-                });
-            }
-
-            photonView.RPC("SynchronizeGameStart", RpcTarget.AllBuffered, serializedPlayers.ToArray());
+            GameObject.Find("NameP" + player.playerNumber).GetComponent<TextMeshProUGUI>().text = player.playerName;
+            InitializeGame();
         }
+
+        MovePlayerToPosition(players[PhotonNetwork.LocalPlayer.ActorNumber-1], Player.Position.down);
 
         Debug.Log("<P"+PhotonNetwork.LocalPlayer.ActorNumber+"> Gamemanager <- SetupMultiplayerGame()");
-    }
-
-    void SetPlayerTextOnUI(Player player)
-    {
-        string textObjectName = "";
-
-        switch (player.position)
-        {
-            case Player.Position.down:
-                textObjectName = "NameP1";
-                break;
-            case Player.Position.up:
-                textObjectName = "NameP3";
-                break;
-            case Player.Position.left:
-                textObjectName = "NameP2";
-                break;
-            case Player.Position.right:
-                textObjectName = "NameP4";
-                break;
-        }
-
-        TextMeshProUGUI playerNameText = GameObject.Find(textObjectName).GetComponent<TextMeshProUGUI>();
-        if (playerNameText != null)
-        {
-            playerNameText.text = player.playerName;
-        }
-        else
-        {
-            Debug.LogWarning($"Could not find UI object {textObjectName} for player {player.playerName}");
-        }
-    }
-
-    [PunRPC]
-    public void SynchronizeGameStart(object[] playersData)
-    {
-        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> SynchronizeGameStart()");
-
-        players = new List<Player>();
-
-        foreach (object playerData in playersData)
-        {
-            object[] data = (object[])playerData;
-
-            string playerName = (string)data[0];
-            int playerNumber = (int)data[1];
-            int team = (int)data[2];
-            Player.Position position = (Player.Position)(int)data[3];
-
-            // Tworzenie GameObjectu dla każdego gracza
-            GameObject playerObject = new GameObject(playerName);
-            Player player = playerObject.AddComponent<Player>();
-
-            player.playerName = playerName;
-            player.playerNumber = playerNumber;
-            player.team = team;
-            player.position = position;
-            player.Setup();
-
-            players.Add(player);
-            SetPlayerTextOnUI(player);
-        }
-
-        localPlayer = players.FirstOrDefault(p => p.playerName == PhotonNetwork.NickName);
-
-        foreach (var player in players)
-        {
-            Debug.Log(player.ToDebugString());
-            if(player == localPlayer)
-                Debug.Log("^^^ this is localplayer ^^^");
-        }
-
-        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> SynchronizeGameStart() -> InitializeGame()");
-        InitializeGame();
-        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> SynchronizeGameStart() <- InitializeGame()");
-        //>DisplayNicknames(true);
-        //>setupFinished = true;
-        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager <- SynchronizeGameStart()");
     }
 
     void BotAuctionDecision()
@@ -1286,32 +1201,32 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     void EndRound()
     {
-        DisplayTrumpText();
-        CalculateRoundScores();
-        CheckForGameEnd();
-        roundNumber++;
-        ResetDeck();
-        ResetCardsVariables();
-        trickManager.ClearPlayedCards();
-
-        firstPlayer = (firstPlayer + 1) % players.Count;
-        InputHandler.Instance.ResetCardsToDeal();
-        foreach (Player player in players)
-        {
-            player.Reset();
-        }
-
-        auctionFinished = false;
-        gameplayFinished = false;
-
-        otherCards.cards.Clear();
-
-        //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
-        // przygotowanie na nastepna runde
-        //tutaj powinnismy karty wlozyc do talii znowu
-        mainDeck.Shuffle();
-        //AudioManager.Instance.PlayDealCardSound();
-        DealInitialCards();
+        // DisplayTrumpText();
+        // CalculateRoundScores();
+        // CheckForGameEnd();
+        // roundNumber++;
+        // ResetDeck();
+        // ResetCardsVariables();
+        // trickManager.ClearPlayedCards();
+        //
+        // firstPlayer = (firstPlayer + 1) % players.Count;
+        // InputHandler.Instance.ResetCardsToDeal();
+        // foreach (Player player in players)
+        // {
+        //     player.Reset();
+        // }
+        //
+        // auctionFinished = false;
+        // gameplayFinished = false;
+        //
+        // otherCards.cards.Clear();
+        //
+        // //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
+        // // przygotowanie na nastepna runde
+        // //tutaj powinnismy karty wlozyc do talii znowu
+        // mainDeck.Shuffle();
+        // //AudioManager.Instance.PlayDealCardSound();
+        // DealInitialCards();
     }
 
     int RoundToNearestTen(int number)
