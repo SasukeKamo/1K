@@ -118,6 +118,9 @@ public class GameManager : MonoBehaviourPunCallbacks
             SetupMultiplayerGame();
 
             Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager <- Start()");
+            Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> StartCoroutine(GameLoop())");
+
+            StartCoroutine(GameLoop());
         }
         else
         {
@@ -355,8 +358,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                     if (card != null)
                     {
                         players[i].hand.Add(card);
-                        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> sets cards of player"+players[i].playerNumber+"+ (i="+i+ ") to visible="+(players[i].playerNumber == PhotonNetwork.LocalPlayer.ActorNumber));
-
+                        //Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> sets cards of player"+players[i].playerNumber+"+ (i="+i+ ") to visible="+(players[i].playerNumber == PhotonNetwork.LocalPlayer.ActorNumber));
                         card.SetVisible(players[i].playerNumber == PhotonNetwork.LocalPlayer.ActorNumber);
                         card.transform.localRotation = Quaternion.Euler(0, 0, 0);
                     }
@@ -1208,32 +1210,32 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     void EndRound()
     {
-        // DisplayTrumpText();
-        // CalculateRoundScores();
-        // CheckForGameEnd();
-        // roundNumber++;
-        // ResetDeck();
-        // ResetCardsVariables();
-        // trickManager.ClearPlayedCards();
-        //
-        // firstPlayer = (firstPlayer + 1) % players.Count;
-        // InputHandler.Instance.ResetCardsToDeal();
-        // foreach (Player player in players)
-        // {
-        //     player.Reset();
-        // }
-        //
-        // auctionFinished = false;
-        // gameplayFinished = false;
-        //
-        // otherCards.cards.Clear();
-        //
-        // //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
-        // // przygotowanie na nastepna runde
-        // //tutaj powinnismy karty wlozyc do talii znowu
-        // mainDeck.Shuffle();
-        // //AudioManager.Instance.PlayDealCardSound();
-        // DealInitialCards();
+        DisplayTrumpText();
+        CalculateRoundScores();
+        CheckForGameEnd();
+        roundNumber++;
+        ResetDeck();
+        ResetCardsVariables();
+        trickManager.ClearPlayedCards();
+        
+        firstPlayer = (firstPlayer + 1) % players.Count;
+        InputHandler.Instance.ResetCardsToDeal();
+        foreach (Player player in players)
+        {
+            player.Reset();
+        }
+        
+        auctionFinished = false;
+        gameplayFinished = false;
+        
+        otherCards.cards.Clear();
+        
+        //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
+        // przygotowanie na nastepna runde
+        //tutaj powinnismy karty wlozyc do talii znowu
+        mainDeck.Shuffle();
+        //AudioManager.Instance.PlayDealCardSound();
+        DealInitialCards();
     }
 
     int RoundToNearestTen(int number)
