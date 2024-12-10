@@ -53,6 +53,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             // Load the Menu scene
             IsMultiplayerMode = false;
+            if (PhotonNetwork.CurrentRoom != null)
+                PhotonNetwork.LeaveRoom();
             SceneManager.LoadScene("Menu");
         }
     }
@@ -111,7 +113,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (IsMultiplayerMode)
         {
             Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> Start()");
-            //PhotonPeer.RegisterType(typeof(Player), (byte)'P', Player.SerializePlayer, Player.DeserializePlayer);
             PhotonNetwork.AutomaticallySyncScene = true;
             onePlayerMode = false;
             SetupMultiplayerGame();
@@ -277,9 +278,6 @@ public class GameManager : MonoBehaviourPunCallbacks
                         Debug.LogError("VALUES: p="+p+", i="+i+", players.Count="+players.Count);
 
                         Card currentCard = mainDeck.cards[i];
-                        string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
-                        GameObject go = GameObject.Find(cardName);
-                        go.transform.SetParent(players[p].transform);
                         Debug.LogError("Adding card '"+currentCard.GetCardFullName()+"' to player '"+players[p].playerName+"'");
                         players[p].AddCardToHand(currentCard);
                     }
@@ -352,10 +350,15 @@ public class GameManager : MonoBehaviourPunCallbacks
                 GameObject cardObject = GameObject.Find(cardName);
                 if (cardObject != null)
                 {
+                    cardObject.transform.SetParent(players[i].transform);
                     Card card = cardObject.GetComponent<Card>();
                     if (card != null)
                     {
-                        players[i].hand.Add(card);  
+                        players[i].hand.Add(card);
+                        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> sets cards of player"+players[i].playerNumber+"+ (i="+i+ ") to visible="+(players[i].playerNumber == PhotonNetwork.LocalPlayer.ActorNumber));
+
+                        card.SetVisible(players[i].playerNumber == PhotonNetwork.LocalPlayer.ActorNumber);
+                        card.transform.localRotation = Quaternion.Euler(0, 0, 0);
                     }
                 }
             }
@@ -664,10 +667,14 @@ public class GameManager : MonoBehaviourPunCallbacks
             //players.Add(player);
 
             GameObject.Find("NameP" + player.playerNumber).GetComponent<TextMeshProUGUI>().text = player.playerName;
-            InitializeGame();
         }
 
         MovePlayerToPosition(players[PhotonNetwork.LocalPlayer.ActorNumber-1], Player.Position.down);
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            InitializeGame();
+        }
 
         Debug.Log("<P"+PhotonNetwork.LocalPlayer.ActorNumber+"> Gamemanager <- SetupMultiplayerGame()");
     }

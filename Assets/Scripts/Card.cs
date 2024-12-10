@@ -71,19 +71,6 @@ public class Card : MonoBehaviour
     {
         this.visible = visible;
         spriteRenderer.sprite = visible ? front : back;
-
-        if (GameManager.IsMultiplayerMode)
-        {
-            PhotonView photonView = PhotonView.Get(this);
-            photonView.RPC("SyncVisibility", RpcTarget.OthersBuffered, visible);
-        }
-    }
-
-    [PunRPC]
-    void SyncVisibility(bool visible)
-    {
-        this.visible = visible;
-        spriteRenderer.sprite = visible ? front : back;
     }
 
     public string GetCardFullName() //mozna uzyc do debugu
