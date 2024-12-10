@@ -13,6 +13,8 @@ using Photon.Realtime;
 using ExitGames.Client.Photon;
 using UnityEngine.Rendering;
 using UnityEngine.XR;
+using System.Security.Cryptography;
+using Unity.VisualScripting;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
@@ -171,7 +173,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsMasterClient)
         {
             firstPlayer = UnityEngine.Random.Range(0, players.Count);
-            photonView.RPC("SetFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
+            photonView.RPC("SyncFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
         }
 
         MovePlayerToPosition(players[PhotonNetwork.LocalPlayer.ActorNumber-1], Player.Position.down);
@@ -219,16 +221,14 @@ public class GameManager : MonoBehaviourPunCallbacks
         photonView.RPC("SyncDeck", RpcTarget.Others, deckData.ToArray());
     }
 
-    [PunRPC]
-    public void SetFirstPlayer(int index)
-    {
-        firstPlayer = index;
-        currentPlayer = players[firstPlayer];
-    }
-
     IEnumerator GameLoop()
     {
         yield return new WaitUntil(() => setupFinished);
+
+        Debug.LogError("setupFinished passed");
+
+        Debug.LogError("TeamScoreSize="+teamScore.Count);
+        Debug.LogError($"TeamScore: [{string.Join(", ", teamScore ?? new List<int>())}]");
 
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
@@ -248,7 +248,9 @@ public class GameManager : MonoBehaviourPunCallbacks
                 else
                 {
                     // pozostali czekaja na synchronizacje
-                    yield return new WaitUntil(() => !PhotonNetwork.IsMasterClient || IsRoundSynced);
+                    Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> IsRoundSynced="+IsRoundSynced);
+                    yield return new WaitUntil(() => IsRoundSynced);
+                    Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> IsRoundSynced=" + IsRoundSynced+" PASSED WAITING");
                 }
             }
             else
@@ -365,7 +367,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 }
             }
 
-            Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Player"+(i+1)+" after synced cards: "+players[i].ToDebugString());
+            //Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Player"+(i+1)+" after synced cards: "+players[i].ToDebugString());
         }
     }
 
@@ -442,7 +444,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             }
         }
 
-        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> Rest after synced cards: [{string.Join(", ", otherCards.cards ?? new List<Card>())}]");
+        //Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> Rest after synced cards: [{string.Join(", ", otherCards.cards ?? new List<Card>())}]");
 
     }
 
@@ -518,54 +520,33 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
+    [PunRPC]
+    public void SyncLog(string logString, float r, float g, float b)
+    {
+        runLog.logText(logString, new Color(r,g,b));
+    }
+
     public void PositiveAuctionDialog()
     {
         currentBid += 10;
         currentBidder = currentPlayer;
         auctionDialog.SetActive(false);
 
-        runLog.logText("<" + currentBidder.playerName + "> has bidded " + currentBid + ".", Color.yellow);
-
-        do
+        if (IsMultiplayerMode)
         {
-            currentPlayer = GetNextPlayer(currentPlayer);
-            MovePlayersToNextPositions();
+            do
+            {
+                currentPlayer = GetNextPlayer(currentPlayer);
 
-        } while (currentPlayer.HasPassed());
+            } while (currentPlayer.HasPassed());
 
-        ChangePlayer();
-    }
-    public void NegativeAuctionDialog()
-    {
-        auctionDialog.SetActive(false);
-
-        currentPlayer.SetPassed(true);
-
-        runLog.logText("<" + currentPlayer.playerName + "> passed.", Color.yellow);
-
-        int passed = 0;
-
-        foreach (Player player in players)
-        {
-            if (player.HasPassed())
-                passed++;
+            photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentBidder.playerName + "> has bidded " + currentBid + ".", 1.0, 1.0, 0.0 );
+            photonView.RPC("SyncAuction", RpcTarget.AllBuffered, currentBid, currentPlayer.playerNumber, currentBidder.playerNumber);
         }
-
-        if (passed >= 3) //Wygrana jednego gracza -> oddanie kart innym graczom
+        else
         {
-            currentPlayer = currentBidder;
-            GameplayCurrentPlayer = currentPlayer;
+            runLog.logText("<" + currentBidder.playerName + "> has bidded " + currentBid + ".", Color.yellow);
 
-            runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].", Color.yellow);
-
-            gamePhase = GamePhase.Handover;
-
-            if (!onePlayerMode) MovePlayerToPosition(currentBidder, Player.Position.down, true);
-            ChangePlayer();
-
-        }
-        else //Nie wszyscy spasowali -> dilog dla nast�pnego gracza
-        {
             do
             {
                 currentPlayer = GetNextPlayer(currentPlayer);
@@ -574,6 +555,72 @@ public class GameManager : MonoBehaviourPunCallbacks
             } while (currentPlayer.HasPassed());
 
             ChangePlayer();
+        }
+    }
+
+
+    [PunRPC]
+    public void SyncPlayer(int playerNumber, string methodName, object[] parameters)
+    {
+        players[playerNumber-1].GetType().GetMethod(methodName).Invoke(players[playerNumber-1], parameters);
+        Debug.LogError("Used function '"+methodName+"' on Player" + players[playerNumber-1].playerNumber+" and now this player looks like this: "+players[playerNumber-1].ToDebugString());
+    }
+
+
+    public void NegativeAuctionDialog()
+    {
+        if (IsMultiplayerMode)
+        {
+            photonView.RPC("SyncPlayer", RpcTarget.AllBuffered, currentPlayer.playerNumber, "SetPassed", new object[] { true });
+            photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentPlayer.playerName + "> passed.", 1.0, 1.0, 0.0);
+            //currentPlayer.GetType().GetMethod("SetPassed").Invoke(currentPlayer, parameters); // null, jeśli metoda nie ma parametrów
+
+            do { currentPlayer = GetNextPlayer(currentPlayer); } 
+            while (currentPlayer.HasPassed());
+
+            photonView.RPC("SyncAuction", RpcTarget.AllBuffered, currentBid, currentPlayer.playerNumber, currentBidder.playerNumber);
+        }
+        else
+        {
+            auctionDialog.SetActive(false);
+
+            currentPlayer.SetPassed(true);
+
+            runLog.logText("<" + currentPlayer.playerName + "> passed.", Color.yellow);
+
+            int passed = 0;
+
+            foreach (Player player in players)
+            {
+                if (player.HasPassed())
+                    passed++;
+            }
+
+            if (passed >= 3) //Wygrana jednego gracza -> oddanie kart innym graczom
+            {
+                currentPlayer = currentBidder;
+                GameplayCurrentPlayer = currentPlayer;
+
+                runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].",
+                    Color.yellow);
+
+                gamePhase = GamePhase.Handover;
+
+                if (!onePlayerMode) MovePlayerToPosition(currentBidder, Player.Position.down, true);
+                ChangePlayer();
+
+            }
+            else //Nie wszyscy spasowali -> dilog dla nast�pnego gracza
+            {
+                do
+                {
+                    currentPlayer = GetNextPlayer(currentPlayer);
+                    MovePlayersToNextPositions();
+
+                } while (currentPlayer.HasPassed());
+
+                ChangePlayer();
+            }
         }
     }
 
@@ -673,10 +720,9 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         MovePlayerToPosition(players[PhotonNetwork.LocalPlayer.ActorNumber-1], Player.Position.down);
 
-        if (PhotonNetwork.IsMasterClient)
-        {
-            InitializeGame();
-        }
+        InitializeGame();
+
+        setupFinished = true;
 
         Debug.Log("<P"+PhotonNetwork.LocalPlayer.ActorNumber+"> Gamemanager <- SetupMultiplayerGame()");
     }
@@ -717,6 +763,55 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 BotAuctionDecision();
             }
+        }
+    }
+
+    [PunRPC]
+    public void SyncSetupAuction()
+    {
+        currentBid = 100;
+        currentBidder = GetPreviousPlayer(currentPlayer);
+        gamePhase = GamePhase.Auction;
+    }
+
+    [PunRPC]
+    public void SyncAuction(int currentBid, int currentPlayerNumber, int currentBidderPlayerNumber)
+    {
+        auctionDialog.SetActive(false);
+        waitingDialog.SetActive(false);
+
+        this.currentBid = currentBid;
+        this.currentPlayer = players[currentPlayerNumber-1];
+        this.currentBidder = players[currentBidderPlayerNumber-1];
+
+
+        int passed = 0;
+        foreach (Player player in players)
+        {
+            if (player.HasPassed())
+                passed++;
+        }
+        if (passed >= 3)
+        {
+            GameplayCurrentPlayer = currentPlayer;
+
+            runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].",
+                Color.yellow);
+
+            gamePhase = GamePhase.Handover;
+            return;
+        }
+
+
+
+
+        if (PhotonNetwork.LocalPlayer.ActorNumber == currentPlayerNumber)
+        {
+            DisplayAuctionDialog();
+        }
+        else
+        {
+            DisplayWaitingDialog();
         }
     }
 
@@ -1140,25 +1235,23 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     IEnumerator StartRound()
     {
-        if (IsMultiplayerMode && PhotonNetwork.IsMasterClient)
-        {
-            firstPlayer = (firstPlayer + 1) % players.Count;
-            photonView.RPC("SyncFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
-        }
-        else if (!IsMultiplayerMode)
-        {
-            firstPlayer = (firstPlayer + 1) % players.Count;
-        }
-
+        firstPlayer = (firstPlayer + 1) % players.Count;
         currentPlayer = players[firstPlayer];
-        if (!IsMultiplayerMode || currentPlayer == localPlayer)
-        {
-            MovePlayerToPosition(currentPlayer, Player.Position.down);
-        }
-
         gamePhase = GamePhase.Start;
 
-        ChangePlayer();
+        if (IsMultiplayerMode && PhotonNetwork.IsMasterClient)
+        {
+            photonView.RPC("SyncFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
+            photonView.RPC("SyncSetupAuction", RpcTarget.AllBuffered);
+            photonView.RPC("SyncAuction", RpcTarget.AllBuffered, currentBid, currentPlayer.playerNumber, currentBidder.playerNumber);
+
+            yield return new WaitUntil(() => gamePhase == GamePhase.Gameplay);
+            Debug.LogError("Started GAMEPLAY PHASE");
+        }
+        else
+        {
+            ChangePlayer();
+        }
 
         StartCoroutine(Gameplay());
         yield return new WaitUntil(() => gameplayFinished);
