@@ -436,15 +436,18 @@ public class GameManager : MonoBehaviourPunCallbacks
             GameObject cardObject = GameObject.Find(cardName);
             if (cardObject != null)
             {
+                cardObject.transform.SetParent(restOfTheDeck.transform);
                 Card card = cardObject.GetComponent<Card>();
                 if (card != null)
                 {
+                    card.SetVisible(false);
+                    //card.transform.localRotation = Quaternion.Euler(0, 0, 0);
                     otherCards.AddCard(card);
                 }
             }
         }
 
-        //Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> Rest after synced cards: [{string.Join(", ", otherCards.cards ?? new List<Card>())}]");
+        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> Rest after synced cards: [{string.Join(", ", otherCards.cards ?? new List<Card>())}]");
 
     }
 
@@ -457,7 +460,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             restOfDeckData.Add(card.name);
         }
 
-        photonView.RPC("SyncRestOfDeck", RpcTarget.Others, restOfDeckData.ToArray());
+        photonView.RPC("SyncRestOfDeck", RpcTarget.AllBuffered, restOfDeckData.ToArray());
     }
 
     public void DisplayTrumpText()
@@ -540,7 +543,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
             } while (currentPlayer.HasPassed());
 
-            photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentBidder.playerName + "> has bidded " + currentBid + ".", 1.0, 1.0, 0.0 );
+            photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentBidder.playerName + "> has bidded " + currentBid + ".", 1.0f, 1.0f, 0.0f );
             photonView.RPC("SyncAuction", RpcTarget.AllBuffered, currentBid, currentPlayer.playerNumber, currentBidder.playerNumber);
         }
         else
@@ -572,7 +575,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (IsMultiplayerMode)
         {
             photonView.RPC("SyncPlayer", RpcTarget.AllBuffered, currentPlayer.playerNumber, "SetPassed", new object[] { true });
-            photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentPlayer.playerName + "> passed.", 1.0, 1.0, 0.0);
+            photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentPlayer.playerName + "> passed.", 1.0f, 1.0f, 0.0f);
             //currentPlayer.GetType().GetMethod("SetPassed").Invoke(currentPlayer, parameters); // null, jeśli metoda nie ma parametrów
 
             do { currentPlayer = GetNextPlayer(currentPlayer); } 
@@ -1231,6 +1234,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         handOverDialog.SetActive(false);
         waitingForCardDialog.SetActive(false);
         auctionFinished = true;
+        gamePhase = GamePhase.Gameplay;
     }
 
     IEnumerator StartRound()
@@ -1241,12 +1245,19 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         if (IsMultiplayerMode && PhotonNetwork.IsMasterClient)
         {
+            //Auction
             photonView.RPC("SyncFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
             photonView.RPC("SyncSetupAuction", RpcTarget.AllBuffered);
             photonView.RPC("SyncAuction", RpcTarget.AllBuffered, currentBid, currentPlayer.playerNumber, currentBidder.playerNumber);
 
+            yield return new WaitUntil(() => gamePhase == GamePhase.Handover);
+
+            //Hand Over
+            photonView.RPC("SyncSetupHandOver", RpcTarget.AllBuffered);
+
             yield return new WaitUntil(() => gamePhase == GamePhase.Gameplay);
             Debug.LogError("Started GAMEPLAY PHASE");
+            yield return new WaitUntil(() => gamePhase == GamePhase.Auction);
         }
         else
         {
@@ -1256,6 +1267,89 @@ public class GameManager : MonoBehaviourPunCallbacks
         StartCoroutine(Gameplay());
         yield return new WaitUntil(() => gameplayFinished);
     }
+
+    [PunRPC]
+    public void SyncSetupHandOver()
+    {
+        var isGivingPlayer = PhotonNetwork.LocalPlayer.ActorNumber == currentBidder.playerNumber;
+
+        handOverDialog.SetActive(isGivingPlayer);
+        waitingForCardDialog.SetActive(!isGivingPlayer);
+        isGivingStage = isGivingPlayer;
+        currentCardReceiver = GetNextPlayer(currentPlayer);
+
+        foreach (var card in otherCards.cards)
+        {
+            card.gameObject.SetActive(true);
+            card.SetVisible(isGivingPlayer);
+        }
+
+        if (isGivingPlayer)
+        {
+            TextMeshProUGUI currentCardReceiverText =
+                GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+            currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+        }
+    }
+
+    [PunRPC]
+    public void SyncDistributeCardToPlayer(string cardName)
+    {
+        Card card = null;
+        Card[] allCards = FindObjectsOfType<Card>(true);
+        foreach (Card c in allCards)
+        {
+            string parentName = c.transform.parent != null
+                ? c.transform.parent.gameObject.name
+                : "NO PARENT";
+
+            Debug.LogError("<P"+PhotonNetwork.LocalPlayer.ActorNumber+"> Found object Card: " + c.gameObject.name + $" located in {parentName}");
+            if (c.gameObject.name == cardName)
+            {
+                Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> Found object Card Successfully!");
+                card = c;
+                break;
+            }
+        }
+
+        if (card == null)
+        {
+            Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> LIPA! NIE MA KARTY!!!");
+            return;
+        }
+
+
+        //Debug.LogError("Searching for card '"+cardName+"'");
+        //Card card = GameObject.Find(cardName).GetComponent<Card>();
+        //Debug.LogError("Found card '" + cardName + "' CARD="+card.GetCardFullName());
+
+        currentCardReceiver.AddCardToHand(card);
+
+        if (currentPlayer.hand.Contains(card))
+            currentPlayer.hand.Remove(card);
+
+        card.gameObject.transform.SetParent(currentCardReceiver.transform);
+        card.gameObject.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+        card.SetVisible(PhotonNetwork.LocalPlayer.ActorNumber == currentCardReceiver.playerNumber);
+        otherCards.cards.Remove(card);
+
+        InputHandler.Instance.cardsToDeal--;
+        currentCardReceiver = GetNextPlayer(currentCardReceiver);
+
+        if (InputHandler.Instance.cardsToDeal == 1)
+        {
+            AddRestToCurrentPlayer();
+            EndDealingStage();
+            return;
+        }
+
+        TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+        currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+
+        Debug.LogError("Cards to deal = " + InputHandler.Instance.cardsToDeal);
+    }
+
 
     [PunRPC]
     public void SyncFirstPlayer(int firstPlayerIndex)
@@ -1535,6 +1629,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 currentPlayer.AddCardToHand(card);
                 card.gameObject.transform.SetParent(currentPlayer.transform);
+                card.transform.localRotation = Quaternion.Euler(0, 0, 0);
             }
         }
     }

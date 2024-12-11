@@ -4612,6 +4612,7 @@ MonoBehaviour:
   trick: {fileID: 96456797}
   trickManager: {fileID: 96456802}
   sortingOrder: 1
+  cardsToDeal: 4
 --- !u!4 &529816629
 Transform:
   m_ObjectHideFlags: 0
@@ -16694,7 +16695,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 367829456}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.5000002
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

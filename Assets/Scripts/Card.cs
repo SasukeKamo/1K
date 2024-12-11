@@ -10,7 +10,6 @@ public class Card : MonoBehaviour
     public enum Suit { Hearts, Diamonds, Clubs, Spades, None };
     public enum Rank { Nine, Ten, Jack, Queen, King, Ace };
 
-    //mozecie tez dodac tutaj np image albo sprite i jakas wartosc np czyOdwrocona i zmieniac zdjecie jesli jest i jesli nie jest
     [SerializeField] private Sprite front;
     [SerializeField] private Sprite back;
 
