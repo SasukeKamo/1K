@@ -115,6 +115,7 @@ public class Card : MonoBehaviour
             originalScale = transform.localScale;
             if (transform.parent.parent == currentPlayerHand.transform || transform.parent == auctionLeftOvers.transform)
             {
+                AudioManager.Instance.PlaySelectCardSound();
                 transform.localScale = originalScale * 1.1f;
                 this.spriteRenderer.sortingOrder++;
                 selected = true;
