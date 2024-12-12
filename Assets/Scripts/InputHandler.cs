@@ -65,7 +65,6 @@ public class InputHandler : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
             text.text = "";
         }
-
     }
 
     public bool ValidateCardOK(Card clickedCard, List<Card> hand)
@@ -357,6 +356,13 @@ public class InputHandler : MonoBehaviour
             else if (clickedCard != null && clickedCard.visible && clickedCard.transform.parent != trick.transform
                      && GameManager.Instance.auctionFinished && trick.GetComponentsInChildren<Card>().Length <= 3)
             {
+                if (GameManager.IsMultiplayerMode && PhotonNetwork.LocalPlayer.ActorNumber !=
+                    GameManager.Instance.GameplayCurrentPlayer.playerNumber)
+                {
+                    Debug.LogError($"Cannot click card IsMultiplayerMode={GameManager.IsMultiplayerMode}, P{PhotonNetwork.LocalPlayer.ActorNumber} != {GameManager.Instance.GameplayCurrentPlayer.playerNumber}");
+                    return;
+                }
+
                 Player cardOwner = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
                 List<Card> hand = GameManager.Instance.GetPlayerHand(cardOwner);
 
@@ -364,9 +370,10 @@ public class InputHandler : MonoBehaviour
                 {
                     if (GameManager.IsMultiplayerMode)
                     {
-                        GameManager.Instance.photonView.RPC("PlayCardOnTable", RpcTarget.All,
-                            clickedCard.name,
-                            cardOwner.playerName);
+                        // GameManager.Instance.photonView.RPC("PlayCardOnTable", RpcTarget.All,
+                        //     clickedCard.name,
+                        //     cardOwner.playerName);
+                        GameManager.Instance.photonView.RPC("SyncGameplayTurn", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber, clickedCard.name);
                     }
                     else
                     {
@@ -420,19 +427,6 @@ public class InputHandler : MonoBehaviour
     }
 
 
-    [PunRPC]
-    void PlayCardOnTable(string cardName, string playerName)
-    {
-        Card card = GameObject.Find(cardName).GetComponent<Card>();
-        Player cardOwner = GameManager.Instance.players.FirstOrDefault(p => p.playerName == playerName);
-
-        if (card != null && cardOwner != null)
-        {
-            List<Card> hand = GameManager.Instance.GetPlayerHand(cardOwner);
-            HandleCardPlay(card, hand, cardOwner);
-        }
-    }
-
     private void AfterClickUpdate(bool moveToNextPos)
     {
         if (!GameManager.Instance.onePlayerMode && moveToNextPos) GameManager.Instance.MovePlayersToNextPositions();
@@ -485,8 +479,10 @@ public class InputHandler : MonoBehaviour
     }
 
 
-    private void PlayCard(Card card, List<Card> hand, Player current)
+    public void PlayCard(Card card, List<Card> hand, Player current)
     {
+        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> entered PlayCard()");
+
         if (card.transform.parent != trick.transform)
         {
             trickManager.AddCard(card);
@@ -507,6 +503,8 @@ public class InputHandler : MonoBehaviour
         {
             Debug.Log("Cannot add card already in the trick area.");
         }
+
+        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> exit PlayCard()");
     }
 
     private void AnimateCardToCenter(Card card, Player currentPlayer)
@@ -534,10 +532,14 @@ public class InputHandler : MonoBehaviour
                   });
     }
 
-    private IEnumerator WaitForAnimEnd(Card card, bool move)
+    public IEnumerator WaitForAnimEnd(Card card, bool move)
     {
         yield return new WaitUntil(() => card.isDotweenAnimEnded);
-        AfterClickUpdate(move);
+
+        if(!GameManager.IsMultiplayerMode)
+            AfterClickUpdate(move);
+
+        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> animation ended");
     }
 
 
