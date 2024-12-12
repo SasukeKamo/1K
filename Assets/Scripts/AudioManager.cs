@@ -22,15 +22,19 @@ public class AudioManager : MonoBehaviour
     public AudioSource audioSource;
 
     public AudioClip winSound;
-    public AudioClip dealCardSound;
+    public AudioClip invalidMoveSound;
     public AudioClip playCardSound;
+    public AudioClip selectCardSound;
+    public AudioClip trumpSound;
+    public AudioClip gamesceneMusic;
+    public AudioClip menuMusic;
 
     void Awake()
     {
         if (_instance == null)
         {
             _instance = this;
-            //DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -45,13 +49,37 @@ public class AudioManager : MonoBehaviour
         audioSource.PlayOneShot(winSound);
     }
 
-    public void PlayDealCardSound()
+    public void PlayTrumpSound()
     {
-        audioSource.PlayOneShot(dealCardSound);
+        audioSource.PlayOneShot(trumpSound);
+    }
+
+    public void PlaySelectCardSound()
+    {
+        audioSource.PlayOneShot(selectCardSound);
+    }
+
+    public void PlayInvalidMoveSound()
+    {
+        audioSource.PlayOneShot(invalidMoveSound);
     }
 
     public void PlayPlayCardSound()
     {
         audioSource.PlayOneShot(playCardSound);
+    }
+
+    public void PlayMenuSong()
+    {
+        audioSource.Stop();
+        audioSource.clip = menuMusic;
+        audioSource.Play();
+    }
+
+    public void PlayGamesceneSong()
+    {
+        audioSource.Stop();
+        audioSource.clip = gamesceneMusic;
+        audioSource.Play();
     }
 }
