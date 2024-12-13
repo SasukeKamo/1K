@@ -1196,6 +1196,11 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         Card card = GameObject.Find(playedCardName).GetComponent<Card>();
 
+        if (currentPlayerNumber != PhotonNetwork.LocalPlayer.ActorNumber)
+        {
+            card.ForceScale();
+        }
+
         InputHandler.Instance.PlayCard(card, players[currentPlayerNumber - 1].hand, players[currentPlayerNumber - 1]);
         Play(card);
         Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> waiting for animation end");

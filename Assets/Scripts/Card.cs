@@ -152,7 +152,7 @@ public class Card : MonoBehaviour
 
     public IEnumerator DissolveIEnumerator()
     {
-
+        AudioManager.Instance.PlayBurnSound();
         float counter = 0.8f;
         while (spriteRenderer.material.GetFloat("_Progress") > 0)
         {

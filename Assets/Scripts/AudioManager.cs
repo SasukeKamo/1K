@@ -19,13 +19,15 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public AudioSource audioSource;
+    public AudioSource musicSource;
+    public AudioSource sfxSource;
 
     public AudioClip winSound;
     public AudioClip invalidMoveSound;
     public AudioClip playCardSound;
     public AudioClip selectCardSound;
     public AudioClip trumpSound;
+    public AudioClip burnSound;
     public AudioClip gamesceneMusic;
     public AudioClip menuMusic;
 
@@ -40,46 +42,49 @@ public class AudioManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-
-        audioSource = gameObject.AddComponent<AudioSource>();
     }
 
     public void PlayWinSound()
     {
-        audioSource.PlayOneShot(winSound);
+        sfxSource.PlayOneShot(winSound);
+    }
+
+    public void PlayBurnSound()
+    {
+        sfxSource.PlayOneShot(burnSound);
     }
 
     public void PlayTrumpSound()
     {
-        audioSource.PlayOneShot(trumpSound);
+        sfxSource.PlayOneShot(trumpSound);
     }
 
     public void PlaySelectCardSound()
     {
-        audioSource.PlayOneShot(selectCardSound);
+        sfxSource.PlayOneShot(selectCardSound);
     }
 
     public void PlayInvalidMoveSound()
     {
-        audioSource.PlayOneShot(invalidMoveSound);
+        sfxSource.PlayOneShot(invalidMoveSound);
     }
 
     public void PlayPlayCardSound()
     {
-        audioSource.PlayOneShot(playCardSound);
+        sfxSource.PlayOneShot(playCardSound);
     }
 
     public void PlayMenuSong()
     {
-        audioSource.Stop();
-        audioSource.clip = menuMusic;
-        audioSource.Play();
+        musicSource.Stop();
+        musicSource.clip = menuMusic;
+        musicSource.Play();
     }
 
     public void PlayGamesceneSong()
     {
-        audioSource.Stop();
-        audioSource.clip = gamesceneMusic;
-        audioSource.Play();
+        musicSource.Stop();
+        musicSource.clip = gamesceneMusic;
+        musicSource.Play();
     }
 }
