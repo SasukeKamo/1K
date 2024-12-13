@@ -1,3 +1,4 @@
+using Photon.Pun;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,7 +10,6 @@ public class Card : MonoBehaviour
     public enum Suit { Hearts, Diamonds, Clubs, Spades, None };
     public enum Rank { Nine, Ten, Jack, Queen, King, Ace };
 
-    //mozecie tez dodac tutaj np image albo sprite i jakas wartosc np czyOdwrocona i zmieniac zdjecie jesli jest i jesli nie jest
     [SerializeField] private Sprite front;
     [SerializeField] private Sprite back;
 
@@ -68,16 +68,8 @@ public class Card : MonoBehaviour
 
     public void SetVisible(bool visible)
     {
-        if (visible)
-        {
-            this.visible = true;
-            spriteRenderer.sprite = front;
-        }
-        else
-        {
-            this.visible = false;
-            spriteRenderer.sprite = back;
-        }
+        this.visible = visible;
+        spriteRenderer.sprite = visible ? front : back;
     }
 
     public string GetCardFullName() //mozna uzyc do debugu
@@ -123,6 +115,7 @@ public class Card : MonoBehaviour
             originalScale = transform.localScale;
             if (transform.parent.parent == currentPlayerHand.transform || transform.parent == auctionLeftOvers.transform)
             {
+                AudioManager.Instance.PlaySelectCardSound();
                 transform.localScale = originalScale * 1.1f;
                 this.spriteRenderer.sortingOrder++;
                 selected = true;

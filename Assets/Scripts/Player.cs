@@ -3,10 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.IO;
+using Photon.Pun;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviourPun
 {
     public enum Position { down, left, up, right };
+
     public Position position;
 
     [SerializeField] 
@@ -22,6 +25,21 @@ public class Player : MonoBehaviour
     private bool hasBidded = false;
     public int playerNumber;
 
+    public string ToDebugString()
+    {
+        return $"Player: {playerName}, " +
+               $"Player Number: {playerNumber}, " +
+               $"Position: {position}, " +
+               $"Score: {score}, " +
+               $"Round Score: {roundScore}, " +
+               $"Team: {team}, " +
+               $"Has Passed: {hasPassed}, " +
+               $"Has Bidded: {hasBidded}, " +
+               $"ScoreText: {scoreText}, "+
+               $"RoundScoreText: {roundScoreText}, "+
+               $"Hand: [{string.Join(", ", hand ?? new List<Card>())}]";
+    }
+
     void Awake()
     {
         if (playerNumber == 1 || playerNumber == 2) scoreText = GameObject.Find("ScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
@@ -29,6 +47,8 @@ public class Player : MonoBehaviour
 
         roundScoreText = GameObject.Find("RoundScoreP" + playerNumber.ToString()).GetComponent<TextMeshProUGUI>();
         roundScoreText.text = roundScore.ToString();
+
+        //hand = new List<Card>();
     }
 
     public int GetCardsInHand()
@@ -56,12 +76,11 @@ public class Player : MonoBehaviour
     public void AddCardToHand(Card card)
     {
         hand.Add(card);
-        //card.gameObject.transform.Rotate(0, 0, 90);
 
-        // Rotationg card to match hand rotation
-        //Vector3 currentRotation = transform.eulerAngles;
-        //currentRotation.z = 0;
-        //card.gameObject.transform.eulerAngles = currentRotation;
+        // if (GameManager.IsMultiplayerMode)
+        // {
+        //     //photonView.RPC("SyncAddCardToHand", RpcTarget.OthersBuffered, playerNumber, card.name);
+        // }
     }
 
     public void RemoveCardFromHand(Card card)
@@ -151,5 +170,4 @@ public class Player : MonoBehaviour
         hasBidded = false;
         hasPassed = false;
     }
-
 }

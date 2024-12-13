@@ -8,8 +8,15 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Photon.Pun;
+using Photon.Realtime;
+using ExitGames.Client.Photon;
+using UnityEngine.Rendering;
+using UnityEngine.XR;
+using System.Security.Cryptography;
+using Unity.VisualScripting;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviourPunCallbacks
 {
     private static GameManager _instance;
 
@@ -40,12 +47,16 @@ public class GameManager : MonoBehaviour
     }
 
 
+
     void Update()
     {
         // Check if the Escape key is pressed
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             // Load the Menu scene
+            IsMultiplayerMode = false;
+            if (PhotonNetwork.CurrentRoom != null)
+                PhotonNetwork.LeaveRoom();
             SceneManager.LoadScene("Menu");
         }
     }
@@ -76,6 +87,10 @@ public class GameManager : MonoBehaviour
     public bool setupFinished = false;
     public GamePhase gamePhase;
     public string savePath = "save.txt";
+
+    private Player localPlayer;
+    public static bool IsMultiplayerMode = false;
+    private bool IsRoundSynced = false;
     [SerializeField] private bool forcePlayerChangeDialog;
     [SerializeField] private GameObject t;
     [SerializeField] private TrickManager trickManager;
@@ -87,6 +102,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject readyDialog;
     [SerializeField] private GameObject setupDialog;
     [SerializeField] private GameObject handOverDialog;
+    [SerializeField] private GameObject waitingDialog;
+    [SerializeField] private GameObject waitingForCardDialog;
     [SerializeField] private GameObject restOfTheDeck;
     [SerializeField] private GameObject[] nickNames;
 
@@ -95,14 +112,40 @@ public class GameManager : MonoBehaviour
     {
         runLog = _instance.GetComponent<RunLog>();
         //InitializeGame();
-        DisplaySetupDialog();
-        StartCoroutine(GameLoop());
+        if (IsMultiplayerMode)
+        {
+            Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> Start()");
+            PhotonNetwork.AutomaticallySyncScene = true;
+            onePlayerMode = false;
+            SetupMultiplayerGame();
+
+            Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager <- Start()");
+            Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> StartCoroutine(GameLoop())");
+
+            StartCoroutine(GameLoop());
+        }
+        else
+        {
+            DisplaySetupDialog();
+            StartCoroutine(GameLoop());
+        }
     }
 
     void InitializeGame()
     {
+        if (IsMultiplayerMode)
+        {
+            InitializeMultiplayerGame();
+        }
+        else
+        {
+            InitializeLocalGame();
+        }
+    }
+
+    void InitializeLocalGame()
+    {
         mainDeck.Shuffle();
-        Debug.Log("Cards shuffled.");
         marriages = new List<Tuple<Player, Card.Suit>>();
         roundNumber = 1;
         firstPlayer = UnityEngine.Random.Range(0, 4);
@@ -112,27 +155,111 @@ public class GameManager : MonoBehaviour
         DealInitialCards();
         teamScore.Add(0);
         teamScore.Add(0);
-        Debug.Log($"{teamScore[0]}, {teamScore[1]}");
+    }
 
+    void InitializeMultiplayerGame()
+    {
+        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> InitializeMultiplayerGame()");
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            mainDeck.Shuffle();
+            SendDeck();
+        }
+
+        marriages = new List<Tuple<Player, Card.Suit>>();
+        roundNumber = 1;
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            firstPlayer = UnityEngine.Random.Range(0, players.Count);
+            photonView.RPC("SyncFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
+        }
+
+        MovePlayerToPosition(players[PhotonNetwork.LocalPlayer.ActorNumber-1], Player.Position.down);
+
+        gamePhase = GamePhase.Start;
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            DealInitialCards();
+        }
+
+        teamScore.Add(0);
+        teamScore.Add(0);
+    }
+
+    [PunRPC]
+    public void SyncDeck(object[] deckData)
+    {
+        mainDeck.cards.Clear();
+
+        foreach (object cardData in deckData)
+        {
+            string cardName = (string)cardData;
+            GameObject cardObject = GameObject.Find(cardName);
+            if (cardObject != null)
+            {
+                Card card = cardObject.GetComponent<Card>();
+                if (card != null)
+                {
+                    mainDeck.AddCard(card);
+                }
+            }
+        }
+    }
+
+    void SendDeck()
+    {
+        List<object> deckData = new List<object>();
+
+        foreach (Card card in mainDeck.cards)
+        {
+            deckData.Add(card.name); // Przesyłaj nazwę karty
+        }
+
+        photonView.RPC("SyncDeck", RpcTarget.Others, deckData.ToArray());
     }
 
     IEnumerator GameLoop()
     {
         yield return new WaitUntil(() => setupFinished);
 
-        //LoadGame(); //only for testing
+        Debug.LogError("setupFinished passed");
+
+        Debug.LogError("TeamScoreSize="+teamScore.Count);
+        Debug.LogError($"TeamScore: [{string.Join(", ", teamScore ?? new List<int>())}]");
 
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
-            Debug.Log("Round Started");
             GameManager.Instance.runLog.logText("");
             GameManager.Instance.runLog.logText("                      --- Round " + roundNumber + " ---", Color.magenta);
-            yield return StartCoroutine(StartRound());
-            EndRound();
-            Debug.Log("Round Ended");
-            SaveGame();
-            Debug.Log("Game Saved");
 
+            if (IsMultiplayerMode)
+            {
+                // master zarzadza rundami
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    yield return StartCoroutine(StartRound());
+                    EndRound(); //Trzeba bedzie zsynchronizowac
+                    //SaveGame();
+                    Debug.Log("Round Ended");
+                }
+                else
+                {
+                    // pozostali czekaja na synchronizacje
+                    Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> IsRoundSynced="+IsRoundSynced);
+                    yield return new WaitUntil(() => IsRoundSynced);
+                    Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> IsRoundSynced=" + IsRoundSynced+" PASSED WAITING");
+                }
+            }
+            else
+            {
+                // Lokalne tryby gry (singleplayer i multiplayer lokalny)
+                yield return StartCoroutine(StartRound());
+                EndRound();
+                SaveGame();
+            }
         }
     }
 
@@ -143,50 +270,197 @@ public class GameManager : MonoBehaviour
 
     void DealInitialCards()
     {
-        int initialCardCount = 5;
-
-        for (int p = 0; p < players.Count; p++)
+        if (IsMultiplayerMode)
         {
-            for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
+            if (PhotonNetwork.IsMasterClient)
             {
-                Card currentCard = mainDeck.cards[i];
-                string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
-                //Debug.Log(cardName);
-                GameObject go = GameObject.Find(cardName);
-                go.transform.SetParent(players[p].transform);
-                players[p].AddCardToHand(currentCard);
+                int initialCardCount = 5;
 
-                if (p == 0)
+                for (int p = 0; p < players.Count; p++)
                 {
-                    go.GetComponent<Card>().SetVisible(true);
+                    for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
+                    {
+                        Debug.LogError("VALUES: p="+p+", i="+i+", players.Count="+players.Count);
+
+                        Card currentCard = mainDeck.cards[i];
+                        Debug.LogError("Adding card '"+currentCard.GetCardFullName()+"' to player '"+players[p].playerName+"'");
+                        players[p].AddCardToHand(currentCard);
+                    }
                 }
-                else if (p == 2)
+
+                for (int p = 0; p < players.Count; p++)
                 {
-                    go.GetComponent<Card>().SetVisible(false);
+                    Debug.Log("Player"+p+" hand: "+players[p].hand.Count);
                 }
-                else
+
+                SendPlayerHands();
+            }
+        }
+        else
+        {
+            // rozdanie kart w trybie lokalnym
+            int initialCardCount = 5;
+
+            for (int p = 0; p < players.Count; p++)
+            {
+                for (int i = p * initialCardCount; i < (p + 1) * initialCardCount; i++)
                 {
-                    go.transform.Rotate(0, 0, 90);
-                    go.GetComponent<Card>().SetVisible(false);
+                    Card currentCard = mainDeck.cards[i];
+                    string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
+                    GameObject go = GameObject.Find(cardName);
+                    go.transform.SetParent(players[p].transform);
+                    players[p].AddCardToHand(currentCard);
+
+                    if (p == 0)
+                    {
+                        go.GetComponent<Card>().SetVisible(true);
+                    }
+                    else if (p == 2)
+                    {
+                        go.GetComponent<Card>().SetVisible(false);
+                    }
+                    else
+                    {
+                        go.transform.Rotate(0, 0, 90);
+                        go.GetComponent<Card>().SetVisible(false);
+                    }
                 }
             }
         }
+
         SaveRestOfTheCards();
+    }
+
+    [PunRPC]
+    public void SyncAddCardToHand(int playernumber, string cardName)
+    {
+        Card card = GameObject.Find(cardName).GetComponent<Card>();
+        if (card != null)
+        {
+            players[playernumber].hand.Add(card);
+        }
+    }
+
+
+    [PunRPC]
+    public void SyncPlayerHands(object[][] handsData)
+    {
+        for (int i = 0; i < players.Count; i++)
+        {
+            players[i].hand.Clear();
+
+            foreach (object cardData in handsData[i])
+            {
+                string cardName = (string)cardData;
+                GameObject cardObject = GameObject.Find(cardName);
+                if (cardObject != null)
+                {
+                    cardObject.transform.SetParent(players[i].transform);
+                    Card card = cardObject.GetComponent<Card>();
+                    if (card != null)
+                    {
+                        players[i].hand.Add(card);
+                        //Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> sets cards of player"+players[i].playerNumber+"+ (i="+i+ ") to visible="+(players[i].playerNumber == PhotonNetwork.LocalPlayer.ActorNumber));
+                        card.SetVisible(players[i].playerNumber == PhotonNetwork.LocalPlayer.ActorNumber);
+                        card.transform.localRotation = Quaternion.Euler(0, 0, 0);
+                    }
+                }
+            }
+
+            //Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Player"+(i+1)+" after synced cards: "+players[i].ToDebugString());
+        }
+    }
+
+    void SendPlayerHands()
+    {
+        List<object[]> handsData = new List<object[]>();
+
+        foreach (Player player in players)
+        {
+            List<object> playerHandData = new List<object>();
+
+            foreach (Card card in player.hand)
+            {
+                playerHandData.Add(card.name);
+            }
+
+            handsData.Add(playerHandData.ToArray());
+        }
+
+        Debug.Log("Sending player hands as array...");
+        photonView.RPC("SyncPlayerHands", RpcTarget.AllBuffered, handsData.ToArray());
     }
 
     private void SaveRestOfTheCards()
     {
-        int initialCardCount = 5;
-        for (int i = players.Count * initialCardCount; i < mainDeck.cards.Count; i++)
+        if (IsMultiplayerMode)
         {
-            Card currentCard = mainDeck.cards[i];
-            otherCards.AddCard(currentCard);
-            string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
+            if (PhotonNetwork.IsMasterClient)
+            {
+                int initialCardCount = 5;
+                for (int i = players.Count * initialCardCount; i < mainDeck.cards.Count; i++)
+                {
+                    Card currentCard = mainDeck.cards[i];
+                    Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Player" + (i + 1) + " adds card '" + currentCard.GetCardFullName()+"' to rest");
+                    otherCards.AddCard(currentCard);
+                }
 
-            GameObject go = GameObject.Find(cardName);
-            go.transform.SetParent(restOfTheDeck.transform);
-            currentCard.SetVisible(true);
+                SendRestOfDeck();
+            }
         }
+        else
+        {
+            // tryb lokalny
+            int initialCardCount = 5;
+            for (int i = players.Count * initialCardCount; i < mainDeck.cards.Count; i++)
+            {
+                Card currentCard = mainDeck.cards[i];
+                otherCards.AddCard(currentCard);
+                string cardName = "Card_" + currentCard.GetSuitToString() + "_" + currentCard.GetRank();
+
+                GameObject go = GameObject.Find(cardName);
+                go.transform.SetParent(restOfTheDeck.transform);
+                currentCard.SetVisible(true);
+            }
+        }
+    }
+
+    [PunRPC]
+    public void SyncRestOfDeck(object[] restOfDeckData)
+    {
+        otherCards.cards.Clear();
+
+        foreach (object cardData in restOfDeckData)
+        {
+            string cardName = (string)cardData;
+            GameObject cardObject = GameObject.Find(cardName);
+            if (cardObject != null)
+            {
+                cardObject.transform.SetParent(restOfTheDeck.transform);
+                Card card = cardObject.GetComponent<Card>();
+                if (card != null)
+                {
+                    card.SetVisible(false);
+                    //card.transform.localRotation = Quaternion.Euler(0, 0, 0);
+                    otherCards.AddCard(card);
+                }
+            }
+        }
+
+        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> Rest after synced cards: [{string.Join(", ", otherCards.cards ?? new List<Card>())}]");
+
+    }
+
+    void SendRestOfDeck()
+    {
+        List<object> restOfDeckData = new List<object>();
+
+        foreach (Card card in otherCards.cards)
+        {
+            restOfDeckData.Add(card.name);
+        }
+
+        photonView.RPC("SyncRestOfDeck", RpcTarget.AllBuffered, restOfDeckData.ToArray());
     }
 
     public void DisplayTrumpText()
@@ -207,6 +481,9 @@ public class GameManager : MonoBehaviour
 
     void DisplayAuctionDialog()
     {
+        if (waitingDialog.activeInHierarchy)
+            waitingDialog.SetActive(false);
+
         auctionDialog.SetActive(true);
 
         GameObject text = GameObject.Find("CurrentBidText");
@@ -218,55 +495,61 @@ public class GameManager : MonoBehaviour
         currentWinnerText.text = "Current winner: " + currentBidder.playerName;
     }
 
+    void DisplayWaitingDialog()
+    {
+        waitingDialog.SetActive(true);
+    }
+
+    [PunRPC]
+    public void ShowWaitingForOtherPlayers(string currentPlayerName)
+    {
+        if (PhotonNetwork.NickName != currentPlayerName)
+        {
+            DisplayWaitingDialog();
+        }
+    }
+
+    void DisplayWaitingForCardDialog()
+    {
+        waitingForCardDialog.SetActive(true);
+    }
+
+    [PunRPC]
+    public void ShowWaitingForOtherPlayerToDeal(string currentPlayerName)
+    {
+        if (PhotonNetwork.NickName != currentPlayerName)
+        {
+            DisplayWaitingForCardDialog();
+        }
+    }
+
+    [PunRPC]
+    public void SyncLog(string logString, float r, float g, float b)
+    {
+        runLog.logText(logString, new Color(r,g,b));
+    }
+
     public void PositiveAuctionDialog()
     {
         currentBid += 10;
         currentBidder = currentPlayer;
         auctionDialog.SetActive(false);
 
-        runLog.logText("<" + currentBidder.playerName + "> has bidded " + currentBid + ".", Color.yellow);
-
-        do
+        if (IsMultiplayerMode)
         {
-            currentPlayer = GetNextPlayer(currentPlayer);
-            MovePlayersToNextPositions();
+            do
+            {
+                currentPlayer = GetNextPlayer(currentPlayer);
 
-        } while (currentPlayer.HasPassed());
+            } while (currentPlayer.HasPassed());
 
-        ChangePlayer();
-    }
-    public void NegativeAuctionDialog()
-    {
-        auctionDialog.SetActive(false);
-
-        currentPlayer.SetPassed(true);
-
-        runLog.logText("<" + currentPlayer.playerName + "> passed.", Color.yellow);
-
-        int passed = 0;
-
-        foreach (Player player in players)
-        {
-            if (player.HasPassed())
-                passed++;
+            photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentBidder.playerName + "> has bidded " + currentBid + ".", 1.0f, 1.0f, 0.0f );
+            photonView.RPC("SyncAuction", RpcTarget.AllBuffered, currentBid, currentPlayer.playerNumber, currentBidder.playerNumber);
         }
-
-        if (passed >= 3) //Wygrana jednego gracza -> oddanie kart innym graczom
+        else
         {
-            currentPlayer = currentBidder;
-            GameplayCurrentPlayer = currentPlayer;
+            runLog.logText("<" + currentBidder.playerName + "> has bidded " + currentBid + ".", Color.yellow);
 
-            Debug.Log(currentBidder.playerName + " wins the auction with a bid of " + currentBid + " points.");
-            runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].", Color.yellow);
-
-            gamePhase = GamePhase.Handover;
-
-            if (!onePlayerMode) MovePlayerToPosition(currentBidder, Player.Position.down, true);
-            ChangePlayer();
-
-        }
-        else //Nie wszyscy spasowali -> dilog dla nast�pnego gracza
-        {
             do
             {
                 currentPlayer = GetNextPlayer(currentPlayer);
@@ -275,6 +558,72 @@ public class GameManager : MonoBehaviour
             } while (currentPlayer.HasPassed());
 
             ChangePlayer();
+        }
+    }
+
+
+    [PunRPC]
+    public void SyncPlayer(int playerNumber, string methodName, object[] parameters)
+    {
+        players[playerNumber-1].GetType().GetMethod(methodName).Invoke(players[playerNumber-1], parameters);
+        Debug.LogError("Used function '"+methodName+"' on Player" + players[playerNumber-1].playerNumber+" and now this player looks like this: "+players[playerNumber-1].ToDebugString());
+    }
+
+
+    public void NegativeAuctionDialog()
+    {
+        if (IsMultiplayerMode)
+        {
+            photonView.RPC("SyncPlayer", RpcTarget.AllBuffered, currentPlayer.playerNumber, "SetPassed", new object[] { true });
+            photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentPlayer.playerName + "> passed.", 1.0f, 1.0f, 0.0f);
+            //currentPlayer.GetType().GetMethod("SetPassed").Invoke(currentPlayer, parameters); // null, jeśli metoda nie ma parametrów
+
+            do { currentPlayer = GetNextPlayer(currentPlayer); } 
+            while (currentPlayer.HasPassed());
+
+            photonView.RPC("SyncAuction", RpcTarget.AllBuffered, currentBid, currentPlayer.playerNumber, currentBidder.playerNumber);
+        }
+        else
+        {
+            auctionDialog.SetActive(false);
+
+            currentPlayer.SetPassed(true);
+
+            runLog.logText("<" + currentPlayer.playerName + "> passed.", Color.yellow);
+
+            int passed = 0;
+
+            foreach (Player player in players)
+            {
+                if (player.HasPassed())
+                    passed++;
+            }
+
+            if (passed >= 3) //Wygrana jednego gracza -> oddanie kart innym graczom
+            {
+                currentPlayer = currentBidder;
+                GameplayCurrentPlayer = currentPlayer;
+
+                runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].",
+                    Color.yellow);
+
+                gamePhase = GamePhase.Handover;
+
+                if (!onePlayerMode) MovePlayerToPosition(currentBidder, Player.Position.down, true);
+                ChangePlayer();
+
+            }
+            else //Nie wszyscy spasowali -> dilog dla nast�pnego gracza
+            {
+                do
+                {
+                    currentPlayer = GetNextPlayer(currentPlayer);
+                    MovePlayersToNextPositions();
+
+                } while (currentPlayer.HasPassed());
+
+                ChangePlayer();
+            }
         }
     }
 
@@ -351,6 +700,36 @@ public class GameManager : MonoBehaviour
         setupFinished = true;
     }
 
+    void SetupMultiplayerGame()
+    {
+        Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> SetupMultiplayerGame()");
+
+        foreach (Photon.Realtime.Player photonPlayer in PhotonNetwork.PlayerList)
+        {
+            Player player = GameObject.Find("P" + photonPlayer.ActorNumber + " Hand").GetComponent<Player>();
+
+            player.playerName = photonPlayer.NickName;
+
+            //player.playerNumber = photonPlayer.ActorNumber;
+            //player.team = photonPlayer.ActorNumber % 2 == 1 ? 1 : 2;
+            // if (player.playerName == PhotonNetwork.NickName)
+            // {
+            //     player.position = Player.Position.down; // Lokalny gracz na dole
+            // }
+            //players.Add(player);
+
+            GameObject.Find("NameP" + player.playerNumber).GetComponent<TextMeshProUGUI>().text = player.playerName;
+        }
+
+        MovePlayerToPosition(players[PhotonNetwork.LocalPlayer.ActorNumber-1], Player.Position.down);
+
+        InitializeGame();
+
+        setupFinished = true;
+
+        Debug.Log("<P"+PhotonNetwork.LocalPlayer.ActorNumber+"> Gamemanager <- SetupMultiplayerGame()");
+    }
+
     void BotAuctionDecision()
     {
         /* RANDOM DECISION
@@ -371,12 +750,74 @@ public class GameManager : MonoBehaviour
         currentBidder = GetPreviousPlayer(currentPlayer);
         gamePhase = GamePhase.Auction;
 
-        DisplayAuctionDialog();
-        if (onePlayerMode && currentPlayer != players[humanPlayer])
+        if (IsMultiplayerMode)
         {
-            BotAuctionDecision();
+            if (PhotonNetwork.IsMasterClient)
+            {
+                DisplayAuctionDialog();
+                photonView.RPC("ShowWaitingForOtherPlayers", RpcTarget.Others, currentPlayer.playerName);
+            }
+        }
+        else
+        {
+            DisplayAuctionDialog();
+
+            if (onePlayerMode && currentPlayer != players[humanPlayer])
+            {
+                BotAuctionDecision();
+            }
         }
     }
+
+    [PunRPC]
+    public void SyncSetupAuction()
+    {
+        currentBid = 100;
+        currentBidder = GetPreviousPlayer(currentPlayer);
+        gamePhase = GamePhase.Auction;
+    }
+
+    [PunRPC]
+    public void SyncAuction(int currentBid, int currentPlayerNumber, int currentBidderPlayerNumber)
+    {
+        auctionDialog.SetActive(false);
+        waitingDialog.SetActive(false);
+
+        this.currentBid = currentBid;
+        this.currentPlayer = players[currentPlayerNumber-1];
+        this.currentBidder = players[currentBidderPlayerNumber-1];
+
+
+        int passed = 0;
+        foreach (Player player in players)
+        {
+            if (player.HasPassed())
+                passed++;
+        }
+        if (passed >= 3)
+        {
+            GameplayCurrentPlayer = currentPlayer;
+
+            runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].",
+                Color.yellow);
+
+            gamePhase = GamePhase.Handover;
+            return;
+        }
+
+
+
+
+        if (PhotonNetwork.LocalPlayer.ActorNumber == currentPlayerNumber)
+        {
+            DisplayAuctionDialog();
+        }
+        else
+        {
+            DisplayWaitingDialog();
+        }
+    }
+
 
     private IEnumerator BotDealCardsDecision()
     {
@@ -432,8 +873,9 @@ public class GameManager : MonoBehaviour
 
     void ChangePlayer()
     {
-        if (!onePlayerMode && forcePlayerChangeDialog)
+        if (!onePlayerMode && !IsMultiplayerMode && forcePlayerChangeDialog)
         {
+            // lokalny multi
             DisplayReadyDialog();
         }
         else
@@ -441,12 +883,26 @@ public class GameManager : MonoBehaviour
             UpdateCardVisibility();
 
             if (gamePhase == GamePhase.Start)
+            {
                 Auction();
+            }
             else if (gamePhase == GamePhase.Auction)
             {
-                if (onePlayerMode && currentPlayer != players[humanPlayer])
-                    BotAuctionDecision();
-                else DisplayAuctionDialog();
+                if (onePlayerMode)
+                {
+                    if (currentPlayer != players[humanPlayer])
+                    {
+                        BotAuctionDecision();
+                    }
+                    else
+                    {
+                        DisplayAuctionDialog();
+                    }
+                }
+                else
+                {
+                    DisplayAuctionDialog();
+                }
             }
             else if (gamePhase == GamePhase.Handover)
             {
@@ -650,60 +1106,147 @@ public class GameManager : MonoBehaviour
 
     }
 
-    private IEnumerator Gameplay()
+    List<Card> currentTrick = new List<Card>();
+    private Player trickWinner;
+
+
+
+    [PunRPC]
+    public void SyncSetupGameplayRound(int roundStartingPlayerNumber) // Przygotowuje rozgrywkę do nowej lewy (4 kart)
     {
-        yield return new WaitUntil(() => auctionFinished);
+        runLog.logText("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> round (" + roundStartingPlayerNumber + ")", Color.cyan);
 
-        //Debug.Log("Gameplay started");
-
-        //GameplayCurrentPlayer = currentBidder;
+        currentTrick.Clear();
+        marriages.Clear();
+        currentPlayer = players[roundStartingPlayerNumber - 1]; //aka bidding winner or trick winner
         GameplayCurrentPlayer = currentPlayer;
-        Debug.Log("GameplayCurrentPlayer = " + GameplayCurrentPlayer);
-        Player trickWinner = currentBidder;
-        List<Card> currentTrick = new List<Card>();
-
+        trickWinner = GameplayCurrentPlayer;
         gameplayFinished = false;
 
-        int numberOfTurns = GameplayCurrentPlayer.GetCardsInHand();
+        Debug.LogError($"Setup finished with variables GamePlayCurrentPlayer={GameplayCurrentPlayer.playerNumber}");
+    }
+    
+    [PunRPC]
+    public void SyncGameplayTurn(int currentPlayerNumber, string playedCardName)
+    {
+        StartCoroutine(GameplayTurn(currentPlayerNumber, playedCardName));
+    }
 
-        for (int i = 0; i < numberOfTurns; i++)
+
+    public IEnumerator GameplayTurn(int currentPlayerNumber, string playedCardName)
+    {
+        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> entered SyncGameplayTurn(" + currentPlayerNumber + "," + playedCardName + ")");
+
+        Card card = GameObject.Find(playedCardName).GetComponent<Card>();
+
+        InputHandler.Instance.PlayCard(card, players[currentPlayerNumber - 1].hand, players[currentPlayerNumber - 1]);
+        Play(card);
+        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> waiting for animation end");
+        yield return new WaitUntil(() => card.isDotweenAnimEnded);
+        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> ended waiting for animation end");
+
+        players[currentPlayerNumber - 1].hand.Remove(playedCard);
+        currentTrick.Add(playedCard);
+
+        if (IsNewTrickWinner(currentTrick))
         {
-            for (int j = 0; j < players.Count; j++)
-            {
-                if (onePlayerMode) DisplayCurrentPlayerText();
-                if (onePlayerMode && GameplayCurrentPlayer != players[humanPlayer])
-                {
-                    StartCoroutine(DelayedBotMove(GameplayCurrentPlayer));
-                }
-                yield return new WaitUntil(() => played);
-                played = false;
-                currentTrick.Add(playedCard);
-                if (IsNewTrickWinner(currentTrick))
-                {
-                    trickWinner = GameplayCurrentPlayer;
-                }
-                GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
-            }
+            trickWinner = GameplayCurrentPlayer;
+
+        }
+        GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
+
+        //Jeśli koniec (wszyscy położyli 1 kartę)
+        if (currentTrick.Count == 4)
+        {
+            GameplayCurrentPlayer = trickWinner;
             yield return new WaitUntil(() => AllCardsReadyForDissolve(currentTrick));
-            foreach (Card card in currentTrick)
+            foreach (Card c in currentTrick)
             {
-                card.Dissolve();
+                c.Dissolve();
             }
             yield return new WaitForSeconds(1.5f);
             EndTurn();
             UpdatePlayerScore(currentTrick, trickWinner);
-            currentTrick.Clear();
             DisplayTrumpText();
-            int playerNum = GameplayCurrentPlayer.playerNumber;
-            GameplayCurrentPlayer = trickWinner;
-            if (!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true);
-            UpdateCardVisibility();
+            UpdateMarriageScore();
+            ClearCurrentPlayerText();
+            marriages.Clear();
+            currentTrick.Clear();
+            gameplayFinished = true;
         }
-        UpdateMarriageScore();
-        marriages.Clear();
-        ClearCurrentPlayerText();
+    }
 
-        gameplayFinished = true;
+    private IEnumerator Gameplay()
+    {
+        yield return new WaitUntil(() => auctionFinished);
+
+        if (IsMultiplayerMode)
+        {
+            GameplayCurrentPlayer = currentBidder;
+            int numberOfTurns = GameplayCurrentPlayer.GetCardsInHand();
+
+            for (int i = 0; i < numberOfTurns; i++)
+            {
+                photonView.RPC("SyncSetupGameplayRound", RpcTarget.AllBuffered, GameplayCurrentPlayer.playerNumber);
+                yield return new WaitUntil(() => gameplayFinished);
+                Debug.LogError("Lewa sie skonczyla");
+            }
+
+            Debug.LogError("Runda sie skonczyla");
+
+            // Koniec rundy (wszyscy mają puste ręce)
+
+
+        }
+        else
+        {
+            GameplayCurrentPlayer = currentPlayer;
+            Player trickWinner = currentBidder;
+            List<Card> currentTrick = new List<Card>();
+
+            gameplayFinished = false;
+
+            int numberOfTurns = GameplayCurrentPlayer.GetCardsInHand();
+
+            for (int i = 0; i < numberOfTurns; i++)
+            {
+                for (int j = 0; j < players.Count; j++)
+                {
+                    if (onePlayerMode) DisplayCurrentPlayerText();
+                    if (onePlayerMode && GameplayCurrentPlayer != players[humanPlayer])
+                    {
+                        StartCoroutine(DelayedBotMove(GameplayCurrentPlayer));
+                    }
+                    yield return new WaitUntil(() => played);
+                    played = false;
+                    currentTrick.Add(playedCard);
+                    if (IsNewTrickWinner(currentTrick))
+                    {
+                        trickWinner = GameplayCurrentPlayer;
+                    }
+                    GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
+                }
+                yield return new WaitUntil(() => AllCardsReadyForDissolve(currentTrick));
+                foreach (Card card in currentTrick)
+                {
+                    card.Dissolve();
+                }
+                yield return new WaitForSeconds(1.5f);
+                EndTurn();
+                UpdatePlayerScore(currentTrick, trickWinner);
+                currentTrick.Clear();
+                DisplayTrumpText();
+                int playerNum = GameplayCurrentPlayer.playerNumber;
+                GameplayCurrentPlayer = trickWinner;
+                if (!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true);
+                UpdateCardVisibility();
+            }
+            UpdateMarriageScore();
+            marriages.Clear();
+            ClearCurrentPlayerText();
+
+            gameplayFinished = true;
+        }
     }
 
     private bool AllCardsReadyForDissolve(List<Card> cTrick)
@@ -720,7 +1263,6 @@ public class GameManager : MonoBehaviour
 
     private void EndTurn()
     {
-        Debug.Log("End of turn.");
         for (int i = 0; i < 4; i++)
         {
             GameObject trickCard = t.transform.GetChild(0).gameObject;
@@ -744,36 +1286,160 @@ public class GameManager : MonoBehaviour
 
     void DealCardsToOtherPlayers()
     {
-        handOverDialog.SetActive(true);
-        isGivingStage = true;
-        currentCardReceiver = GetNextPlayer(currentPlayer);
+        if (IsMultiplayerMode)
+        {
+            if (PhotonNetwork.NickName == currentPlayer.playerName)
+            {
+                handOverDialog.SetActive(true);
+                isGivingStage = true;
+                currentCardReceiver = GetNextPlayer(currentPlayer);
 
-        TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
-        currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+                TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+                currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+
+                photonView.RPC("ShowWaitingForOtherPlayerToDeal", RpcTarget.Others, currentPlayer.playerName);
+            }
+        }
+        else
+        {
+            handOverDialog.SetActive(true);
+            isGivingStage = true;
+            currentCardReceiver = GetNextPlayer(currentPlayer);
+
+            TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+            currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+        }
     }
 
     public void EndDealingStage()
     {
         isGivingStage = false;
         handOverDialog.SetActive(false);
+        waitingForCardDialog.SetActive(false);
         auctionFinished = true;
+        gamePhase = GamePhase.Gameplay;
     }
 
     IEnumerator StartRound()
     {
-        Debug.Log("Starting Round " + roundNumber);
-
         firstPlayer = (firstPlayer + 1) % players.Count;
         currentPlayer = players[firstPlayer];
-        MovePlayerToPosition(currentPlayer, Player.Position.down);
         gamePhase = GamePhase.Start;
 
-        ChangePlayer();
-        //Auction();
-        //DealCardsToOtherPlayers();
+        if (IsMultiplayerMode && PhotonNetwork.IsMasterClient)
+        {
+            //Auction
+            photonView.RPC("SyncFirstPlayer", RpcTarget.AllBuffered, firstPlayer);
+            photonView.RPC("SyncSetupAuction", RpcTarget.AllBuffered);
+            photonView.RPC("SyncAuction", RpcTarget.AllBuffered, currentBid, currentPlayer.playerNumber, currentBidder.playerNumber);
+
+            yield return new WaitUntil(() => gamePhase == GamePhase.Handover);
+
+            //Hand Over
+            photonView.RPC("SyncSetupHandOver", RpcTarget.AllBuffered);
+
+            yield return new WaitUntil(() => gamePhase == GamePhase.Gameplay);
+            Debug.LogError("Started GAMEPLAY PHASE");
+        }
+        else
+        {
+            ChangePlayer();
+        }
+
         StartCoroutine(Gameplay());
         yield return new WaitUntil(() => gameplayFinished);
     }
+
+    [PunRPC]
+    public void SyncSetupHandOver()
+    {
+        var isGivingPlayer = PhotonNetwork.LocalPlayer.ActorNumber == currentBidder.playerNumber;
+
+        handOverDialog.SetActive(isGivingPlayer);
+        waitingForCardDialog.SetActive(!isGivingPlayer);
+        isGivingStage = isGivingPlayer;
+        currentCardReceiver = GetNextPlayer(currentPlayer);
+
+        foreach (var card in otherCards.cards)
+        {
+            card.gameObject.SetActive(true);
+            card.SetVisible(isGivingPlayer);
+        }
+
+        if (isGivingPlayer)
+        {
+            TextMeshProUGUI currentCardReceiverText =
+                GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+            currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+        }
+    }
+
+    [PunRPC]
+    public void SyncDistributeCardToPlayer(string cardName)
+    {
+        Card card = null;
+        Card[] allCards = FindObjectsOfType<Card>(true);
+        foreach (Card c in allCards)
+        {
+            string parentName = c.transform.parent != null
+                ? c.transform.parent.gameObject.name
+                : "NO PARENT";
+
+            Debug.LogError("<P"+PhotonNetwork.LocalPlayer.ActorNumber+"> Found object Card: " + c.gameObject.name + $" located in {parentName}");
+            if (c.gameObject.name == cardName)
+            {
+                Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> Found object Card Successfully!");
+                card = c;
+                break;
+            }
+        }
+
+        if (card == null)
+        {
+            Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + $"> LIPA! NIE MA KARTY!!!");
+            return;
+        }
+
+
+        //Debug.LogError("Searching for card '"+cardName+"'");
+        //Card card = GameObject.Find(cardName).GetComponent<Card>();
+        //Debug.LogError("Found card '" + cardName + "' CARD="+card.GetCardFullName());
+
+        currentCardReceiver.AddCardToHand(card);
+
+        if (currentPlayer.hand.Contains(card))
+            currentPlayer.hand.Remove(card);
+
+        card.gameObject.transform.SetParent(currentCardReceiver.transform);
+        card.gameObject.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+        card.SetVisible(PhotonNetwork.LocalPlayer.ActorNumber == currentCardReceiver.playerNumber);
+        otherCards.cards.Remove(card);
+
+        InputHandler.Instance.cardsToDeal--;
+        currentCardReceiver = GetNextPlayer(currentCardReceiver);
+
+        if (InputHandler.Instance.cardsToDeal == 1)
+        {
+            AddRestToCurrentPlayer();
+            EndDealingStage();
+            return;
+        }
+
+        TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
+        currentCardReceiverText.text = "Choose card for player: " + currentCardReceiver.playerName;
+
+        Debug.LogError("Cards to deal = " + InputHandler.Instance.cardsToDeal);
+    }
+
+
+    [PunRPC]
+    public void SyncFirstPlayer(int firstPlayerIndex)
+    {
+        firstPlayer = firstPlayerIndex;
+        currentPlayer = players[firstPlayer];
+    }
+
 
     private void ResetCardsVariables()
     {
@@ -813,7 +1479,6 @@ public class GameManager : MonoBehaviour
 
     void EndRound()
     {
-        Debug.Log("Ending Round " + roundNumber);
         DisplayTrumpText();
         CalculateRoundScores();
         CheckForGameEnd();
@@ -821,20 +1486,19 @@ public class GameManager : MonoBehaviour
         ResetDeck();
         ResetCardsVariables();
         trickManager.ClearPlayedCards();
-
+        
         firstPlayer = (firstPlayer + 1) % players.Count;
-        //Debug.Log(firstPlayer);
         InputHandler.Instance.ResetCardsToDeal();
         foreach (Player player in players)
         {
             player.Reset();
         }
-
+        
         auctionFinished = false;
         gameplayFinished = false;
-
+        
         otherCards.cards.Clear();
-
+        
         //MovePlayerToPosition(players[firstPlayer], Player.Position.down);
         // przygotowanie na nastepna runde
         //tutaj powinnismy karty wlozyc do talii znowu
@@ -962,31 +1626,34 @@ public class GameManager : MonoBehaviour
 
     public void MovePlayersToNextPositions()
     {
-        for (int i = 0; i < players.Count; i++)
+        if (!IsMultiplayerMode)
         {
-            GameObject playerObject = players[i].gameObject;
-            Player player = players[i];
+            for (int i = 0; i < players.Count; i++)
+            {
+                GameObject playerObject = players[i].gameObject;
+                Player player = players[i];
 
-            // Przesuniecie gracza na kolejna pozycje
-            if (player.position == Player.Position.right)
-            {
-                MovePlayerToPosition(player, Player.Position.up, false);
-            }
-            else if (player.position == Player.Position.up)
-            {
-                MovePlayerToPosition(player, Player.Position.left, false);
-            }
-            else if (player.position == Player.Position.left)
-            {
-                MovePlayerToPosition(player, Player.Position.down, false);
-            }
-            else if (player.position == Player.Position.down)
-            {
-                MovePlayerToPosition(player, Player.Position.right, false);
-            }
-            else
-            {
-                Debug.LogWarning("Unsupported player position!");
+                // Przesuniecie gracza na kolejna pozycje
+                if (player.position == Player.Position.right)
+                {
+                    MovePlayerToPosition(player, Player.Position.up, false);
+                }
+                else if (player.position == Player.Position.up)
+                {
+                    MovePlayerToPosition(player, Player.Position.left, false);
+                }
+                else if (player.position == Player.Position.left)
+                {
+                    MovePlayerToPosition(player, Player.Position.down, false);
+                }
+                else if (player.position == Player.Position.down)
+                {
+                    MovePlayerToPosition(player, Player.Position.right, false);
+                }
+                else
+                {
+                    Debug.LogWarning("Unsupported player position!");
+                }
             }
         }
     }
@@ -1044,6 +1711,7 @@ public class GameManager : MonoBehaviour
             {
                 currentPlayer.AddCardToHand(card);
                 card.gameObject.transform.SetParent(currentPlayer.transform);
+                card.transform.localRotation = Quaternion.Euler(0, 0, 0);
             }
         }
     }
