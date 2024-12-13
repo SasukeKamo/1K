@@ -1252,6 +1252,9 @@ public class GameManager : MonoBehaviourPunCallbacks
                         trickWinner = GameplayCurrentPlayer;
                     }
                     GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
+                    if(!onePlayerMode){
+                        DisplayReadyDialog();
+                    }
                 }
                 yield return new WaitUntil(() => AllCardsReadyForDissolve(currentTrick));
                 foreach (Card card in currentTrick)
