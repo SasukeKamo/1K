@@ -208,6 +208,7 @@ public class InputHandler : MonoBehaviour
                 {
                     Card.Suit suit = clickedCard.GetSuit();
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
+                    currentPlayer.AddRoundScore(suit.GetValue());
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
                     GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
@@ -224,6 +225,7 @@ public class InputHandler : MonoBehaviour
                 {
                     Card.Suit suit = clickedCard.GetSuit();
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
+                    currentPlayer.AddRoundScore(suit.GetValue());
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
                     GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
@@ -243,6 +245,7 @@ public class InputHandler : MonoBehaviour
             {
                 Card.Suit suit = clickedCard.GetSuit();
                 GameManager.Instance.AddMarriage(currentPlayer, suit);
+                currentPlayer.AddRoundScore(suit.GetValue());
 
                 Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
                 GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
