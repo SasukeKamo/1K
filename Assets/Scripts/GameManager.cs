@@ -86,7 +86,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     public bool auctionFinished = false;
     public bool setupFinished = false;
     public GamePhase gamePhase;
-    public string savePath = "save.txt";
+    public string savePath = "./saves/save.txt";
 
     private Player localPlayer;
     public static bool IsMultiplayerMode = false;
@@ -105,6 +105,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject waitingDialog;
     [SerializeField] private GameObject waitingForCardDialog;
     [SerializeField] private GameObject restOfTheDeck;
+    [SerializeField] private GameObject loadGameButton;
     [SerializeField] private GameObject[] nickNames;
 
 
@@ -112,6 +113,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         runLog = _instance.GetComponent<RunLog>();
         //InitializeGame();
+        
         if (IsMultiplayerMode)
         {
             Debug.Log("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> Gamemanager -> Start()");
@@ -126,6 +128,12 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
+            FileInfo file = new FileInfo(savePath);
+            if (!file.Exists)
+            {
+                loadGameButton.SetActive(false);
+            }
+
             DisplaySetupDialog();
             StartCoroutine(GameLoop());
         }
@@ -258,7 +266,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 // Lokalne tryby gry (singleplayer i multiplayer lokalny)
                 yield return StartCoroutine(StartRound());
                 EndRound();
-                SaveGame();
+                //SaveGame();
             }
         }
     }
@@ -1482,13 +1490,15 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         DisplayTrumpText();
         CalculateRoundScores();
-        CheckForGameEnd();
         roundNumber++;
         ResetDeck();
         ResetCardsVariables();
         trickManager.ClearPlayedCards();
         
         firstPlayer = (firstPlayer + 1) % players.Count;
+        SaveGame();
+        CheckForGameEnd();
+        
         InputHandler.Instance.ResetCardsToDeal();
         foreach (Player player in players)
         {
@@ -1589,12 +1599,31 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             //AudioManager.Instance.PlayWinSound();
             Debug.Log("Team 1 wins!");
+
+            FileInfo file = new FileInfo(savePath);
+
+            Debug.Log(file.Exists);
+
+            if (file.Exists)
+            {
+                file.Delete();
+            }
+            
             // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
         }
         else if (teamScore[1] >= targetScore)
         {
             //AudioManager.Instance.PlayWinSound();
             Debug.Log("Team 2 wins!");
+
+            FileInfo file = new FileInfo(savePath);
+
+            Debug.Log(file.Exists);
+
+            if (file.Exists)
+            {
+                file.Delete();
+            }
             // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
             return;
         }
@@ -1781,9 +1810,16 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
     public void SaveGame()
     {
+        DirectoryInfo dir = new DirectoryInfo(Path.GetDirectoryName(savePath));
+        if (!dir.Exists)
+            dir.Create();
+
         using (StreamWriter sw = File.CreateText(savePath))
         {
-            sw.WriteLine($"{roundNumber} {firstPlayer}");
+            if(!onePlayerMode)
+                sw.WriteLine($"{roundNumber} {firstPlayer} 0");
+            else
+                sw.WriteLine($"{roundNumber} {firstPlayer} 1");
             foreach (var player in players)
             {
                 sw.WriteLine($"{player.playerNumber} {player.playerName} {player.team} {player.GetScore()}");
@@ -1809,6 +1845,12 @@ public class GameManager : MonoBehaviourPunCallbacks
                 roundNumber = int.Parse(lineSplit[0]);
                 firstPlayer = int.Parse(lineSplit[1]);
 
+                currentPlayer = players[firstPlayer];
+                if (lineSplit[2] == "0")
+                    onePlayerMode = false;
+                else
+                    onePlayerMode = true;
+
                 while ((line = sr.ReadLine()) != null)
                 {
                     lineSplit = line.Split(' ');
@@ -1829,5 +1871,14 @@ public class GameManager : MonoBehaviourPunCallbacks
             Debug.LogError(e.Message);
         }
 
+    }
+
+    public void Continue()
+    {
+        setupDialog.SetActive(false);
+        InitializeGame();
+        LoadGame();
+        DisplayNicknames(true);
+        setupFinished = true;
     }
 }
