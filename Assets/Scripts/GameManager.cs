@@ -1267,7 +1267,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 if (!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true);
                 UpdateCardVisibility();
             }
-            UpdateMarriageScore();
+            //UpdateMarriageScore();
             marriages.Clear();
             ClearCurrentPlayerText();
 
