@@ -834,6 +834,19 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         yield return new WaitForSeconds(3.0f);
 
+        // move cards from table to winner's hand
+        Card[] trickCards = trickManager.GetTrickCards();
+
+        for (int i = 0; i < 4; i++)
+        {
+            GameObject trickCard = t.transform.GetChild(0).gameObject;
+            trickCard.transform.SetParent(currentPlayer.transform);
+            currentPlayer.AddCardToHand(trickCards[i]);
+        }
+        trickManager.ClearTrickCards();
+        InputHandler.Instance.sortingOrder = 1;
+        UpdateCardVisibility();
+
         // handle dealing cards to other players
         List<Card> hand = GetPlayerHand(currentPlayer);
         isGivingStage = true;
@@ -856,18 +869,6 @@ public class GameManager : MonoBehaviourPunCallbacks
             yield return new WaitForSeconds(1.0f);
             InputHandler.Instance.OnClickHandle(card);
         }
-
-        Card[] trickCards = trickManager.GetTrickCards();
-
-        for (int i = 0; i < 4; i++)
-        {
-            GameObject trickCard = t.transform.GetChild(0).gameObject;
-            trickCard.transform.SetParent(currentPlayer.transform);
-            currentPlayer.AddCardToHand(trickCards[i]);
-        }
-        trickManager.ClearTrickCards();
-        InputHandler.Instance.sortingOrder = 1;
-        UpdateCardVisibility();
     }
 
 
