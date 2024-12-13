@@ -525,8 +525,12 @@ public class InputHandler : MonoBehaviour
                       card.spriteRenderer.sortingOrder = originalSO;
                       card.readyForDissolve = true;
                       card.transform.SetParent(trick.transform);
+
+                      //HERE
                       if (GameManager.Instance.onePlayerMode && (currentPlayer == GameManager.Instance.players[leftPlayer] || currentPlayer == GameManager.Instance.players[rightPlayer]))
                           card.gameObject.transform.Rotate(0, 0, 90);
+                      //card.gameObject.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
                       card.isDotweenAnimEnded = true;
                       isAnyCardInAnim = false;
                   });

@@ -53,12 +53,16 @@ public class GameManager : MonoBehaviourPunCallbacks
         // Check if the Escape key is pressed
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // Load the Menu scene
-            IsMultiplayerMode = false;
-            if (PhotonNetwork.CurrentRoom != null)
-                PhotonNetwork.LeaveRoom();
-            SceneManager.LoadScene("Menu");
+            ExitToMenu();
         }
+    }
+
+    public void ExitToMenu()
+    {
+        if (GameManager.IsMultiplayerMode && PhotonNetwork.CurrentRoom != null)
+            PhotonNetwork.LeaveRoom();
+        IsMultiplayerMode = false;
+        SceneManager.LoadScene("Menu");
     }
 
     public List<Player> players;
@@ -105,6 +109,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject handOverDialog;
     [SerializeField] private GameObject waitingDialog;
     [SerializeField] private GameObject waitingForCardDialog;
+    [SerializeField] private GameObject endGameDialog;
     [SerializeField] private GameObject restOfTheDeck;
     [SerializeField] private GameObject[] nickNames;
 
@@ -243,7 +248,13 @@ public class GameManager : MonoBehaviourPunCallbacks
                 // master zarzadza rundami
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    if(roundNumber > 1) DealInitialCards();
+                    if (roundNumber > 1)
+                    {
+                        mainDeck.Shuffle();
+                        SendDeck();
+                        DealInitialCards();
+                    }
+
                     yield return StartCoroutine(StartRound());
                     photonView.RPC("SyncEndRound", RpcTarget.AllBuffered);  //EndRound();
                     Debug.Log("Round Ended");
@@ -271,7 +282,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         DisplayTrumpText();
         CalculateRoundScores();
-        CheckForGameEnd();
+        if (CheckForGameEnd())
+            return;
         roundNumber++;
         ResetDeck();
         ResetCardsVariables();
@@ -835,8 +847,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
 
 
-
-
         if (PhotonNetwork.LocalPlayer.ActorNumber == currentPlayerNumber)
         {
             DisplayAuctionDialog();
@@ -1118,21 +1128,38 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
     private void DisplayCurrentPlayerText()
     {
-        TextMeshProUGUI currentPlayerText = GameObject.Find("CurrentPlayerText").GetComponent<TextMeshProUGUI>();
-        if (GameplayCurrentPlayer == players[humanPlayer])
+        if (GameManager.IsMultiplayerMode)
         {
-            currentPlayerText.fontSize = 45;
-            currentPlayerText.color = Color.white;
-            currentPlayerText.text = "Your move";
+            TextMeshProUGUI currentPlayerText = GameObject.Find("CurrentPlayerText").GetComponent<TextMeshProUGUI>();
+            if (PhotonNetwork.LocalPlayer.ActorNumber == GameplayCurrentPlayer.playerNumber)
+            {
+                currentPlayerText.fontSize = 45;
+                currentPlayerText.color = Color.white;
+                currentPlayerText.text = "Your move";
+            }
+            else
+            {
+                currentPlayerText.fontSize = 25;
+                currentPlayerText.color = Color.grey;
+                currentPlayerText.text = GameManager.Instance.GameplayCurrentPlayer.playerName + "'s move";
+            }
         }
         else
         {
-            currentPlayerText.fontSize = 25;
-            currentPlayerText.color = Color.grey;
-            currentPlayerText.text = GameManager.Instance.GameplayCurrentPlayer.playerName + "'s move";
+            TextMeshProUGUI currentPlayerText = GameObject.Find("CurrentPlayerText").GetComponent<TextMeshProUGUI>();
+            if (GameplayCurrentPlayer == players[humanPlayer])
+            {
+                currentPlayerText.fontSize = 45;
+                currentPlayerText.color = Color.white;
+                currentPlayerText.text = "Your move";
+            }
+            else
+            {
+                currentPlayerText.fontSize = 25;
+                currentPlayerText.color = Color.grey;
+                currentPlayerText.text = GameManager.Instance.GameplayCurrentPlayer.playerName + "'s move";
+            }
         }
-
-
     }
 
     List<Card> currentTrick = new List<Card>();
@@ -1143,7 +1170,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [PunRPC]
     public void SyncSetupGameplayRound(int roundStartingPlayerNumber) // Przygotowuje rozgrywkę do nowej lewy (4 kart)
     {
-        runLog.logText("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> round (" + roundStartingPlayerNumber + ")", Color.cyan);
+        runLog.logText("<" + players[roundStartingPlayerNumber - 1].playerName + "> starts.", Color.cyan);
 
         roundFinished = false;
 
@@ -1151,6 +1178,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         currentPlayer = players[roundStartingPlayerNumber - 1]; //aka bidding winner or trick winner
         GameplayCurrentPlayer = currentPlayer;
         trickWinner = GameplayCurrentPlayer;
+        DisplayCurrentPlayerText();
 
         Debug.LogError($"Setup finished with variables GamePlayCurrentPlayer={GameplayCurrentPlayer.playerNumber}");
     }
@@ -1182,6 +1210,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             trickWinner = GameplayCurrentPlayer;
         }
         GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
+        DisplayCurrentPlayerText();
 
         //Jeśli koniec (wszyscy położyli 1 kartę)
         if (currentTrick.Count == 4)
@@ -1514,7 +1543,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         DisplayTrumpText();
         CalculateRoundScores();
-        CheckForGameEnd();
+        if (CheckForGameEnd())
+            return;
         roundNumber++;
         ResetDeck();
         ResetCardsVariables();
@@ -1615,21 +1645,38 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
-    void CheckForGameEnd()
+    bool CheckForGameEnd()
     {
-        if (teamScore[0] >= targetScore)
+        // Win
+        if (teamScore[0] >= targetScore || teamScore[1] >= targetScore)
         {
-            //AudioManager.Instance.PlayWinSound();
-            Debug.Log("Team 1 wins!");
-            // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
+            AudioManager.Instance.PlayWinSound();
+            endGameDialog.SetActive(true);
+            TextMeshProUGUI winnerTeam = GameObject.Find("WinnerTeam").GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI winner1 = GameObject.Find("Winner1").GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI winner2 = GameObject.Find("Winner2").GetComponent<TextMeshProUGUI>();
+
+            if (teamScore[0] > teamScore[1])
+            {
+                Debug.Log("Team 1 wins!");
+                // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
+                winnerTeam.text = "Team 1";
+                winner1.text = players[0].playerName;
+                winner2.text = players[2].playerName;
+            }
+            else
+            {
+                Debug.Log("Team 2 wins!");
+                // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
+                winnerTeam.text = "Team 2";
+                winner1.text = players[1].playerName;
+                winner2.text = players[3].playerName;
+            }
+
+            return true;
         }
-        else if (teamScore[1] >= targetScore)
-        {
-            //AudioManager.Instance.PlayWinSound();
-            Debug.Log("Team 2 wins!");
-            // tutaj jakas logika zakonczenia np. wyswietlenie obrazu kto wygral i jakies opcje np powrot do menu czy reset rozgrywki
-            return;
-        }
+
+        return false;
     }
 
     public Player GetPlayerForCurrentCard(GameObject cardObject)
