@@ -83,6 +83,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     public bool isGivingStage = false;
     public RunLog runLog;
     private bool gameplayFinished = false;
+    private bool roundFinished = false;
     public bool auctionFinished = false;
     public bool setupFinished = false;
     public GamePhase gamePhase;
@@ -237,12 +238,14 @@ public class GameManager : MonoBehaviourPunCallbacks
 
             if (IsMultiplayerMode)
             {
+                IsRoundSynced = false;
+
                 // master zarzadza rundami
                 if (PhotonNetwork.IsMasterClient)
                 {
+                    if(roundNumber > 1) DealInitialCards();
                     yield return StartCoroutine(StartRound());
-                    EndRound(); //Trzeba bedzie zsynchronizowac
-                    //SaveGame();
+                    photonView.RPC("SyncEndRound", RpcTarget.AllBuffered);  //EndRound();
                     Debug.Log("Round Ended");
                 }
                 else
@@ -261,6 +264,32 @@ public class GameManager : MonoBehaviourPunCallbacks
                 SaveGame();
             }
         }
+    }
+
+    [PunRPC]
+    public void SyncEndRound()
+    {
+        DisplayTrumpText();
+        CalculateRoundScores();
+        CheckForGameEnd();
+        roundNumber++;
+        ResetDeck();
+        ResetCardsVariables();
+        trickManager.ClearPlayedCards();
+
+        firstPlayer = (firstPlayer + 1) % players.Count;
+        InputHandler.Instance.ResetCardsToDeal();
+        foreach (Player player in players)
+        {
+            player.Reset();
+        }
+
+        auctionFinished = false;
+        gameplayFinished = false;
+
+        otherCards.cards.Clear();
+
+        IsRoundSynced = true;
     }
 
     public void AddMarriage(Player player, Card.Suit suit)
@@ -1093,7 +1122,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (GameplayCurrentPlayer == players[humanPlayer])
         {
             currentPlayerText.fontSize = 45;
-            currentPlayerText.color = Color.blue;
+            currentPlayerText.color = Color.white;
             currentPlayerText.text = "Your move";
         }
         else
@@ -1116,12 +1145,12 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         runLog.logText("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> round (" + roundStartingPlayerNumber + ")", Color.cyan);
 
+        roundFinished = false;
+
         currentTrick.Clear();
-        marriages.Clear();
         currentPlayer = players[roundStartingPlayerNumber - 1]; //aka bidding winner or trick winner
         GameplayCurrentPlayer = currentPlayer;
         trickWinner = GameplayCurrentPlayer;
-        gameplayFinished = false;
 
         Debug.LogError($"Setup finished with variables GamePlayCurrentPlayer={GameplayCurrentPlayer.playerNumber}");
     }
@@ -1151,7 +1180,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (IsNewTrickWinner(currentTrick))
         {
             trickWinner = GameplayCurrentPlayer;
-
         }
         GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
 
@@ -1168,11 +1196,8 @@ public class GameManager : MonoBehaviourPunCallbacks
             EndTurn();
             UpdatePlayerScore(currentTrick, trickWinner);
             DisplayTrumpText();
-            UpdateMarriageScore();
-            ClearCurrentPlayerText();
-            marriages.Clear();
             currentTrick.Clear();
-            gameplayFinished = true;
+            roundFinished = true;
         }
     }
 
@@ -1188,15 +1213,14 @@ public class GameManager : MonoBehaviourPunCallbacks
             for (int i = 0; i < numberOfTurns; i++)
             {
                 photonView.RPC("SyncSetupGameplayRound", RpcTarget.AllBuffered, GameplayCurrentPlayer.playerNumber);
-                yield return new WaitUntil(() => gameplayFinished);
+                yield return new WaitUntil(() => roundFinished);
                 Debug.LogError("Lewa sie skonczyla");
             }
 
             Debug.LogError("Runda sie skonczyla");
-
             // Koniec rundy (wszyscy mają puste ręce)
 
-
+            photonView.RPC("SyncEndGameplayRound", RpcTarget.AllBuffered);
         }
         else
         {
@@ -1247,6 +1271,15 @@ public class GameManager : MonoBehaviourPunCallbacks
 
             gameplayFinished = true;
         }
+    }
+
+    [PunRPC]
+    public void SyncEndGameplayRound()
+    {
+        UpdateMarriageScore();
+        marriages.Clear();
+        ClearCurrentPlayerText();
+        gameplayFinished = true;
     }
 
     private bool AllCardsReadyForDissolve(List<Card> cTrick)
