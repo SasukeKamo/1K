@@ -91,7 +91,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     public bool auctionFinished = false;
     public bool setupFinished = false;
     public GamePhase gamePhase;
-    public string savePath = "save.txt";
+    public string savePath = "./saves/save.txt";
 
     private Player localPlayer;
     public static bool IsMultiplayerMode = false;
@@ -111,11 +111,13 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject waitingForCardDialog;
     [SerializeField] private GameObject endGameDialog;
     [SerializeField] private GameObject restOfTheDeck;
+    [SerializeField] private GameObject loadGameButton;
     [SerializeField] private GameObject[] nickNames;
 
 
     void Start()
     {
+        AudioManager.Instance.PlayGamesceneSong();
         runLog = _instance.GetComponent<RunLog>();
         //InitializeGame();
         if (IsMultiplayerMode)
@@ -132,6 +134,12 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
+            FileInfo file = new FileInfo(savePath);
+            if (!file.Exists)
+            {
+                loadGameButton.SetActive(false);
+            }
+
             DisplaySetupDialog();
             StartCoroutine(GameLoop());
         }
@@ -272,7 +280,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 // Lokalne tryby gry (singleplayer i multiplayer lokalny)
                 yield return StartCoroutine(StartRound());
                 EndRound();
-                SaveGame();
+                //SaveGame();
             }
         }
     }
@@ -873,6 +881,19 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         yield return new WaitForSeconds(3.0f);
 
+        // move cards from table to winner's hand
+        Card[] trickCards = trickManager.GetTrickCards();
+        for (int i = 0; i < 4; i++)
+        {
+            GameObject trickCard = t.transform.GetChild(0).gameObject;
+            trickCard.transform.SetParent(currentPlayer.transform);
+            currentPlayer.AddCardToHand(trickCards[i]);
+        }
+        trickManager.ClearTrickCards();
+        InputHandler.Instance.sortingOrder = 1;
+        UpdateCardVisibility();
+
+
         // handle dealing cards to other players
         List<Card> hand = GetPlayerHand(currentPlayer);
         isGivingStage = true;
@@ -895,18 +916,6 @@ public class GameManager : MonoBehaviourPunCallbacks
             yield return new WaitForSeconds(1.0f);
             InputHandler.Instance.OnClickHandle(card);
         }
-
-        Card[] trickCards = trickManager.GetTrickCards();
-
-        for (int i = 0; i < 4; i++)
-        {
-            GameObject trickCard = t.transform.GetChild(0).gameObject;
-            trickCard.transform.SetParent(currentPlayer.transform);
-            currentPlayer.AddCardToHand(trickCards[i]);
-        }
-        trickManager.ClearTrickCards();
-        InputHandler.Instance.sortingOrder = 1;
-        UpdateCardVisibility();
     }
 
 
@@ -1026,7 +1035,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         if (cards.Count == 1)
         {
-            return false;
+            return true;
         }
 
         Card.Suit trump = GetAtuSuit();
@@ -1299,7 +1308,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 if (!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true);
                 UpdateCardVisibility();
             }
-            UpdateMarriageScore();
+            //UpdateMarriageScore();
             marriages.Clear();
             ClearCurrentPlayerText();
 
@@ -1310,7 +1319,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [PunRPC]
     public void SyncEndGameplayRound()
     {
-        UpdateMarriageScore();
+        //UpdateMarriageScore();
         marriages.Clear();
         ClearCurrentPlayerText();
         gameplayFinished = true;
@@ -1548,14 +1557,15 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         DisplayTrumpText();
         CalculateRoundScores();
-        if (CheckForGameEnd())
-            return;
         roundNumber++;
         ResetDeck();
         ResetCardsVariables();
         trickManager.ClearPlayedCards();
         
         firstPlayer = (firstPlayer + 1) % players.Count;
+        SaveGame();
+        if (CheckForGameEnd())
+            return;
         InputHandler.Instance.ResetCardsToDeal();
         foreach (Player player in players)
         {
@@ -1676,6 +1686,13 @@ public class GameManager : MonoBehaviourPunCallbacks
                 winnerTeam.text = "Team 2";
                 winner1.text = players[1].playerName;
                 winner2.text = players[3].playerName;
+            }
+
+            FileInfo file = new FileInfo(savePath);
+            Debug.Log(file.Exists);
+            if (file.Exists)
+            {
+                file.Delete();
             }
 
             return true;
@@ -1865,9 +1882,17 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
     public void SaveGame()
     {
+        DirectoryInfo dir = new DirectoryInfo(Path.GetDirectoryName(savePath));
+        if (!dir.Exists)
+            dir.Create();
+
         using (StreamWriter sw = File.CreateText(savePath))
         {
-            sw.WriteLine($"{roundNumber} {firstPlayer}");
+            if (!onePlayerMode)
+                sw.WriteLine($"{roundNumber} {firstPlayer} 0");
+            else
+                sw.WriteLine($"{roundNumber} {firstPlayer} 1");
+
             foreach (var player in players)
             {
                 sw.WriteLine($"{player.playerNumber} {player.playerName} {player.team} {player.GetScore()}");
@@ -1893,6 +1918,12 @@ public class GameManager : MonoBehaviourPunCallbacks
                 roundNumber = int.Parse(lineSplit[0]);
                 firstPlayer = int.Parse(lineSplit[1]);
 
+                currentPlayer = players[firstPlayer];
+                if (lineSplit[2] == "0")
+                    onePlayerMode = false;
+                else
+                    onePlayerMode = true;
+
                 while ((line = sr.ReadLine()) != null)
                 {
                     lineSplit = line.Split(' ');
@@ -1913,5 +1944,14 @@ public class GameManager : MonoBehaviourPunCallbacks
             Debug.LogError(e.Message);
         }
 
+    }
+
+    public void Continue()
+    {
+        setupDialog.SetActive(false);
+        InitializeGame();
+        LoadGame();
+        DisplayNicknames(true);
+        setupFinished = true;
     }
 }

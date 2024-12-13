@@ -17,9 +17,6 @@ public class InputHandler : MonoBehaviour
     public int cardsToDeal = 4;
     private bool isAnyCardInAnim = false;
 
-    private int leftPlayer = 1;
-    private int rightPlayer = 3;
-
     private static InputHandler _instance;
 
     public static InputHandler Instance
@@ -55,6 +52,7 @@ public class InputHandler : MonoBehaviour
         {
             TextMeshProUGUI text = GameObject.Find("WrongMoveText").GetComponent<TextMeshProUGUI>();
             text.text = "illegal move";
+            AudioManager.Instance.PlayInvalidMoveSound();
             yield return new WaitForSeconds(0.5f);
             text.text = "";
         }
@@ -62,6 +60,7 @@ public class InputHandler : MonoBehaviour
         {
             TextMeshProUGUI text = GameObject.Find("WrongMoveText").GetComponent<TextMeshProUGUI>();
             text.text = "illegal move";
+            AudioManager.Instance.PlayInvalidMoveSound();
             yield return new WaitForSeconds(0.5f);
             text.text = "";
         }
@@ -208,6 +207,8 @@ public class InputHandler : MonoBehaviour
                 {
                     Card.Suit suit = clickedCard.GetSuit();
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
+                    currentPlayer.AddRoundScore(suit.GetValue());
+                    AudioManager.Instance.PlayTrumpSound();
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
                     GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
@@ -224,6 +225,8 @@ public class InputHandler : MonoBehaviour
                 {
                     Card.Suit suit = clickedCard.GetSuit();
                     GameManager.Instance.AddMarriage(currentPlayer, suit);
+                    currentPlayer.AddRoundScore(suit.GetValue());
+                    AudioManager.Instance.PlayTrumpSound();
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
                     GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
@@ -243,6 +246,8 @@ public class InputHandler : MonoBehaviour
             {
                 Card.Suit suit = clickedCard.GetSuit();
                 GameManager.Instance.AddMarriage(currentPlayer, suit);
+                currentPlayer.AddRoundScore(suit.GetValue());
+                AudioManager.Instance.PlayTrumpSound();
 
                 Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
                 GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
