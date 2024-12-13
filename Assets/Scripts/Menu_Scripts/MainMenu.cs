@@ -6,9 +6,7 @@ using UnityEngine.SceneManagement;
 public class MainMenu : MonoBehaviour
 {
     [SerializeField]
-    SettingsMenu SettingsMenu;
-    [SerializeField]
-    OnlineMenu OnlineMenu;
+    GameObject SettingsMenu;
 
     // Start is called before the first frame update
     void Start()
@@ -23,33 +21,17 @@ public class MainMenu : MonoBehaviour
     }
 
 
-    public void PlayLocalGame()
+    public void PlayGameHotSeat()
     {
         Debug.Log("Loading HotSeat scene.");
-        SceneManager.LoadScene("GameScene");
-    }
-
-    public void OnEnter()
-    {
-        gameObject.SetActive(true);
-    }
-
-    public void OnExit()
-    {
-        gameObject.SetActive(false);
+        SceneManager.LoadScene("SampleScene");
     }
 
 
     public void EnterSettingsMenu()
     {
-        SettingsMenu.OnEnter();
-        OnExit();
-    }
-
-    public void EnterOnlineMenu()
-    {
-        OnlineMenu.OnEnter();
-        OnExit();
+        SettingsMenu.SetActive(true);
+        gameObject.SetActive(false);
     }
 
     public void Exit()

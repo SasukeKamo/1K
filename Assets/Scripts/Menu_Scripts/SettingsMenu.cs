@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class SettingsMenu : MonoBehaviour
 {
     [SerializeField]
-    MainMenu MainMenu;
+    GameObject MainMenu;
 
     // Start is called before the first frame update
     void Start()
@@ -20,20 +20,10 @@ public class SettingsMenu : MonoBehaviour
         
     }
 
-    public void OnEnter()
-    {
-        gameObject.SetActive(true);
-    }
-
-    public void OnExit()
-    {
-        gameObject.SetActive(false);
-    }
-
     public void Back()
     {
-        MainMenu.OnEnter();
-        OnExit();
+        MainMenu.gameObject.SetActive(true);
+        gameObject.SetActive(false);
     }
 }
 

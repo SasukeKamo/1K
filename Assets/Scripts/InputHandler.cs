@@ -6,7 +6,6 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using DG.Tweening;
-using Photon.Pun;
 
 public class InputHandler : MonoBehaviour
 {
@@ -14,7 +13,7 @@ public class InputHandler : MonoBehaviour
     [SerializeField] private GameObject trick;
     [SerializeField] private TrickManager trickManager;
     public int sortingOrder = 1;
-    public int cardsToDeal = 4;
+    private int cardsToDeal = 4;
     private bool isAnyCardInAnim = false;
 
     private int leftPlayer = 1;
@@ -65,6 +64,7 @@ public class InputHandler : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
             text.text = "";
         }
+
     }
 
     public bool ValidateCardOK(Card clickedCard, List<Card> hand)
@@ -254,7 +254,7 @@ public class InputHandler : MonoBehaviour
         return false;
     }
 
-    /*public void OnClick(InputAction.CallbackContext context)
+    public void OnClick(InputAction.CallbackContext context)
     {
         if (!context.started) return;
         if (isAnyCardInAnim) return;
@@ -318,114 +318,7 @@ public class InputHandler : MonoBehaviour
                 }
             }
         }
-    }*/
-
-    public void OnClick(InputAction.CallbackContext context)
-    {
-        if (!context.started) return;
-        if (isAnyCardInAnim) return;
-
-        RaycastHit2D hit = Physics2D.GetRayIntersection(Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue()));
-        if (hit.collider != null)
-        {
-            Card clickedCard = hit.collider.gameObject.GetComponent<Card>();
-            if (!clickedCard.selected) return;
-
-            Player currentPlayer = GameManager.Instance.GameplayCurrentPlayer;
-
-            if (GameManager.Instance.onePlayerMode && currentPlayer != GameManager.Instance.players[GameManager.humanPlayer])
-            {
-                Debug.LogWarning("It's not your move now!");
-                return;
-            }
-
-            // rozdawanie kart
-            if (GameManager.Instance.isGivingStage && clickedCard.visible)
-            {
-                if (GameManager.IsMultiplayerMode)
-                {
-                    GameManager.Instance.photonView.RPC("SyncDistributeCardToPlayer", RpcTarget.All,
-                        clickedCard.name);
-                }
-                else
-                {
-                    HandleCardDistribution(clickedCard);
-                }
-            }
-            // zagrywanie kart
-            else if (clickedCard != null && clickedCard.visible && clickedCard.transform.parent != trick.transform
-                     && GameManager.Instance.auctionFinished && trick.GetComponentsInChildren<Card>().Length <= 3)
-            {
-                if (GameManager.IsMultiplayerMode && PhotonNetwork.LocalPlayer.ActorNumber !=
-                    GameManager.Instance.GameplayCurrentPlayer.playerNumber)
-                {
-                    Debug.LogError($"Cannot click card IsMultiplayerMode={GameManager.IsMultiplayerMode}, P{PhotonNetwork.LocalPlayer.ActorNumber} != {GameManager.Instance.GameplayCurrentPlayer.playerNumber}");
-                    return;
-                }
-
-                Player cardOwner = GameManager.Instance.GetPlayerForCurrentCard(clickedCard.gameObject);
-                List<Card> hand = GameManager.Instance.GetPlayerHand(cardOwner);
-
-                if (ValidateCardOK(clickedCard, hand))
-                {
-                    if (GameManager.IsMultiplayerMode)
-                    {
-                        // GameManager.Instance.photonView.RPC("PlayCardOnTable", RpcTarget.All,
-                        //     clickedCard.name,
-                        //     cardOwner.playerName);
-                        GameManager.Instance.photonView.RPC("SyncGameplayTurn", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber, clickedCard.name);
-                    }
-                    else
-                    {
-                        HandleCardPlay(clickedCard, hand, cardOwner);
-                    }
-                }
-            }
-        }
     }
-
-    void HandleCardDistribution(Card clickedCard)
-    {
-        GameManager.Instance.currentCardReceiver.AddCardToHand(clickedCard);
-
-        if (GameManager.Instance.currentPlayer.hand.Contains(clickedCard))
-            GameManager.Instance.currentPlayer.hand.Remove(clickedCard);
-
-        GameObject cardObject = GameObject.Find(clickedCard.name);
-        cardObject.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
-        cardObject.transform.localRotation = Quaternion.Euler(0, 0, 0);
-
-        clickedCard.SetVisible(GameManager.Instance.currentCardReceiver == GameManager.Instance.currentPlayer);
-        GameManager.Instance.otherCards.cards.Remove(clickedCard);
-
-        cardsToDeal--;
-        GameManager.Instance.currentCardReceiver = GameManager.Instance.GetNextPlayer(GameManager.Instance.currentCardReceiver);
-
-        TextMeshProUGUI currentCardReceiverText = GameObject.Find("CurrentCardReceiverText").GetComponent<TextMeshProUGUI>();
-        currentCardReceiverText.text = "Choose card for player: " + GameManager.Instance.currentCardReceiver.playerName;
-
-        if (cardsToDeal == 1)
-        {
-            Card lastCard = GameManager.Instance.otherCards.cards[0];
-            GameManager.Instance.currentCardReceiver.AddCardToHand(lastCard);
-
-            GameObject lastCardObject = GameObject.Find(lastCard.name);
-            lastCardObject.transform.SetParent(GameManager.Instance.currentCardReceiver.transform);
-
-            GameManager.Instance.otherCards.cards.Remove(lastCard);
-            GameManager.Instance.AddRestToCurrentPlayer();
-
-            GameManager.Instance.EndDealingStage();
-        }
-    }
-
-    void HandleCardPlay(Card clickedCard, List<Card> hand, Player cardOwner)
-    {
-        PlayCard(clickedCard, hand, cardOwner);
-        GameManager.Instance.Play(clickedCard);
-        StartCoroutine(WaitForAnimEnd(clickedCard, true));
-    }
-
 
     private void AfterClickUpdate(bool moveToNextPos)
     {
@@ -479,10 +372,8 @@ public class InputHandler : MonoBehaviour
     }
 
 
-    public void PlayCard(Card card, List<Card> hand, Player current)
+    private void PlayCard(Card card, List<Card> hand, Player current)
     {
-        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> entered PlayCard()");
-
         if (card.transform.parent != trick.transform)
         {
             trickManager.AddCard(card);
@@ -503,8 +394,6 @@ public class InputHandler : MonoBehaviour
         {
             Debug.Log("Cannot add card already in the trick area.");
         }
-
-        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> exit PlayCard()");
     }
 
     private void AnimateCardToCenter(Card card, Player currentPlayer)
@@ -532,14 +421,10 @@ public class InputHandler : MonoBehaviour
                   });
     }
 
-    public IEnumerator WaitForAnimEnd(Card card, bool move)
+    private IEnumerator WaitForAnimEnd(Card card, bool move)
     {
         yield return new WaitUntil(() => card.isDotweenAnimEnded);
-
-        if(!GameManager.IsMultiplayerMode)
-            AfterClickUpdate(move);
-
-        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> animation ended");
+        AfterClickUpdate(move);
     }
 
 
