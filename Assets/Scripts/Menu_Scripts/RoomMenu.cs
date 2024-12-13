@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
@@ -35,9 +36,19 @@ public class RoomMenu : MonoBehaviourPun
 
     public void OnPlayerNameChanged(string value)
     {
-        Debug.Log("Changing player "+ PhotonNetwork.LocalPlayer.ActorNumber + " name to '"+value+"'");
-        PhotonNetwork.LocalPlayer.NickName = value;
-        GetComponent<PhotonView>().RPC("SyncPlayerNames", RpcTarget.All);
+        if (!String.IsNullOrWhiteSpace(value))
+        {
+            Debug.Log("Changing player " + PhotonNetwork.LocalPlayer.ActorNumber + " name to '" + value + "'");
+            PhotonNetwork.LocalPlayer.NickName = value;
+            GetComponent<PhotonView>().RPC("SyncPlayerNames", RpcTarget.All);
+        }
+        else
+        {
+            var newName = "Player" + PhotonNetwork.LocalPlayer.ActorNumber;
+            Debug.Log("Changing player " + PhotonNetwork.LocalPlayer.ActorNumber + " name to '" + newName + "'");
+            PhotonNetwork.LocalPlayer.NickName = newName;
+            GetComponent<PhotonView>().RPC("SyncPlayerNames", RpcTarget.All);
+        }
     }
     public void OnEnter()
     {
