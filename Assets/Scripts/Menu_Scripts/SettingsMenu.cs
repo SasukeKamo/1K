@@ -1,12 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class SettingsMenu : MonoBehaviour
 {
     [SerializeField]
     MainMenu MainMenu;
+
+    [SerializeField] private Slider musicSlider;
+    [SerializeField] private Slider sfxSlider;
 
     // Start is called before the first frame update
     void Start()
@@ -18,6 +22,19 @@ public class SettingsMenu : MonoBehaviour
     void Update()
     {
         
+    }
+
+    private void OnEnable()
+    {
+        if (AudioManager.Instance.musicSource != null)
+        {
+            musicSlider.value = AudioManager.Instance.musicSource.volume;
+        }
+
+        if (AudioManager.Instance.sfxSource != null)
+        {
+            sfxSlider.value = AudioManager.Instance.sfxSource.volume;
+        }
     }
 
     public void OnEnter()

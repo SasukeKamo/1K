@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AudioManager : MonoBehaviour
 {
@@ -22,6 +23,9 @@ public class AudioManager : MonoBehaviour
     public AudioSource musicSource;
     public AudioSource sfxSource;
 
+    public Slider musicSlider;
+    public Slider sfxSlider;
+
     public AudioClip winSound;
     public AudioClip invalidMoveSound;
     public AudioClip playCardSound;
@@ -30,6 +34,8 @@ public class AudioManager : MonoBehaviour
     public AudioClip burnSound;
     public AudioClip gamesceneMusic;
     public AudioClip menuMusic;
+
+    private float defaultVolumeValue = 0.5f;
 
     void Awake()
     {
@@ -42,6 +48,11 @@ public class AudioManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    private void Start()
+    {
+        LoadSlidersValues();
     }
 
     public void PlayWinSound()
@@ -86,5 +97,55 @@ public class AudioManager : MonoBehaviour
         musicSource.Stop();
         musicSource.clip = gamesceneMusic;
         musicSource.Play();
+    }
+
+    public void OnMusicSliderChanged()
+    {
+        musicSource.volume = musicSlider.value;
+        SaveMusicSliderValue(musicSlider.value);
+    }
+
+    public void OnSFXSliderChanged()
+    {
+        sfxSource.volume = sfxSlider.value;
+        SaveSFXSliderValue(sfxSlider.value);
+    }
+
+    public void SaveMusicSliderValue(float value)
+    {
+        PlayerPrefs.SetFloat("MusicVolume", value);
+        PlayerPrefs.Save();
+    }
+
+    public void SaveSFXSliderValue(float value)
+    {
+        PlayerPrefs.SetFloat("SFXVolume", value);
+        PlayerPrefs.Save();
+    }
+
+    private void LoadSlidersValues()
+    {
+        if (PlayerPrefs.HasKey("MusicVolume"))
+        {
+            float savedValue = PlayerPrefs.GetFloat("MusicVolume");
+            musicSlider.value = savedValue;
+            musicSource.volume = savedValue;
+        }
+        else
+        {
+            musicSlider.value = defaultVolumeValue;
+            musicSource.volume = defaultVolumeValue;
+        }
+        if (PlayerPrefs.HasKey("SFXVolume"))
+        {
+            float savedValue = PlayerPrefs.GetFloat("SFXVolume");
+            sfxSlider.value = savedValue;
+            sfxSource.volume = savedValue;
+        }
+        else
+        {
+            sfxSlider.value = defaultVolumeValue;
+            sfxSource.volume = defaultVolumeValue;
+        }
     }
 }
