@@ -1,3 +1,4 @@
+using System;
 using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
@@ -59,9 +60,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public void ReJoinLobby()
     {
-        PhotonNetwork.LeaveRoom();
-        LeaveLobby();
-        JoinLobby();
+        if(PhotonNetwork.CurrentRoom != null)
+            PhotonNetwork.LeaveRoom();
+        PhotonNetwork.GetCustomRoomList(TypedLobby.Default, String.Empty);
     }
 
     public override void OnConnectedToMaster()
@@ -79,7 +80,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void CreateRoom(string roomName)
     {
         PhotonNetwork.CreateRoom(roomName, new RoomOptions() { MaxPlayers = 4, IsVisible = true, IsOpen = true });
-
     }
 
     public void JoinRoom(string roomName)

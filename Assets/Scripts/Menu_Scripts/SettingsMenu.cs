@@ -37,6 +37,18 @@ public class SettingsMenu : MonoBehaviour
         }
     }
 
+    public void OnMusicSliderChanged()
+    {
+        AudioManager.Instance.musicSource.volume = musicSlider.value;
+        AudioManager.Instance.SaveMusicSliderValue(musicSlider.value);
+    }
+
+    public void OnSFXSliderChanged()
+    {
+        AudioManager.Instance.sfxSource.volume = sfxSlider.value;
+        AudioManager.Instance.SaveSFXSliderValue(sfxSlider.value);
+    }
+
     public void OnEnter()
     {
         gameObject.SetActive(true);

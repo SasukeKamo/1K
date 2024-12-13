@@ -99,18 +99,6 @@ public class AudioManager : MonoBehaviour
         musicSource.Play();
     }
 
-    public void OnMusicSliderChanged()
-    {
-        musicSource.volume = musicSlider.value;
-        SaveMusicSliderValue(musicSlider.value);
-    }
-
-    public void OnSFXSliderChanged()
-    {
-        sfxSource.volume = sfxSlider.value;
-        SaveSFXSliderValue(sfxSlider.value);
-    }
-
     public void SaveMusicSliderValue(float value)
     {
         PlayerPrefs.SetFloat("MusicVolume", value);

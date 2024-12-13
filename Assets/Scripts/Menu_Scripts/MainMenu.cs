@@ -1,14 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
     [SerializeField]
-    SettingsMenu SettingsMenu;
+    private SettingsMenu SettingsMenu;
     [SerializeField]
-    OnlineMenu OnlineMenu;
+    private OnlineMenu OnlineMenu;
+    [SerializeField] 
+    private GameObject loadGameObject;
+
 
     // Start is called before the first frame update
     void Start()
@@ -22,10 +26,25 @@ public class MainMenu : MonoBehaviour
         
     }
 
+    void OnEnable()
+    {
+        FileInfo file = new FileInfo(GameManager.savePath);
+        if (file.Exists)
+        {
+            loadGameObject.SetActive(true);
+        }
+    }
+
 
     public void PlayLocalGame()
     {
         Debug.Log("Loading HotSeat scene.");
+        SceneManager.LoadScene("GameScene");
+    }
+
+    public void ContinueLocalGame()
+    {
+        GameManager.IsGameContinued = true;
         SceneManager.LoadScene("GameScene");
     }
 

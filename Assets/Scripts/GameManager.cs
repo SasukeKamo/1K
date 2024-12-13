@@ -91,12 +91,13 @@ public class GameManager : MonoBehaviourPunCallbacks
     public bool auctionFinished = false;
     public bool setupFinished = false;
     public GamePhase gamePhase;
-    public string savePath = "./saves/save.txt";
+    public static string savePath = "./saves/save.txt";
 
     private Player localPlayer;
     public static bool IsMultiplayerMode = false;
+    public static bool IsGameContinued = false;
     private bool IsRoundSynced = false;
-    [SerializeField] private bool forcePlayerChangeDialog;
+    [SerializeField] private bool forcePlayerChangeDialog = true;
     [SerializeField] private GameObject t;
     [SerializeField] private TrickManager trickManager;
     [SerializeField] private GameObject downPlace;
@@ -111,7 +112,6 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject waitingForCardDialog;
     [SerializeField] private GameObject endGameDialog;
     [SerializeField] private GameObject restOfTheDeck;
-    [SerializeField] private GameObject loadGameButton;
     [SerializeField] private GameObject[] nickNames;
 
 
@@ -134,13 +134,16 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            FileInfo file = new FileInfo(savePath);
-            if (!file.Exists)
+            if (IsGameContinued)
             {
-                loadGameButton.SetActive(false);
+                IsGameContinued = false;
+                Continue();
+            }
+            else
+            {
+                DisplaySetupDialog();
             }
 
-            DisplaySetupDialog();
             StartCoroutine(GameLoop());
         }
     }
@@ -1280,6 +1283,9 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 for (int j = 0; j < players.Count; j++)
                 {
+                    //HERE
+                    ChangePlayer();
+
                     if (onePlayerMode) DisplayCurrentPlayerText();
                     if (onePlayerMode && GameplayCurrentPlayer != players[humanPlayer])
                     {
