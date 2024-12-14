@@ -1284,7 +1284,8 @@ public class GameManager : MonoBehaviourPunCallbacks
                 for (int j = 0; j < players.Count; j++)
                 {
                     //HERE
-                    ChangePlayer();
+                    if(!onePlayerMode)
+                        ChangePlayer();
 
                     if (onePlayerMode) DisplayCurrentPlayerText();
                     if (onePlayerMode && GameplayCurrentPlayer != players[humanPlayer])
@@ -1861,6 +1862,16 @@ public class GameManager : MonoBehaviourPunCallbacks
             }
 
             currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
+        }
+
+        foreach (Transform cardTransform in t.transform)
+        {
+            Card card = cardTransform.GetComponent<Card>();
+            if (card != null)
+            {
+                card.SetVisible(true);
+                card.transform.localRotation = Quaternion.Euler(0, 0, 0);
+            }
         }
     }
 

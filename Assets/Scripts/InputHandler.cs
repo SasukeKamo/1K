@@ -432,10 +432,13 @@ public class InputHandler : MonoBehaviour
     }
 
 
-    private void AfterClickUpdate(bool moveToNextPos)
+    private void AfterClickUpdate(bool moveToNextPos, bool updateCardsVisibility = false)
     {
-        if (!GameManager.Instance.onePlayerMode && moveToNextPos) GameManager.Instance.MovePlayersToNextPositions();
-        GameManager.Instance.UpdateCardVisibility();
+        if (!GameManager.Instance.onePlayerMode && moveToNextPos)
+            GameManager.Instance.MovePlayersToNextPositions();
+
+        if(updateCardsVisibility)
+            GameManager.Instance.UpdateCardVisibility();
     }
 
     // handle bot move

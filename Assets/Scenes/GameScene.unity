@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 37629319}
   - component: {fileID: 37629321}
   - component: {fileID: 37629320}
+  - component: {fileID: 37629322}
   m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
@@ -203,6 +204,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 37629318}
   m_CullTransparentMesh: 1
+--- !u!223 &37629322
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 37629318}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 1
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 101
+  m_TargetDisplay: 0
 --- !u!1 &39850082
 GameObject:
   m_ObjectHideFlags: 0
@@ -4434,7 +4458,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -175.84, y: -272.88504}
+  m_AnchoredPosition: {x: -175.84, y: -272.885}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &524075331
@@ -7123,7 +7147,6 @@ MonoBehaviour:
   auctionFinished: 0
   setupFinished: 0
   gamePhase: 0
-  savePath: save.txt
   forcePlayerChangeDialog: 1
   t: {fileID: 96456797}
   trickManager: {fileID: 96456802}
@@ -7139,7 +7162,6 @@ MonoBehaviour:
   waitingForCardDialog: {fileID: 64838323}
   endGameDialog: {fileID: 8556197519734639413}
   restOfTheDeck: {fileID: 458990547}
-  loadGameButton: {fileID: 0}
   nickNames:
   - {fileID: 1294346584}
   - {fileID: 326252255}
@@ -16650,7 +16672,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 367829456}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.5000002
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

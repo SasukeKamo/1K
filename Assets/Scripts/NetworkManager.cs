@@ -62,7 +62,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         if(PhotonNetwork.CurrentRoom != null)
             PhotonNetwork.LeaveRoom();
-        PhotonNetwork.GetCustomRoomList(TypedLobby.Default, String.Empty);
+        //PhotonNetwork.GetCustomRoomList(TypedLobby.Default, "");
+        PhotonNetwork.LeaveLobby();
+        PhotonNetwork.JoinLobby();
     }
 
     public override void OnConnectedToMaster()
