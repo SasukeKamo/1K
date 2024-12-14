@@ -1306,7 +1306,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 {
                     card.Dissolve();
                 }
-                yield return new WaitForSeconds(1.5f);
+                if(onePlayerMode)yield return new WaitForSeconds(1.5f);
                 EndTurn();
                 UpdatePlayerScore(currentTrick, trickWinner);
                 currentTrick.Clear();
