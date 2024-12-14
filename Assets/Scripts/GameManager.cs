@@ -659,6 +659,8 @@ public class GameManager : MonoBehaviourPunCallbacks
                 runLog.logText("<" + currentPlayer.playerName + "> won auction [" + currentBid + " points].",
                     Color.yellow);
 
+                PrintTrickToLog();
+
                 gamePhase = GamePhase.Handover;
 
                 if (!onePlayerMode) MovePlayerToPosition(currentBidder, Player.Position.down, true);
@@ -1250,6 +1252,16 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
+        void PrintTrickToLog(){
+        Card[] leftOvers = restOfTheDeck.GetComponentsInChildren<Card>();
+
+        Instance.runLog.logText("                       - Trick cards -", Color.blue);
+        foreach(Card card in leftOvers){
+            Instance.runLog.logText("Card " + card.GetCardName(), Color.cyan);
+        }
+    }
+    
+
     private IEnumerator Gameplay()
     {
         yield return new WaitUntil(() => auctionFinished);
@@ -1308,7 +1320,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 {
                     card.Dissolve();
                 }
-                if(onePlayerMode)yield return new WaitForSeconds(1.5f);
+                yield return new WaitForSeconds(1.5f);
                 EndTurn();
                 UpdatePlayerScore(currentTrick, trickWinner);
                 currentTrick.Clear();

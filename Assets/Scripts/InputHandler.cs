@@ -382,7 +382,7 @@ public class InputHandler : MonoBehaviour
                     }
                     else
                     {
-                        HandleCardPlay(clickedCard, hand, cardOwner);
+                        StartCoroutine(HandleCardPlay(clickedCard, hand, cardOwner));
                     }
                 }
             }
@@ -423,12 +423,12 @@ public class InputHandler : MonoBehaviour
             GameManager.Instance.EndDealingStage();
         }
     }
-
-    void HandleCardPlay(Card clickedCard, List<Card> hand, Player cardOwner)
+    
+    private IEnumerator HandleCardPlay(Card clickedCard, List<Card> hand, Player cardOwner)
     {
         PlayCard(clickedCard, hand, cardOwner);
+        yield return StartCoroutine(WaitForAnimEnd(clickedCard, true));
         GameManager.Instance.Play(clickedCard);
-        StartCoroutine(WaitForAnimEnd(clickedCard, true));
     }
 
 
