@@ -802,6 +802,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         currentBid = 100;
         currentBidder = GetPreviousPlayer(currentPlayer);
+        MovePlayerToPosition(currentPlayer, Player.Position.down);
+        UpdateCardVisibility();
         gamePhase = GamePhase.Auction;
 
         if (IsMultiplayerMode)
