@@ -26,6 +26,8 @@ public class Card : MonoBehaviour
     public bool isDotweenAnimStarted = false;
     public bool isDotweenAnimEnded = false;
     public bool selected = false;
+    public static bool isInDissolveAnim = false;
+
 
     [SerializeField] private Suit suit;
     [SerializeField] private Rank rank;

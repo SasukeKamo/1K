@@ -687,7 +687,10 @@ public class GameManager : MonoBehaviourPunCallbacks
         readyDialog.SetActive(true);
 
         TextMeshProUGUI readyPlayerNameText = GameObject.Find("ReadyPlayerNameText").GetComponent<TextMeshProUGUI>();
-        readyPlayerNameText.text = currentPlayer.playerName;
+        if (gamePhase == GamePhase.Auction || gamePhase == GamePhase.Start)
+            readyPlayerNameText.text = currentPlayer.playerName;
+        else
+            readyPlayerNameText.text = GameplayCurrentPlayer.playerName;
     }
 
     public void SetPlayerReady()
@@ -802,8 +805,6 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         currentBid = 100;
         currentBidder = GetPreviousPlayer(currentPlayer);
-        MovePlayerToPosition(currentPlayer, Player.Position.down);
-        UpdateCardVisibility();
         gamePhase = GamePhase.Auction;
 
         if (IsMultiplayerMode)
@@ -816,6 +817,9 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
+            MovePlayerToPosition(currentPlayer, Player.Position.down);
+            UpdateCardVisibility();
+
             DisplayAuctionDialog();
 
             if (onePlayerMode && currentPlayer != players[humanPlayer])
@@ -1315,6 +1319,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                     }
                     GameplayCurrentPlayer = GetNextPlayer(GameplayCurrentPlayer);
                 }
+                if(!onePlayerMode) HideAllCards();
                 yield return new WaitUntil(() => AllCardsReadyForDissolve(currentTrick));
                 foreach (Card card in currentTrick)
                 {
