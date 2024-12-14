@@ -250,7 +250,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         while (teamScore[0] < targetScore && teamScore[1] < targetScore)
         {
             GameManager.Instance.runLog.logText("");
-            GameManager.Instance.runLog.logText("                      --- Round " + roundNumber + " ---", Color.magenta);
+            GameManager.Instance.runLog.logText("                     •••  Round " + roundNumber + "  •••", Color.magenta);
 
             if (IsMultiplayerMode)
             {
@@ -1258,13 +1258,13 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         void PrintTrickToLog(){
         Card[] leftOvers = restOfTheDeck.GetComponentsInChildren<Card>();
-
-        Instance.runLog.logText("                       - Trick cards -", Color.blue);
+        Instance.runLog.logText("");
+        Instance.runLog.logText("                       • Trick cards •", Color.green);
         foreach(Card card in leftOvers){
-            Instance.runLog.logText("Card " + card.GetCardName(), Color.cyan);
+            Instance.runLog.logText("Card " + card.GetCardName(), Color.green);
         }
+        Instance.runLog.logText("");
     }
-    
 
     private IEnumerator Gameplay()
     {
@@ -1457,6 +1457,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void SyncSetupHandOver()
     {
         var isGivingPlayer = PhotonNetwork.LocalPlayer.ActorNumber == currentBidder.playerNumber;
+
+        PrintTrickToLog();
 
         handOverDialog.SetActive(isGivingPlayer);
         waitingForCardDialog.SetActive(!isGivingPlayer);
