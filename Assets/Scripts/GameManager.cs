@@ -1281,6 +1281,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 photonView.RPC("SyncSetupGameplayRound", RpcTarget.AllBuffered, GameplayCurrentPlayer.playerNumber);
                 yield return new WaitUntil(() => roundFinished);
+                photonView.RPC("SyncRoundScore", RpcTarget.AllBuffered, players[0].GetRoundScore(), players[1].GetRoundScore(), players[2].GetRoundScore(), players[3].GetRoundScore());
                 Debug.LogError("Lewa sie skonczyla");
             }
 
@@ -1344,6 +1345,16 @@ public class GameManager : MonoBehaviourPunCallbacks
             gameplayFinished = true;
         }
     }
+
+    [PunRPC]
+    public void SyncRoundScore(int scorePlayer1, int scorePlayer2, int scorePlayer3, int scorePlayer4)
+    {
+        players[0].SetRoundScore(scorePlayer1);
+        players[1].SetRoundScore(scorePlayer2);
+        players[2].SetRoundScore(scorePlayer3);
+        players[3].SetRoundScore(scorePlayer4);
+    }
+
 
     [PunRPC]
     public void SyncEndGameplayRound()
