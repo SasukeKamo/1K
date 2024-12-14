@@ -285,8 +285,6 @@ public class GameManager : MonoBehaviourPunCallbacks
                 EndRound();
                 //SaveGame();
             }
-
-            yield return new WaitForSecondsRealtime(0.5f);
         }
     }
 
@@ -816,9 +814,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            MovePlayerToPosition(currentPlayer, Player.Position.down);
-            UpdateCardVisibility();
-
             DisplayAuctionDialog();
 
             if (onePlayerMode && currentPlayer != players[humanPlayer])
