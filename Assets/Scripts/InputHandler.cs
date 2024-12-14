@@ -427,7 +427,6 @@ public class InputHandler : MonoBehaviour
     void HandleCardPlay(Card clickedCard, List<Card> hand, Player cardOwner)
     {
         PlayCard(clickedCard, hand, cardOwner);
-        GameManager.Instance.Play(clickedCard);
         StartCoroutine(WaitForAnimEnd(clickedCard, true));
     }
 
@@ -550,6 +549,8 @@ public class InputHandler : MonoBehaviour
 
         if(!GameManager.IsMultiplayerMode)
             AfterClickUpdate(move);
+
+        GameManager.Instance.Play(card);
 
         Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> animation ended");
     }
