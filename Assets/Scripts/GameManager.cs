@@ -305,7 +305,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         ResetCardsVariables();
         trickManager.ClearPlayedCards();
 
-        firstPlayer = (firstPlayer + 1) % players.Count;
+        //firstPlayer = (firstPlayer + 1) % players.Count;
         InputHandler.Instance.ResetCardsToDeal();
         foreach (Player player in players)
         {
@@ -1627,7 +1627,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         ResetCardsVariables();
         trickManager.ClearPlayedCards();
 
-        firstPlayer = (firstPlayer + 1) % players.Count;
+        //firstPlayer = (firstPlayer + 1) % players.Count;
         SaveGame();
         if (CheckForGameEnd())
             return;
