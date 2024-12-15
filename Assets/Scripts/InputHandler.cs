@@ -228,6 +228,7 @@ public class InputHandler : MonoBehaviour
                     GameManager.Instance.AddHandMarriage(currentPlayer, suit);
                     currentPlayer.AddRoundScore(suit.GetValue());
                     AudioManager.Instance.PlayTrumpSound();
+                    GameManager.Instance.DisplayTrumpText();
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
                     GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
@@ -246,6 +247,7 @@ public class InputHandler : MonoBehaviour
                     GameManager.Instance.AddHandMarriage(currentPlayer, suit);
                     currentPlayer.AddRoundScore(suit.GetValue());
                     AudioManager.Instance.PlayTrumpSound();
+                    GameManager.Instance.DisplayTrumpText();
 
                     Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
                     GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
@@ -267,6 +269,7 @@ public class InputHandler : MonoBehaviour
                 GameManager.Instance.AddInTurnMarriage(currentPlayer, suit);
                 currentPlayer.AddRoundScore(suit.GetValue());
                 AudioManager.Instance.PlayTrumpSound();
+                GameManager.Instance.DisplayTrumpText();
 
                 Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
                 GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
@@ -508,8 +511,6 @@ public class InputHandler : MonoBehaviour
 
     public void PlayCard(Card card, List<Card> hand, Player current)
     {
-        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> entered PlayCard()");
-
         if (card.transform.parent != trick.transform)
         {
             trickManager.AddCard(card);
@@ -528,8 +529,6 @@ public class InputHandler : MonoBehaviour
         {
             Debug.Log("Cannot add card already in the trick area.");
         }
-
-        Debug.LogError("<P" + PhotonNetwork.LocalPlayer.ActorNumber + "> exit PlayCard()");
     }
 
     private void AnimateCardToCenter(Card card, Player currentPlayer)

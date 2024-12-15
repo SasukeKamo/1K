@@ -25,6 +25,8 @@ public class Player : MonoBehaviourPun
     private bool hasBidded = false;
     public int playerNumber;
 
+    public bool isReady = false;
+
     public string ToDebugString()
     {
         return $"Player: {playerName}, " +
@@ -72,6 +74,10 @@ public class Player : MonoBehaviourPun
 
     public void SetBidded(bool bidded) { hasBidded = bidded; }
     public bool HasBidded() { return hasBidded; }
+
+
+    public void SetReady(bool ready) { isReady = ready; }
+    public bool IsReady() { return isReady; }
 
     public void AddCardToHand(Card card)
     {
