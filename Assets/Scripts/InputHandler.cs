@@ -95,10 +95,28 @@ public class InputHandler : MonoBehaviour
                         }
                     }
 
+                    // check if baseCard already conquered with trump
+                    Card.Suit currentAtuSuit = GameManager.Instance.GetAtuSuit();
+                    List<Card> trickTrumps = new List<Card>();
+                    if (currentAtuSuit != Card.Suit.None)
+                    {
+                        foreach (Card card in trickCards)
+                        {
+                            if (card.GetSuit() == currentAtuSuit)
+                            {
+                                trickTrumps.Add(card);
+                            }
+                        }
+                    }
+
                     foreach (Card card in hand)
                     {
                         if (card.GetSuitToString() == trickWinner.GetSuitToString() && card.GetValue() > trickWinner.GetValue())
                         {
+                            //if trick already conquered with trump then no need to lay card stronger than basecard
+                            if(trickTrumps.Count > 0 && baseCard.GetSuit() != currentAtuSuit){
+                                return true;
+                            }
                             Debug.LogWarning("Invalid move. Need to overtrump with higher value of " + baseCard.GetSuitToString() + "!");
                             StartCoroutine(DisplayWrongMoveText());
                             return false;
@@ -178,7 +196,8 @@ public class InputHandler : MonoBehaviour
                             return false;
                         }
                     }
-                    if (highestPlayerAtu.GetValue() > clickedCard.GetValue())
+                    if (highestPlayerAtu.GetValue() > highestTrickAtu.GetValue()
+                    &&  clickedCard.GetValue() < highestTrickAtu.GetValue())
                     {
                         Debug.Log("Invalid move. Player has to overtrump with trump!");
                         StartCoroutine(DisplayWrongMoveText());
@@ -206,7 +225,7 @@ public class InputHandler : MonoBehaviour
                 if (card.GetRank() == "King" && card.GetSuitToString() == clickedCard.GetSuitToString())
                 {
                     Card.Suit suit = clickedCard.GetSuit();
-                    GameManager.Instance.AddMarriage(currentPlayer, suit);
+                    GameManager.Instance.AddHandMarriage(currentPlayer, suit);
                     currentPlayer.AddRoundScore(suit.GetValue());
                     AudioManager.Instance.PlayTrumpSound();
 
@@ -224,7 +243,7 @@ public class InputHandler : MonoBehaviour
                 if (card.GetRank() == "Queen" && card.GetSuitToString() == clickedCard.GetSuitToString())
                 {
                     Card.Suit suit = clickedCard.GetSuit();
-                    GameManager.Instance.AddMarriage(currentPlayer, suit);
+                    GameManager.Instance.AddHandMarriage(currentPlayer, suit);
                     currentPlayer.AddRoundScore(suit.GetValue());
                     AudioManager.Instance.PlayTrumpSound();
 
@@ -245,7 +264,7 @@ public class InputHandler : MonoBehaviour
                 trickCards[trickSize - 1].GetRank() == "King")
             {
                 Card.Suit suit = clickedCard.GetSuit();
-                GameManager.Instance.AddMarriage(currentPlayer, suit);
+                GameManager.Instance.AddInTurnMarriage(currentPlayer, suit);
                 currentPlayer.AddRoundScore(suit.GetValue());
                 AudioManager.Instance.PlayTrumpSound();
 
@@ -500,11 +519,9 @@ public class InputHandler : MonoBehaviour
 
             card.SetVisible(true);
             Debug.Log("Played card: " + card.gameObject.name);
+            GameManager.Instance.runLog.logText("<" + current.playerName + "> plays " + card.GetCardName() + ".");
             VerifyMarriage(card, hand, current);
             current.RemoveCardFromHand(card);
-
-            GameManager.Instance.runLog.logText("<" + current.playerName + "> plays " + card.GetCardName() + ".");
-
             AnimateCardToCenter(card, current);
         }
         else

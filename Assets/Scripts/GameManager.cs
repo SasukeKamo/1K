@@ -75,6 +75,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     private List<int> teamScore = new List<int>(); // teamScore[0]: team1, teamScore[1]: team2 etc.
     const int targetScore = 1000;
     private List<Tuple<Player, Card.Suit>> marriages;
+    private List<Tuple<Player, Card.Suit>> tempMarriages;
     private int currentBid;
     private Player currentBidder; // Player who is winning the auction at the moment
     public Player currentPlayer; // Player who is making any move at the moment
@@ -164,6 +165,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         mainDeck.Shuffle();
         marriages = new List<Tuple<Player, Card.Suit>>();
+        tempMarriages = new List<Tuple<Player, Card.Suit>>();
         roundNumber = 1;
         firstPlayer = UnityEngine.Random.Range(0, 4);
         currentPlayer = players[firstPlayer];
@@ -185,6 +187,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
 
         marriages = new List<Tuple<Player, Card.Suit>>();
+        tempMarriages = new List<Tuple<Player, Card.Suit>>();
         roundNumber = 1;
 
         if (PhotonNetwork.IsMasterClient)
@@ -315,9 +318,16 @@ public class GameManager : MonoBehaviourPunCallbacks
         IsRoundSynced = true;
     }
 
-    public void AddMarriage(Player player, Card.Suit suit)
+    public void AddInTurnMarriage(Player player, Card.Suit suit)
     {
+        tempMarriages.Add(Tuple.Create(player, suit));
+    }
+
+    public void AddHandMarriage(Player player, Card.Suit suit)
+    {
+        tempMarriages.Add(Tuple.Create(player, suit));
         marriages.Add(Tuple.Create(player, suit));
+        DisplayTrumpText();
     }
 
     void DealInitialCards()
@@ -924,7 +934,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             bool isMaximizingPlayer = pp.team == currentPlayer.team;
             Card card = ComputerPlayer.GetCardToDeal(hand, isMaximizingPlayer);
 
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(0.7f);
             InputHandler.Instance.OnClickHandle(card);
         }
         waitingForCardDialog.SetActive(false);
@@ -1137,7 +1147,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     private IEnumerator DelayedBotMove(Player player)
     {
         // Wait for before making a move
-        yield return new WaitForSeconds(1.0f);
+        if(player!=players[humanPlayer+1]) yield return new WaitForSeconds(1.0f);
 
         InputHandler.Instance.OnClickHandle(ChooseCardToPlay(player));
     }
@@ -1189,9 +1199,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 
 
     [PunRPC]
-    public void SyncSetupGameplayRound(int roundStartingPlayerNumber) // Przygotowuje rozgrywkę do nowej lewy (4 kart)
+    public void SyncSetupGameplayRound(int roundStartingPlayerNumber, int turnIndex) // Przygotowuje rozgrywkę do nowej lewy (4 kart)
     {
-        runLog.logText("<" + players[roundStartingPlayerNumber - 1].playerName + "> starts.", Color.cyan);
+        //runLog.logText("<" + players[roundStartingPlayerNumber - 1].playerName + "> starts.", Color.cyan);
+        runLog.logText(string.Format("{0,26} • {1}. turn •", " ", turnIndex + 1), Color.grey);
 
         roundFinished = false;
 
@@ -1268,6 +1279,14 @@ public class GameManager : MonoBehaviourPunCallbacks
         Instance.runLog.logText("");
     }
 
+    void UpdateMarriageList(){
+        marriages.Clear();
+        foreach (var m in tempMarriages)
+        {
+            marriages.Add(m);
+        }
+    }
+
     private IEnumerator Gameplay()
     {
         yield return new WaitUntil(() => auctionFinished);
@@ -1279,10 +1298,12 @@ public class GameManager : MonoBehaviourPunCallbacks
 
             for (int i = 0; i < numberOfTurns; i++)
             {
-                photonView.RPC("SyncSetupGameplayRound", RpcTarget.AllBuffered, GameplayCurrentPlayer.playerNumber);
+                photonView.RPC("SyncSetupGameplayRound", RpcTarget.AllBuffered, GameplayCurrentPlayer.playerNumber, i);
                 yield return new WaitUntil(() => roundFinished);
                 photonView.RPC("SyncRoundScore", RpcTarget.AllBuffered, players[0].GetRoundScore(), players[1].GetRoundScore(), players[2].GetRoundScore(), players[3].GetRoundScore());
                 Debug.LogError("Lewa sie skonczyla");
+                //marriages=tempMarriages;
+                UpdateMarriageList();
             }
 
             Debug.LogError("Runda sie skonczyla");
@@ -1302,6 +1323,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
             for (int i = 0; i < numberOfTurns; i++)
             {
+                Instance.runLog.logText(string.Format("{0,26} • {1}. turn •", " ", i + 1), Color.grey);
                 for (int j = 0; j < players.Count; j++)
                 {
                     //HERE
@@ -1330,6 +1352,7 @@ public class GameManager : MonoBehaviourPunCallbacks
                 }
                 yield return new WaitForSeconds(1.5f);
                 EndTurn();
+                UpdateMarriageList();
                 UpdatePlayerScore(currentTrick, trickWinner);
                 currentTrick.Clear();
                 DisplayTrumpText();
@@ -1338,8 +1361,10 @@ public class GameManager : MonoBehaviourPunCallbacks
                 if (!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true);
                 UpdateCardVisibility();
             }
+            if(onePlayerMode) yield return new WaitForSeconds(0.9f);
             //UpdateMarriageScore();
             marriages.Clear();
+            tempMarriages.Clear();
             ClearCurrentPlayerText();
 
             gameplayFinished = true;
@@ -1361,6 +1386,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         //UpdateMarriageScore();
         marriages.Clear();
+        tempMarriages.Clear();
         ClearCurrentPlayerText();
         gameplayFinished = true;
     }
@@ -1659,6 +1685,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             }
         }
         marriages.Clear();
+        tempMarriages.Clear();
 
         tempTeamScore[0] = RoundToNearestTen(tempTeamScore[0]);
         tempTeamScore[1] = RoundToNearestTen(tempTeamScore[1]);
