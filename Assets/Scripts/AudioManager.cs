@@ -32,6 +32,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip selectCardSound;
     public AudioClip trumpSound;
     public AudioClip burnSound;
+    public AudioClip bombSound;
     public AudioClip gamesceneMusic;
     public AudioClip menuMusic;
 
@@ -63,6 +64,11 @@ public class AudioManager : MonoBehaviour
     public void PlayBurnSound()
     {
         sfxSource.PlayOneShot(burnSound);
+    }
+
+    public void PlayBombSound()
+    {
+        sfxSource.PlayOneShot(bombSound);
     }
 
     public void PlayTrumpSound()
