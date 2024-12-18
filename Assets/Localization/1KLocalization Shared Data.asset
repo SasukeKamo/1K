@@ -1,0 +1,252 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: 1KLocalization Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: 1KLocalization
+  m_TableCollectionNameGuidString: b37fd4b071c02fa46bb6c77b6fc52c82
+  m_Entries:
+  - m_Id: 840094441472
+    m_Key: LOCAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024384
+    m_Key: ONLINE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024385
+    m_Key: SETTINGS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024386
+    m_Key: EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024387
+    m_Key: CONTINUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024388
+    m_Key: UNFINISHED_GAME_STRING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024389
+    m_Key: GAME_SETUP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024390
+    m_Key: TEAM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024391
+    m_Key: MULTIPLAYER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024392
+    m_Key: SINGLE_PLAYER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024393
+    m_Key: GAME_RULES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024394
+    m_Key: PLAYER_NAME
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024395
+    m_Key: ROUND_SCORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024396
+    m_Key: GAME_SCORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024397
+    m_Key: AUCTION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024398
+    m_Key: CURRENT_BID
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024399
+    m_Key: CURRENT_WINNER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024400
+    m_Key: PASS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024401
+    m_Key: BID
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024402
+    m_Key: ROUND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024403
+    m_Key: TRICK_CARDS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024404
+    m_Key: HAS_BIDDED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024405
+    m_Key: PASSED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024406
+    m_Key: CARD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024407
+    m_Key: HANDLED_CARD_TO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024408
+    m_Key: YOUR_MOVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024409
+    m_Key: MOVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024410
+    m_Key: TURN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024411
+    m_Key: ILLEGAL_MOVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024412
+    m_Key: MARRIAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024413
+    m_Key: POINTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024414
+    m_Key: SCORES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024415
+    m_Key: WON_ROUND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024416
+    m_Key: LOST_ROUND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024417
+    m_Key: WON_AUCTION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024418
+    m_Key: HAND_OVER_CARDS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024419
+    m_Key: CHOOSE_CARD_FOR_PLAYER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024420
+    m_Key: BOMB
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024421
+    m_Key: PLAYER_CHANGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024422
+    m_Key: PLAYER_CHANGE_STRING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024423
+    m_Key: READY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024424
+    m_Key: LOBBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024425
+    m_Key: CREATE_ROOM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024426
+    m_Key: CREATE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024427
+    m_Key: REFRESH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024428
+    m_Key: PLAYERS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024429
+    m_Key: ENTER_YOUR_NICKNAME
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024430
+    m_Key: KING_ON_QUEEN_MARRIAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024431
+    m_Key: BIDDING_LIMITATIONS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024432
+    m_Key: BOMB_POSSIBILITY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024433
+    m_Key: OTHER_PLAYER_DECISION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024434
+    m_Key: OTHER_PLAYER_BIDDING_STRING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024435
+    m_Key: OTHER_PLAYER_DEALING_STRING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024436
+    m_Key: GAMEOVER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024437
+    m_Key: WINNERS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024438
+    m_Key: TRUMP
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 4398082124352323608
+  references:
+    version: 2
+    RefIds:
+    - rid: 4398082124352323608
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1734560905889

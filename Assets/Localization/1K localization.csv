@@ -1,0 +1,57 @@
+Key,English(en),Polish(pl)
+LOCAL,Local,Gra lokalnie
+ONLINE,Online,Gra siecowa
+SETTINGS,Settings,Ustawienia
+EXIT,Exit,Wyjdź z gry
+CONTINUE,Continue,Kontynuuj grę
+UNFINISHED_GAME_STRING,You have an unfinished game. Would you like to load it?,Czy chcesz kontynuować przerwaną grę?
+GAME_SETUP,Game Setup,Ustawienia gry
+TEAM,Team,Para
+MULTIPLAYER,Multiplayer,Tryb wieloosobowy
+SINGLE_PLAYER,Single player,Tryb jednoosobowy
+GAME_RULES,Game rules,Zasady gry
+PLAYER_NAME,Player Name,Gracz
+ROUND_SCORE,Round Score,Wynik rundy
+GAME_SCORE,Game Score,Wynik gry
+AUCTION,Auction,Licytacja
+CURRENT_BID,Current bid,Obecna stawka
+CURRENT_WINNER,Current winner,Obecny zwycięzca
+PASS,Pass,Spasuj
+BID,Bid,Podbij
+ROUND,Round,Runda
+TRICK_CARDS,Trick cards,Karty w musiku
+HAS_BIDDED,has bidded,podbił/a stawkę do
+PASSED,passed,spasował/a
+CARD,Card,Karta
+HANDLED_CARD_TO,handles card to,przekazuje kartę do
+YOUR_MOVE,Your move,Twój ruch
+MOVE,move,ruch
+TURN,turn ,tura
+ILLEGAL_MOVE,illegal move,niedozwolony ruch
+MARRIAGE,Marriage,Meldunek
+POINTS,points,punktów
+SCORES,scores,zdobywa
+WON_ROUND,won round,wygrywa
+LOST_ROUND,lost round,przegrywa
+WON_AUCTION,won auction,wygrywa licytację
+HAND_OVER_CARDS,Hand over cards,Rozdaj karty
+CHOOSE_CARD_FOR_PLAYER,Choose card for player,Wybierz kartę dla gracza
+BOMB,Bomb,Bomba
+PLAYER_CHANGE,Player Change,Zmiana gracza
+PLAYER_CHANGE_STRING,Press the button when you are ready to play,Wciśnij przycisk kiedy będziesz gotowy/a
+READY,Ready,Gotowy/a
+LOBBY,Lobby ,Pokój online
+CREATE_ROOM,Create room,Utwórz pokój
+CREATE,Create,Utwórz
+REFRESH,Refresh,Odśwież listę
+PLAYERS,Players,Gracze
+ENTER_YOUR_NICKNAME,Enter your nickname,Wpisz swoją nazwę gracza
+KING_ON_QUEEN_MARRIAGE,King-on-Queen marriage,Meldunki w biegu
+BIDDING_LIMITATIONS,Bidding limitations,Ograniczenia wysokości licytacji
+BOMB_POSSIBILITY,Bomb possibility,Możliwość bomby
+OTHER_PLAYER_DECISION,Other player decision,Inny gracz licytuje
+OTHER_PLAYER_BIDDING_STRING,Waiting for other player decision on bidding.,Oczekiwanie na decyzję innego gracza w licytacji.
+OTHER_PLAYER_DEALING_STRING,Waiting for the player to deal the cards.,Oczekiwanie na rozdanie kart
+GAMEOVER,Gameover,Koniec gry
+WINNERS,Winners,Wygrani
+TRUMP,Trump,Atut

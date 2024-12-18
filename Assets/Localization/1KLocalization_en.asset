@@ -1,0 +1,247 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: 1KLocalization_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: b37fd4b071c02fa46bb6c77b6fc52c82, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 840094441472
+    m_Localized: Local
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024384
+    m_Localized: Online
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024385
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024386
+    m_Localized: Exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024387
+    m_Localized: Continue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024388
+    m_Localized: You have an unfinished game. Would you like to load it?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024389
+    m_Localized: Game Setup
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024390
+    m_Localized: Team
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024391
+    m_Localized: Multiplayer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024392
+    m_Localized: Single player
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024393
+    m_Localized: Game rules
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024394
+    m_Localized: Player Name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024395
+    m_Localized: Round Score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024396
+    m_Localized: Game Score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024397
+    m_Localized: Auction
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024398
+    m_Localized: Current bid
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024399
+    m_Localized: Current winner
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024400
+    m_Localized: Pass
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024401
+    m_Localized: Bid
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024402
+    m_Localized: Round
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024403
+    m_Localized: Trick cards
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024404
+    m_Localized: has bidded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024405
+    m_Localized: passed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024406
+    m_Localized: Card
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024407
+    m_Localized: handles card to
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024408
+    m_Localized: Your move
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024409
+    m_Localized: move
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024410
+    m_Localized: 'turn '
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024411
+    m_Localized: illegal move
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024412
+    m_Localized: Marriage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024413
+    m_Localized: points
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024414
+    m_Localized: scores
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024415
+    m_Localized: won round
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024416
+    m_Localized: lost round
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024417
+    m_Localized: won auction
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024418
+    m_Localized: Hand over cards
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024419
+    m_Localized: Choose card for player
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024420
+    m_Localized: Bomb
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024421
+    m_Localized: Player Change
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024422
+    m_Localized: Press the button when you are ready to play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024423
+    m_Localized: Ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024424
+    m_Localized: 'Lobby '
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024425
+    m_Localized: Create room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024426
+    m_Localized: Create
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024427
+    m_Localized: Refresh
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024428
+    m_Localized: Players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024429
+    m_Localized: Enter your nickname
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024430
+    m_Localized: King-on-Queen marriage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024431
+    m_Localized: Bidding limitations
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024432
+    m_Localized: Bomb possibility
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024433
+    m_Localized: Other player decision
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024434
+    m_Localized: Waiting for other player decision on bidding.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024435
+    m_Localized: Waiting for the player to deal the cards.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024436
+    m_Localized: Gameover
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024437
+    m_Localized: Winners
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024438
+    m_Localized: Trump
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

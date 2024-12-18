@@ -1,0 +1,247 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: 1KLocalization_pl
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: pl
+  m_SharedData: {fileID: 11400000, guid: b37fd4b071c02fa46bb6c77b6fc52c82, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 840094441472
+    m_Localized: Gra lokalnie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024384
+    m_Localized: Gra siecowa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024385
+    m_Localized: Ustawienia
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024386
+    m_Localized: "Wyjd\u017A z gry"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024387
+    m_Localized: "Kontynuuj gr\u0119"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024388
+    m_Localized: "Czy chcesz kontynuowa\u0107 przerwan\u0105 gr\u0119?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024389
+    m_Localized: Ustawienia gry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024390
+    m_Localized: Para
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024391
+    m_Localized: Tryb wieloosobowy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024392
+    m_Localized: Tryb jednoosobowy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024393
+    m_Localized: Zasady gry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024394
+    m_Localized: Gracz
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024395
+    m_Localized: Wynik rundy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024396
+    m_Localized: Wynik gry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024397
+    m_Localized: Licytacja
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024398
+    m_Localized: Obecna stawka
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024399
+    m_Localized: "Obecny zwyci\u0119zca"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024400
+    m_Localized: Spasuj
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024401
+    m_Localized: Podbij
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024402
+    m_Localized: Runda
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024403
+    m_Localized: Karty w musiku
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024404
+    m_Localized: "podbi\u0142/a stawk\u0119 do"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024405
+    m_Localized: "spasowa\u0142/a"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024406
+    m_Localized: Karta
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024407
+    m_Localized: "przekazuje kart\u0119 do"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024408
+    m_Localized: "Tw\xF3j ruch"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024409
+    m_Localized: ruch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024410
+    m_Localized: tura
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024411
+    m_Localized: niedozwolony ruch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024412
+    m_Localized: Meldunek
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024413
+    m_Localized: "punkt\xF3w"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024414
+    m_Localized: zdobywa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024415
+    m_Localized: wygrywa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024416
+    m_Localized: przegrywa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024417
+    m_Localized: "wygrywa licytacj\u0119"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024418
+    m_Localized: Rozdaj karty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024419
+    m_Localized: "Wybierz kart\u0119 dla gracza"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024420
+    m_Localized: Bomba
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024421
+    m_Localized: Zmiana gracza
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024422
+    m_Localized: "Wci\u015Bnij przycisk kiedy b\u0119dziesz gotowy/a"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024423
+    m_Localized: Gotowy/a
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024424
+    m_Localized: "Pok\xF3j online"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024425
+    m_Localized: "Utw\xF3rz pok\xF3j"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024426
+    m_Localized: "Utw\xF3rz"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024427
+    m_Localized: "Od\u015Bwie\u017C list\u0119"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024428
+    m_Localized: Gracze
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024429
+    m_Localized: "Wpisz swoj\u0105 nazw\u0119 gracza"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024430
+    m_Localized: Meldunki w biegu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024431
+    m_Localized: "Ograniczenia wysoko\u015Bci licytacji"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024432
+    m_Localized: "Mo\u017Cliwo\u015B\u0107 bomby"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024433
+    m_Localized: Inny gracz licytuje
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024434
+    m_Localized: "Oczekiwanie na decyzj\u0119 innego gracza w licytacji."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024435
+    m_Localized: Oczekiwanie na rozdanie kart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024436
+    m_Localized: Koniec gry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024437
+    m_Localized: Wygrani
+    m_Metadata:
+      m_Items: []
+  - m_Id: 840107024438
+    m_Localized: Atut
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []
