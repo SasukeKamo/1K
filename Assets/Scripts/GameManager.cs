@@ -1280,6 +1280,12 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         yield return new WaitUntil(() => auctionFinished);
 
+        if (bombPlayed)
+        {
+            gameplayFinished = true;
+            yield break;
+        }
+
         if (IsMultiplayerMode)
         {
             GameplayCurrentPlayer = currentBidder;
@@ -1364,10 +1370,9 @@ public class GameManager : MonoBehaviourPunCallbacks
                 DisplayTrumpText();
                 int playerNum = GameplayCurrentPlayer.playerNumber;
                 GameplayCurrentPlayer = trickWinner;
-                if (!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true);
-                UpdateCardVisibility();
+                if (!onePlayerMode) MovePlayerToPosition(trickWinner, Player.Position.down, true); UpdateCardVisibility();
             }
-            if(onePlayerMode) yield return new WaitForSeconds(0.9f);
+            if (onePlayerMode) yield return new WaitForSeconds(0.9f);
             //UpdateMarriageScore();
             marriages.Clear();
             tempMarriages.Clear();
@@ -1436,6 +1441,8 @@ public class GameManager : MonoBehaviourPunCallbacks
         played = true;
     }
 
+    private bool bombPlayed = false;
+
     void DealCardsToOtherPlayers()
     {
         if (IsMultiplayerMode)
@@ -1472,10 +1479,34 @@ public class GameManager : MonoBehaviourPunCallbacks
         gamePhase = GamePhase.Gameplay;
     }
 
-    void BombEndRound(){
+    public void BombEndRound(){
         // TU IMPLEMENTACJA BOMBY
         // -> PUNKTY - team bombującego: 0pkt, przeciwny team 0.5*WARTOSC_WYLICYTOWANA pkt
         // -> PRZEJŚCIE DO NASTEPNEJ TURY
+
+        bombPlayed = true;
+        int pointsToGive = RoundToNearestTen(currentBid / 2);
+        teamScore[currentBidder.GetTeam() % 2] += pointsToGive;
+
+        foreach (Player player in players)
+        {
+            if (player.GetTeam() == 1)
+            {
+                player.SetScore(teamScore[0]);
+            }
+            else
+            {
+                player.SetScore(teamScore[1]);
+            }
+            player.ClearHand();
+        }
+
+        isGivingStage = false;
+        ResetDeck();
+        handOverDialog.SetActive(false);
+        waitingForCardDialog.SetActive(false);
+        gamePhase = GamePhase.Gameplay;
+        auctionFinished = true;
     }
 
     IEnumerator StartRound()
@@ -1504,8 +1535,13 @@ public class GameManager : MonoBehaviourPunCallbacks
             ChangePlayer();
         }
 
-        StartCoroutine(Gameplay());
+        if (!bombPlayed)
+        {
+            StartCoroutine(Gameplay());
+        }
+
         yield return new WaitUntil(() => gameplayFinished);
+
     }
 
     [PunRPC]
@@ -1645,6 +1681,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         DisplayTrumpText();
         CalculateRoundScores();
+        if (bombPlayed)
+            bombPlayed = false;
         roundNumber++;
         ResetDeck();
         ResetCardsVariables();
@@ -1688,10 +1726,12 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     void CalculateRoundScores()
     {
-        int bidderTeam = currentBidder.GetTeam();
-        List<int> tempTeamScore = new List<int>();
-        tempTeamScore.Add(0);
-        tempTeamScore.Add(0);
+        if (!bombPlayed)
+        {
+            int bidderTeam = currentBidder.GetTeam();
+            List<int> tempTeamScore = new List<int>();
+            tempTeamScore.Add(0);
+            tempTeamScore.Add(0);
 
         foreach (Player player in players)
         {
@@ -1707,30 +1747,31 @@ public class GameManager : MonoBehaviourPunCallbacks
         marriages.Clear();
         tempMarriages.Clear();
 
-        tempTeamScore[0] = RoundToNearestTen(tempTeamScore[0]);
-        tempTeamScore[1] = RoundToNearestTen(tempTeamScore[1]);
+            tempTeamScore[0] = RoundToNearestTen(tempTeamScore[0]);
+            tempTeamScore[1] = RoundToNearestTen(tempTeamScore[1]);
 
-        for (int i = 0; i < 2; i++)
-        {
-            if (i == bidderTeam - 1)
+            for (int i = 0; i < 2; i++)
             {
-                if (tempTeamScore[bidderTeam - 1] < currentBid)
+                if (i == bidderTeam - 1)
                 {
-                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i] + " points", Color.red);
-                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> lost round. [-" + currentBid + " points]", Color.red);
-                    teamScore[i] -= currentBid;
+                    if (tempTeamScore[bidderTeam - 1] < currentBid)
+                    {
+                        GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i] + " points", Color.red);
+                        GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> lost round. [-" + currentBid + " points]", Color.red);
+                        teamScore[i] -= currentBid;
+                    }
+                    else
+                    {
+                        GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i] + " points", Color.green);
+                        GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> won round.", Color.green);
+                        teamScore[i] += tempTeamScore[i];
+                    }
                 }
                 else
                 {
-                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> scores " + tempTeamScore[i] + " points", Color.green);
-                    GameManager.Instance.runLog.logText("<Team " + bidderTeam + "> won round.", Color.green);
+                    GameManager.Instance.runLog.logText("<Team " + (i + 1) + "> scores " + tempTeamScore[i] + " points", Color.yellow);
                     teamScore[i] += tempTeamScore[i];
                 }
-            }
-            else
-            {
-                GameManager.Instance.runLog.logText("<Team " + (i + 1) + "> scores " + tempTeamScore[i] + " points", Color.yellow);
-                teamScore[i] += tempTeamScore[i];
             }
         }
 
