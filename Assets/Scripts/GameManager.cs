@@ -110,6 +110,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject readyDialog;
     [SerializeField] private GameObject setupDialog;
     [SerializeField] private GameObject handOverDialog;
+    [SerializeField] GameObject BombButton;
     [SerializeField] private GameObject waitingDialog;
     [SerializeField] private GameObject waitingForCardDialog;
     [SerializeField] private GameObject endGameDialog;
@@ -1443,13 +1444,35 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private bool bombPlayed = false;
 
+    void DisplayHandoverDialog()
+    {
+        handOverDialog.SetActive(true);
+        // hide bomb button
+        if (BombButton == null)
+        {
+            Debug.LogError("BombButton not found!");
+        }
+        else
+        {
+            if (gameRules.CanPlayerUseBomb(currentPlayer.playerNumber - 1))
+            {
+                BombButton.SetActive(true);
+            }
+            else
+            {
+                BombButton.SetActive(false);
+            }
+        }
+    }
+
     void DealCardsToOtherPlayers()
     {
         if (IsMultiplayerMode)
         {
             if (PhotonNetwork.NickName == currentPlayer.playerName)
             {
-                handOverDialog.SetActive(true);
+                //handOverDialog.SetActive(true);
+                DisplayHandoverDialog();
                 isGivingStage = true;
                 currentCardReceiver = GetNextPlayer(currentPlayer);
 
@@ -1461,7 +1484,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            handOverDialog.SetActive(true);
+            DisplayHandoverDialog();
             isGivingStage = true;
             currentCardReceiver = GetNextPlayer(currentPlayer);
 
@@ -1480,13 +1503,11 @@ public class GameManager : MonoBehaviourPunCallbacks
     }
 
     public void BombEndRound(){
-        // TU IMPLEMENTACJA BOMBY
-        // -> PUNKTY - team bombującego: 0pkt, przeciwny team 0.5*WARTOSC_WYLICYTOWANA pkt
-        // -> PRZEJŚCIE DO NASTEPNEJ TURY
-
         bombPlayed = true;
         int pointsToGive = RoundToNearestTen(currentBid / 2);
         teamScore[currentBidder.GetTeam() % 2] += pointsToGive;
+
+        runLog.logText("<" + currentPlayer.playerName + "> declared bomb ", Color.blue);
 
         foreach (Player player in players)
         {

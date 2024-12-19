@@ -6552,7 +6552,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 586773326}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 910014286}
+        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+        m_MethodName: BombEndRound
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &586773326
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8591,6 +8603,7 @@ MonoBehaviour:
   readyDialog: {fileID: 557785614}
   setupDialog: {fileID: 106503057}
   handOverDialog: {fileID: 353215066}
+  BombButton: {fileID: 586773323}
   waitingDialog: {fileID: 1403456770}
   waitingForCardDialog: {fileID: 64838323}
   endGameDialog: {fileID: 8556197519734639413}
@@ -19536,7 +19549,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 367829456}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.5000001
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

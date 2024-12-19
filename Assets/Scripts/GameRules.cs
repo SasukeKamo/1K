@@ -9,7 +9,7 @@ public class GameRules
     public bool KingOnQueenMarriage { get; set; }
     public int[] BombCount;
 
-    public GameRules(bool biddingLimitation = true, bool bomb = false, bool kingOnQueenMarriage = false, int playerN = 4)
+    public GameRules(bool biddingLimitation = true, bool bomb = true, bool kingOnQueenMarriage = false, int playerN = 4)
     {
         BiddingLimitation = biddingLimitation;
         Bomb = bomb;
@@ -21,7 +21,7 @@ public class GameRules
         }
     }
 
-    public bool CanUseBomb(int playerIndex)
+    public bool CanPlayerUseBomb(int playerIndex)
     {
         if (BombCount[playerIndex] > 0)
         {
