@@ -69,6 +69,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     public List<Player> players;
     public enum GamePhase { Start, Auction, Handover, Gameplay };
     public bool onePlayerMode = true;
+    public GameRules gameRules;
 
     public Deck mainDeck;
     public Deck otherCards;
@@ -121,6 +122,9 @@ public class GameManager : MonoBehaviourPunCallbacks
         AudioManager.Instance.PlayGamesceneSong();
         runLog = _instance.GetComponent<RunLog>();
         //InitializeGame();
+
+        gameRules = new GameRules(); // TU ZAINICJOWAC RULESY WG BOOLI WZIETYCH Z CHECKBOXOW
+
         if (IsMultiplayerMode)
         {
             PhotonNetwork.AutomaticallySyncScene = true;
@@ -594,7 +598,9 @@ public class GameManager : MonoBehaviourPunCallbacks
             do
             {
                 currentPlayer = GetNextPlayer(currentPlayer);
-
+                if (!gameRules.CanPlayerBid(currentBid, currentPlayer.hand)){
+                    NegativeAuctionDialog();
+                }
             } while (currentPlayer.HasPassed());
 
             photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentBidder.playerName + "> has bidded " + currentBid + ".", 1.0f, 1.0f, 0.0f);
@@ -608,6 +614,9 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 currentPlayer = GetNextPlayer(currentPlayer);
                 MovePlayersToNextPositions();
+                if (!gameRules.CanPlayerBid(currentBid, currentPlayer.hand)){
+                    NegativeAuctionDialog();
+                }
 
             } while (currentPlayer.HasPassed());
 
@@ -620,7 +629,7 @@ public class GameManager : MonoBehaviourPunCallbacks
     public void SyncPlayer(int playerNumber, string methodName, object[] parameters)
     {
         players[playerNumber - 1].GetType().GetMethod(methodName).Invoke(players[playerNumber - 1], parameters);
-    }
+    }   
 
 
     public void NegativeAuctionDialog()
@@ -631,8 +640,13 @@ public class GameManager : MonoBehaviourPunCallbacks
             photonView.RPC("SyncLog", RpcTarget.AllBuffered, "<" + currentPlayer.playerName + "> passed.", 1.0f, 1.0f, 0.0f);
             //currentPlayer.GetType().GetMethod("SetPassed").Invoke(currentPlayer, parameters); // null, jeśli metoda nie ma parametrów
 
-            do { currentPlayer = GetNextPlayer(currentPlayer); }
-            while (currentPlayer.HasPassed());
+            do
+            {
+                currentPlayer = GetNextPlayer(currentPlayer);
+                if (!gameRules.CanPlayerBid(currentBid, currentPlayer.hand)){
+                    currentPlayer.SetPassed(true);
+                }
+            } while (currentPlayer.HasPassed());
 
             photonView.RPC("SyncAuction", RpcTarget.AllBuffered, currentBid, currentPlayer.playerNumber, currentBidder.playerNumber);
         }
@@ -674,6 +688,9 @@ public class GameManager : MonoBehaviourPunCallbacks
                 {
                     currentPlayer = GetNextPlayer(currentPlayer);
                     MovePlayersToNextPositions();
+                    if (!gameRules.CanPlayerBid(currentBid, currentPlayer.hand)){
+                        NegativeAuctionDialog();
+                    }
 
                 } while (currentPlayer.HasPassed());
 
@@ -1022,7 +1039,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 if (player.playerNumber == marriage.Item1.playerNumber)
                 {
-                    int score = marriage.Item2.GetValue();
+                    int score = marriage.Item2.GetMarriageValue();
                     player.AddRoundScore(score);
                 }
             }
@@ -1455,6 +1472,12 @@ public class GameManager : MonoBehaviourPunCallbacks
         gamePhase = GamePhase.Gameplay;
     }
 
+    void BombEndRound(){
+        // TU IMPLEMENTACJA BOMBY
+        // -> PUNKTY - team bombującego: 0pkt, przeciwny team 0.5*WARTOSC_WYLICYTOWANA pkt
+        // -> PRZEJŚCIE DO NASTEPNEJ TURY
+    }
+
     IEnumerator StartRound()
     {
         firstPlayer = (firstPlayer + 1) % players.Count;
@@ -1677,7 +1700,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 if (p == player)
                 {
-                    tempTeamScore[player.GetTeam() - 1] += suit.GetValue();
+                    tempTeamScore[player.GetTeam() - 1] += suit.GetMarriageValue();
                 }
             }
         }

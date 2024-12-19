@@ -226,13 +226,13 @@ public class InputHandler : MonoBehaviour
                 {
                     Card.Suit suit = clickedCard.GetSuit();
                     GameManager.Instance.AddHandMarriage(currentPlayer, suit);
-                    currentPlayer.AddRoundScore(suit.GetValue());
+                    currentPlayer.AddRoundScore(suit.GetMarriageValue());
                     AudioManager.Instance.PlayTrumpSound();
                     GameManager.Instance.DisplayTrumpText();
 
-                    Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetMarriageValue() + " points].");
                     GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
-                    " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
+                    " [+" + clickedCard.GetSuit().GetMarriageValue() + " points].", Color.green);
                     return true;
                 }
             }
@@ -245,38 +245,41 @@ public class InputHandler : MonoBehaviour
                 {
                     Card.Suit suit = clickedCard.GetSuit();
                     GameManager.Instance.AddHandMarriage(currentPlayer, suit);
-                    currentPlayer.AddRoundScore(suit.GetValue());
+                    currentPlayer.AddRoundScore(suit.GetMarriageValue());
                     AudioManager.Instance.PlayTrumpSound();
                     GameManager.Instance.DisplayTrumpText();
 
-                    Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
+                    Debug.Log("Hand marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetMarriageValue() + " points].");
                     GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
-                    " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
+                    " [+" + clickedCard.GetSuit().GetMarriageValue() + " points].", Color.green);
                     return true;
                 }
             }
         }
 
         // king-on-queen marriage
-        int trickSize = trickCards.Length;
-        if (trickSize > 1)
-        {
-            if (trickCards[trickSize - 2].GetSuit() == trickCards[trickSize - 1].GetSuit() &&
-                trickCards[trickSize - 2].GetRank() == "Queen" &&
-                trickCards[trickSize - 1].GetRank() == "King")
+        if(GameManager.Instance.gameRules.KingOnQueenMarriage){
+            int trickSize = trickCards.Length;
+            if (trickSize > 1)
             {
-                Card.Suit suit = clickedCard.GetSuit();
-                GameManager.Instance.AddInTurnMarriage(currentPlayer, suit);
-                currentPlayer.AddRoundScore(suit.GetValue());
-                AudioManager.Instance.PlayTrumpSound();
-                GameManager.Instance.DisplayTrumpText();
+                if (trickCards[trickSize - 2].GetSuit() == trickCards[trickSize - 1].GetSuit() &&
+                    trickCards[trickSize - 2].GetRank() == "Queen" &&
+                    trickCards[trickSize - 1].GetRank() == "King")
+                {
+                    Card.Suit suit = clickedCard.GetSuit();
+                    GameManager.Instance.AddInTurnMarriage(currentPlayer, suit);
+                    currentPlayer.AddRoundScore(suit.GetMarriageValue());
+                    AudioManager.Instance.PlayTrumpSound();
+                    GameManager.Instance.DisplayTrumpText();
 
-                Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetValue() + " points].");
-                GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
-                " [+" + clickedCard.GetSuit().GetValue() + " points].", Color.green);
-                return true;
+                    Debug.Log("King-on-queen marriage: " + clickedCard.GetSuitToString() + " [+" + clickedCard.GetSuit().GetMarriageValue() + " points].");
+                    GameManager.Instance.runLog.logText("(MARRIAGE) " + clickedCard.GetSuitToString() +
+                    " [+" + clickedCard.GetSuit().GetMarriageValue() + " points].", Color.green);
+                    return true;
+                }
             }
         }
+        
 
         return false;
     }

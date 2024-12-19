@@ -188,7 +188,7 @@ public class Card : MonoBehaviour
 
 public static class SuitValue
 {
-    public static int GetValue(this Card.Suit suit)
+    public static int GetMarriageValue(this Card.Suit suit)
     {
         switch (suit)
         {
